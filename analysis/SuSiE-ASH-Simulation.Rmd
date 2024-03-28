@@ -1,0 +1,348 @@
+---
+title: "SuSiE-ASH Simulation"
+output: html_document
+date: "2024-03-20"
+---
+
+Note-to-self: 
+- Recall/Power = Percentage of simulated LARGE EFFECTS among the top N variants when ranked by PIP (Note that recall for SuSiE-Inf was very similar to, but slightly lower than the recall of SuSiE)
+- False Discovery Rate = P(Non-Causal | PIP > 0.9)
+- Calibration = Of variants with PIP = x%, we expect x% are truly causal
+- Replication Failure Rate = P(PIP Large Sample < 0.1 | PIP Small Sample > 0.9)
+- Expected Proportion of Non-Causal Variants (EPN) --> Supp table 6,7,8
+- Coverage: proportion of variants with nonzero effects
+- Heritability: proportion of outcome variance that can be attributed to genetic effects (our betas and thetas)
+
+
+If the RFR is significantly higher than the EPN, it suggests miscalibration.
+
+```{r}
+# Load Libraries
+library(devtools)
+library(tidyverse)
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE/')
+devtools::install_github("stephenslab/mr.ash.alpha")
+
+# SuSiE-ASH (original; pre credible sets)
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/mr.ash/R/susie-ash-original-v1.R")
+
+# SuSiE-ASH (v1; remaining effects)
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/mr.ash/R/susie-ash-warmstart-v2 copy(remaining effects version).R")
+
+# SuSiE-ASH (v2; Gao's Version)
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/mr.ash/R/susie-ash-warmstart-v2.R")
+```
+
+# Simulated Data
+
+```{r}
+generate_data <- function(n, p, heritability, sparse_coverage, nonsparse_coverage) {
+  # Generate sparse effects (beta.true)
+  num_sparse <- round(p * sparse_coverage)
+  beta.true <- rep(0, p)
+  beta.true[sample(p, num_sparse)] <- rnorm(num_sparse, 0, 0.5)
+  
+  # Generate nonsparse effects (theta.true)
+  num_nonsparse <- round(p * nonsparse_coverage)
+  theta.true <- rep(0, p)
+  
+  # Set the mixture prior parameters for nonsparse effects
+  nonsparse_pis <- c(0.5, 0.3, 0.15, 0.05)
+  #nonsparse_sds <- c(0.0001, 0.002, 0.05, 0.1) # William Mixture
+  #nonsparse_sds <- c(0.0001, 0.005, 0.0075, 0.05) 
+  nonsparse_sds <- c(0.0001, 0.002/2, 0.05/2, 0.1/2)
+  
+  theta.true[sample(p, num_nonsparse)] <- sapply(1:num_nonsparse, function(i) {
+    dist.sel <- runif(1)
+    
+    if (dist.sel < nonsparse_pis[1]) {
+      val <- 0
+    } else if (dist.sel < sum(nonsparse_pis[1:2])) {
+      val <- rnorm(1, 0, nonsparse_sds[2])
+    } else if (dist.sel < sum(nonsparse_pis[1:3])) {
+      val <- rnorm(1, 0, nonsparse_sds[3]) 
+    } else {
+      val <- rnorm(1, 0, nonsparse_sds[4])
+    }
+    
+    val
+  })
+  
+  # Create Design Matrix
+  X <- cbind(matrix(rnorm(n*p),nrow=n))
+  X <- scale(X, center=TRUE, scale=FALSE)
+
+  # Create Residual Error
+  sigmasq_error <- (var(X %*% beta.true)*(1 - heritability)) / heritability
+
+  # Create Outcomes
+  y <- X%*%matrix(beta.true,ncol=1) + X%*%matrix(theta.true,ncol=1) + rnorm(n,0,sqrt(sigmasq_error))
+  y <- scale(y, center=TRUE, scale=FALSE)
+  
+  # Store Information
+  return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
+}
+
+data <- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
+
+plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
+plot(data$theta, ylim = c(-.5,.5), ylab = "theta")
+```
+
+
+# Methods (SuSiE, SuSiE-ASH Variants)
+
+```{r}
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, threshold = 0.9) {
+  # Run various methods
+  susie_output <- susie(X = X, y = y, L = L)
+  susie_ash_output_v1 <- susie_ash_warmstart_re(X = X, y = y, L = L, warm_start = 5, tol = 0.05)
+  susie_ash_output_v2 <- susie_ash_warmstart(X = X, y = y, L = L, warm_start = 5, tol = 0.05)
+  
+  
+  calc_metrics <- function(mod, beta = data$beta, threshold = 0.9) {
+    # Identify causal variables (non-zero sparse effects)
+    causal <- beta != 0
+    significant <- mod$pip > threshold
+    
+    # Calculate FDR
+    fdr <- ifelse(sum(significant) > 0, sum(!causal & significant) / sum(significant), 0)
+    
+    # Calculate Recall
+    recall <- ifelse(sum(causal) > 0, sum(causal & significant) / sum(causal), 0)
+    
+    # CS Based FDR and Recall
+    # test.true <- which(data$X != 0)
+    # test.cs <- susie_get_cs(mod, X = data$X)$cs
+    # 
+    #   TP = sum(test.true %in% unlist(test.cs))
+    #   FN = length(test.true) - TP
+    #   FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in%test.true)!=0,T,F)}) %>% unlist(.) %>% sum(.) # FP based on CSs
+    #   FP = length(unlist(test.cs)) - sum(unlist(test.cs) %in% test.true) # FP based on elements
+    #   
+    #   cs_fdr = FP/(TP+FP)
+    #   cs_recall = TP/(TP+FN)
+
+    
+    return(list(fdr = fdr, recall = recall))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
+  }
+  
+  # Calculate FDR and Recall for each method
+  susie_metrics <- calc_metrics(susie_output, beta, threshold)
+  susie_ash_v1_metrics <- calc_metrics(susie_ash_output_v1, beta, threshold)
+  susie_ash_v2_metrics <- calc_metrics(susie_ash_output_v2, beta, threshold)
+  
+  #Create a data frame with the results
+  metrics_table  <- data.frame(
+    Model = c("SuSiE", "SuSiE-ASH v1", "SuSiE-ASH v2"),
+    FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
+    Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall)#,
+    #CS_FDR = c(susie_metrics$cs_fdr, susie_ash_v1_metrics$cs_fdr, susie_ash_v2_metrics$cs_fdr),
+    #CS_Recall = c(susie_metrics$cs_recall, susie_ash_v1_metrics$cs_recall, susie_ash_v2_metrics$cs_recall)
+  )
+  
+  # metrics_table  <- data.frame(
+  #   Model = c("SuSiE", "SuSiE-ASH"),
+  #   FDR = c(susie_metrics$fdr, susie_ash_v2_metrics$fdr),
+  #   Recall = c(susie_metrics$recall, susie_ash_v2_metrics$recall)
+  # )
+  
+  # Return the results table
+  return(list(
+    metrics = metrics_table,
+    susie_output = susie_output,
+    susie_ash_output_v1 = susie_ash_output_v1,
+    susie_ash_output_v2 = susie_ash_output_v2,
+    betas = data$beta,
+    thetas = data$theta)
+  )
+}
+
+```
+
+
+```{r}
+# data <- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
+# 
+# output <- method_and_score()
+```
+
+```{r}
+beta.true.index = which(data$beta != 0)
+theta.true.index = which(abs(data$theta) >= 0.05)
+
+# Color + Shape Differ for True Effects
+color_vector <- rep("black", length(output$susie_output$pip))
+color_vector[beta.true.index] <- "red"
+shape_vector <- rep(1, length(output$susie_output$pip))
+shape_vector[beta.true.index] <- 17
+
+color_vector[theta.true.index] <- "blue"
+shape_vector[theta.true.index] <- 16
+
+output$susie_output$pip %>% plot(., main = "SuSiE PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
+output$susie_ash_output_v1$pip %>% plot(., main = "SuSiE-ASH PIP (v1)", col = color_vector, pch = shape_vector)  %>% abline(h = 0.9, col="black", lty = 2)
+
+output$susie_ash_output_v2$pip %>% plot(., main = "SuSiE-ASH PIP (v2)", col = color_vector, pch = shape_vector)  %>% abline(h = 0.9, col="black", lty = 2)
+
+susie_get_cs(susie_output, X = data$X, coverage = 0.9)
+susie_get_cs(susie_ash_output_v1, X = data$X, coverage = 0.9)
+susie_get_cs(susie_ash_output_v2, X = data$X, coverage = 0.9)
+
+# plot(large_simulation$all_betas[[1]], ylim = c(-1.5, 1.5), ylab = "Beta Sim 1")
+plot(large_simulation$all_betas[[2]], ylim = c(-1.5, 1.5), ylab = "Beta Sim 2")
+# plot(large_simulation$all_betas[[3]], ylim = c(-1.5, 1.5), ylab = "Beta Sim 3")
+# 
+# plot(large_simulation$all_thetas[[1]], ylim = c(-0.5, 0.5), ylab = "Theta Sim 1")
+plot(large_simulation$all_thetas[[2]], ylim = c(-1.5, 1.5), ylab = "Theta Sim 2")
+# plot(large_simulation$all_thetas[[3]], ylim = c(-0.5, 0.5), ylab = "theta Sim 3")
+
+
+
+# beta.true.index = which(large_simulation$all_betas[[2]] != 0)
+# theta.true.index = which(abs(large_simulation$all_thetas) >= 0.05)
+# 
+# # Color + Shape Differ for True Effects
+# color_vector <- rep("black", length(output$susie_output$pip))
+# color_vector[beta.true.index] <- "red"
+# shape_vector <- rep(1, length(output$susie_output$pip))
+# shape_vector[beta.true.index] <- 17
+# 
+# color_vector[theta.true.index] <- "blue"
+# shape_vector[theta.true.index] <- 16
+# 
+# 
+# large_simulation$all_susie_outputs[[2]]$pip %>% plot(., main = "SuSiE PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
+# large_simulation$all_susie_ash_outputs_v1[[2]]$pip %>% plot(., main = "SuSiE-ASH PIP (v1)", col = color_vector, pch = shape_vector)  %>% abline(h = 0.9, col="black", lty = 2)
+# 
+# large_simulation$all_susie_ash_outputs_v2[[2]]$pip %>% plot(., main = "SuSiE-ASH PIP (v2)", col = color_vector, pch = shape_vector)  %>% abline(h = 0.9, col="black", lty = 2)
+```
+
+# Scores (FDR, Recall)
+
+```{r}
+# Calculate FDR and Recall based on SuSiE-Infinitesimal Definitions
+calc_metrics <- function(pip, beta, threshold = 0.9) {
+  # Identify causal variants (non-zero sparse effects)
+  
+  causal <- beta != 0
+  # Set significance threshold
+  significant <- pip > threshold
+  
+  # Calculate FDR
+  fdr <- sum(!causal & significant) / sum(significant)
+  
+  # Calculate Recall
+  recall <- sum(causal & significant) / sum(causal)
+  
+  return(list(fdr = fdr, recall = recall))
+}
+```
+
+
+```{r}
+# Calculate FDR and Recall for each method
+susie_metrics <- calc_metrics(susie_output$pip, data$beta)
+susie_ash_v1_metrics <- calc_metrics(susie_ash_output_v2$pip, data$beta)
+susie_ash_v2_metrics <- calc_metrics(susie_ash_output_v2$pip, data$beta)
+
+# Create a data frame with the results
+results <- data.frame(
+  Model = c("SuSiE", "SuSiE-ASH", "SuSiE-ASH v2"),
+  FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
+  Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall)
+)
+
+# Print the results table
+print(results)
+```
+
+
+
+
+
+```{r}
+simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9) {
+  
+  # Initialize lists to store results
+  all_metrics <- list()
+  all_betas <- list()
+  all_thetas <- list()
+  all_susie_outputs <- list()
+  all_susie_ash_outputs_v1 <- list()
+  all_susie_ash_outputs_v2 <- list()
+  all_seeds <- numeric(num_simulations)
+  
+  for (i in 1:num_simulations) {
+    cat("Running simulation", i, "out of", num_simulations, "\n")
+    
+    # Set random seed for each simulation
+    seed <- abs(round(rnorm(1, mean = 0, sd = 1000)))
+    set.seed(seed)
+    
+    # Generate data
+    data <- generate_data(n, p, heritability, sparse_coverage, nonsparse_coverage)
+    
+    # Run methods and calculate metrics
+    results <- method_and_score(data$X, data$y, data$beta, L, threshold)
+    
+    # Store results + betas/thetas
+    all_metrics[[i]] <- results$metrics
+    all_betas[[i]] <- data$beta
+    all_thetas[[i]] <- data$theta
+    all_susie_outputs[[i]] <- results$susie_output
+    all_susie_ash_outputs_v1[[i]] <- results$susie_ash_output_v1
+    all_susie_ash_outputs_v2[[i]] <- results$susie_ash_output_v2
+    all_seeds[i] <- seed
+  }
+  
+  # Calculate average metrics
+  avg_metrics <- data.frame(
+    Model = unique(all_metrics[[1]]$Model),
+    FDR = Reduce("+", lapply(all_metrics, function(x) x$FDR)) / num_simulations,
+    Recall = Reduce("+", lapply(all_metrics, function(x) x$Recall)) / num_simulations#,
+    #CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
+    #CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations
+  )
+  
+  # Return all results
+  return(list(
+    avg_metrics = avg_metrics,
+    all_metrics = all_metrics,
+    all_betas = all_betas,
+    all_thetas = all_thetas,
+    all_susie_outputs = all_susie_outputs,
+    all_susie_ash_outputs_v1 = all_susie_ash_outputs_v1,
+    all_susie_ash_outputs_v2 = all_susie_ash_outputs_v2,
+    all_seeds = all_seeds
+  ))
+}
+
+large_simulation <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+print(large_simulation$avg_metrics)
+print(large_simulation$all_seeds)
+
+
+```
+
+Note-to-self: 
+- Recall/Power = Percentage of simulated LARGE EFFECTS among the top N variants when ranked by PIP (Note that recall for SuSiE-Inf was very similar to, but slightly lower than the recall of SuSiE)
+- False Discovery Rate = P(Non-Causal | PIP > 0.9)
+- Calibration = Of variants with PIP = x%, we expect x% are truly causal
+- Replication Failure Rate = P(PIP Large Sample < 0.1 | PIP Small Sample > 0.9)
+- Expected Proportion of Non-Causal Variants (EPN) --> Supp table 6,7,8
+- Coverage: proportion of variants with nonzero effects
+- Heritability: proportion of outcome variance that can be attributed to genetic effects (our betas and thetas)
+
+
+To implement: 
+1) CS Size, similar to precision
+
+2) Coverage = proportion of credible sets with a causal effect, 95% coverage want CS with 95% prob of containing a causal effect
+
+3) ROC curve with FDR vs Power, way of comparing PIP
+
+4) Coverage versus L (from susie) graph 
+
+5) How does coverage change when we vary heritability versus the amount of actual simulated effects
