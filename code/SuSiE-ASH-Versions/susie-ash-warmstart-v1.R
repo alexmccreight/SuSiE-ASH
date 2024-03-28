@@ -161,13 +161,13 @@
 #'   credible set. The default, 0.5, corresponds to a squared
 #'   correlation of 0.25, which is a commonly used threshold for
 #'   genotype data in genetic studies.
-#' 
+#'
 #' @param median_abs_corr An alternative "purity" threshold for the CS. Median
 #'   correlation between pairs of variables in a CS less than this
-#'   threshold will be filtered out and not reported. When both min_abs_corr 
-#'   and median_abs_corr are set, a CS will only be removed if it fails both 
-#'   filters. Default set to NULL to be compatible with Wang et al (2020) JRSS-B 
-#'   but it is recommended to set it to 0.8 in practice. 
+#'   threshold will be filtered out and not reported. When both min_abs_corr
+#'   and median_abs_corr are set, a CS will only be removed if it fails both
+#'   filters. Default set to NULL to be compatible with Wang et al (2020) JRSS-B
+#'   but it is recommended to set it to 0.8 in practice.
 #'
 #' @param compute_univariate_zscore If \code{compute_univariate_zscore
 #'   = TRUE}, the univariate regression z-scores are outputted for each
@@ -329,10 +329,10 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
                   refine = FALSE,
                   n_purity = 100,
                   warm_start = 3) {
-  
+
   # Process input estimate_prior_method.
   estimate_prior_method = match.arg(estimate_prior_method)
-  
+
   # Check input X.
   if (!(is.double(X) & is.matrix(X)) &
       !inherits(X,"CsparseMatrix") &
@@ -367,15 +367,15 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
     warning_message("For an X with many columns, please consider installing",
                     "the Rfast package for more efficient credible set (CS)",
                     "calculations.", style='hint')
-  
+
   # Check input y.
   n = nrow(X)
   mean_y = mean(y)
-  
+
   # Center and scale input.
   if (intercept)
     y = y - mean_y
-  
+
   # Set three attributes for matrix X: attr(X,'scaled:center') is a
   # p-vector of column means of X if center=TRUE, a p vector of zeros
   # otherwise; 'attr(X,'scaled:scale') is a p-vector of column
@@ -387,9 +387,9 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
   attr(X,"scaled:center") = out$cm
   attr(X,"scaled:scale") = out$csd
   attr(X,"d") = out$d
-  
+
   # Initialize susie fit.
-  s = init_setup(n,p,L,scaled_prior_variance,residual_variance,prior_weights, 
+  s = init_setup(n,p,L,scaled_prior_variance,residual_variance,prior_weights,
                  null_weight,as.numeric(var(y)),standardize)
   if (!missing(s_init) && !is.null(s_init)) {
     if (!inherits(s_init,"susie"))
@@ -397,7 +397,7 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
     if (max(s_init$alpha) > 1 || min(s_init$alpha) < 0)
       stop("s_init$alpha has invalid values outside range [0,1]; please ",
            "check your input")
-    
+
     # First, remove effects with s_init$V = 0
     s_init = susie_prune_single_effects(s_init)
     num_effects = nrow(s_init$alpha)
@@ -417,57 +417,28 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
   } else {
     s = init_finalize(s)
   }
-  
+
   # Initialize elbo to NA.
-  elbo = rep(as.numeric(NA),max_iter + 1)
-  elbo[1] = -Inf;
+  elbo = rep(as.numeric(NA),max_iter - warm_start + 1)
   tracking = list()
-  
-  # Initialize mr. ash ELBO to NA
-  mrash_ELBO = rep(as.numeric(NA),max_iter + 1)
-  mrash_ELBO[1] = -Inf;
-  
-  # Initialize conditional ELBO to NA
-  cond_elbo = rep(as.numeric(NA),max_iter + 1)
-  cond_elbo[1] = -Inf; 
-  
-  # Initialize y_residuals1 to y
-  y_residuals1 = y
-  
-  # Initialize mrash_output
-  mrash_output <- list(
-    beta = matrix(0, nrow = ncol(X), ncol = 1),  
-    sigma2 = 0, 
-    pi = rep(0, 3), # 3 = length(sa) from mr ash 
-    iter = 0, 
-    varobj = rep(as.numeric(NA), max_iter - warm_start), 
-    intercept = 0, 
-    data = list(
-      X = matrix(0, nrow = nrow(X), ncol = ncol(X)), 
-      y = matrix(0, nrow = nrow(y), ncol = ncol(y)), 
-      Z = matrix(0, nrow = nrow(X), ncol = 1),
-      ZtZiZX = matrix(0, nrow = 1, ncol = ncol(X)), 
-      ZtZiZy = 0,
-      w = rep(as.numeric(NA), ncol(X)),
-      sa2 = c(0, 0.01, 0.9) 
-    ),
-    update.order = rep(as.numeric(NA), ncol(X)*1000) # Come back to this one
-  )
-  
+
+
+  # Initialize y_residuals to y
+  y_residuals = y
+
   for (i in 1:max_iter) {
-    print(i)
-    # Introduce "warm start"
+    # SuSiE "warm start" phase
   if(i <= warm_start){
     if (track_fit)
       tracking[[i]] = susie_slim(s)
-    s = update_each_effect(X,y_residuals1,s,estimate_prior_variance,estimate_prior_method,
+    s = update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
                            check_null_threshold)
     if (verbose)
       print(paste0("objective:",get_objective(X,y,s)))
-    
+
     # Save credible sets
     warmstart_cs = susie_get_cs(s)$cs
-    
+
     # Check prior variances and remove elements of credible sets with prior variance less than 0.001
     removed_effects <- list()
     for (l in seq_along(warmstart_cs)) {
@@ -477,94 +448,59 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
     }
     removed_effects <- unique(unlist(removed_effects))
     remaining_effects <- setdiff(1:ncol(X), removed_effects)
-    
-    
-    if(length(removed_effects) > 0) {
-      #y_residuals1 = y - X[,removed_effects] %*% colSums(s$alpha[,removed_effects]*s$mu[,removed_effects])
-      y_residuals1 = y - X[,remaining_effects] %*% colSums(s$alpha[,remaining_effects]*s$mu[,remaining_effects])
-    }
-    
-    
-    
-    # Update y residuals for next iteration of the warm start
-    #y_residuals1 = y - X %*% colSums(s$alpha*s$mu)
-  }
-    
-    if(i > warm_start){
-      if(i == warm_start + 1){
-        y_residuals2 = y_residuals1 # y_residual2 = last iteration of warm start susie result
-      }
-      
-      # Calculate Theta + Mr ASH ELBO (Run Mr. ASH)
-      mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals2, sa2 = c(0, 0.025^2, 0.5^2,1), intercept = FALSE) #0.9
-      theta = mrash_output$beta
-      mrash_ELBO = -(mrash_output$varobj)
-      #print(c(mrash_ELBO, i))
 
-      # Update y_residuals1 for the next iteration within the Mr. ASH phase
-      y_residuals2 = y_residuals2 - X %*% theta
-      
-      elbo[i+1] = mrash_ELBO[i+1-warm_start]
-      print(c(elbo[i+1], elbo[i], elbo[i+1] - elbo[i]))
-      # Convergence Criterion 
-      if ((elbo[i+1] - elbo[i]) < tol) {
-        s$converged = TRUE
-        break
-      }
+    if(length(removed_effects) > 0) {
+      y_residuals = y - X[,remaining_effects] %*% colSums(s$alpha[,remaining_effects]*s$mu[,remaining_effects])
     }
-    
+  } else{
+    # Set up Mr. ASH Residuals
+    if(i == warm_start + 1){
+      y_residuals_mrash = y_residuals
+    }
+
+    # Run Mr. ASH on residuals
+    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals_mrash, sa2 = c(0, 0.025^2, 0.5^2,1))
+    theta = mrash_output$beta
+    elbo[i - warm_start + 1] = -(mrash_output$varobj)
+    y_residuals_mrash = y_residuals_mrash - X %*% theta
+
+    #Convergence Criterion
+    if (i > warm_start + 1 && (elbo[i - warm_start + 1] - elbo[i - warm_start]) < tol) {
+      s$converged = TRUE
+      break
+    }
+  }
+
     # Common objective and convergence check (adjust as needed for the transition)
-    
+
     # Compute objective before updating residual variance because part
     # of the objective s$kl has already been computed under the
     # residual variance before the update.
-    
-    # Solution: Don't check convergence before the warm-start
-    if (i <= warm_start) {
-      #elbo[i+1] = get_objective(X, y_residuals1, s) # For SuSiE phase
-      elbo[i+1] = -100000
-    } else {
-      #elbo[i+1] = get_objective(X, y_residuals2, s) + mrash_ELBO[i + 1 - warm_start] # FIXME: For Mr. ASH phase
-      elbo[i+1] = mrash_ELBO[i + 1 - warm_start]
-    }
-    
-    
-    # Check elbo status
-    #print(c(elbo[i+1], elbo[i], elbo[i+1] - elbo[i]))
-    
-    # # Convergence Criterion (Irrespective of warm start)
-    # if ((elbo[i+1] - elbo[i]) < tol) {
-    #   s$converged = TRUE
-    #   break
-    # }
-    
+
     # Update residual variance after mr ash
     if (estimate_residual_variance) {
       s$sigma2 = pmax(residual_variance_lowerbound,
-                      estimate_residual_variance(X,y_residuals1,s))
+                      estimate_residual_variance(X,y_residuals,s))
       if (s$sigma2 > residual_variance_upperbound)
         s$sigma2 = residual_variance_upperbound
       if (verbose)
-        print(paste0("objective:",get_objective(X,y_residuals1,s)))
+        print(paste0("objective:",get_objective(X,y_residuals,s)))
     }
   }
 
-  
+
   # Remove first (infinite) entry, and trailing NAs. Combine SuSiE and mr. ash ELBO.
-  elbo = elbo[2:(i+1)]
-  cond_elbo = cond_elbo[2:(i+1)]
-  
-  s$cond_elbo = cond_elbo
+  elbo = elbo[!is.na(elbo)]
   s$elbo = elbo
   s$niter = i
-  
+
   if (is.null(s$converged)) {
     warning(paste("IBSS algorithm did not converge in",max_iter,"iterations!"))
     s$converged = FALSE
   }
-  
+
   if (intercept) {
-    
+
     # Estimate unshrunk intercept.
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
                                  (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
@@ -575,10 +511,10 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
   }
   s$fitted = drop(s$fitted)
   names(s$fitted) = `if`(is.null(names(y)),rownames(X),names(y))
-  
+
   if (track_fit)
     s$trace = tracking
-  
+
   # SuSiE CS and PIP.
   if (!is.null(coverage) && !is.null(min_abs_corr)) {
     s$sets = susie_get_cs(s,coverage = coverage,X = X,
@@ -587,7 +523,7 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
                           n_purity = n_purity)
     s$pip = susie_get_pip(s,prune_by_cs = FALSE,prior_tol = prior_tol)
   }
-  
+
   if (!is.null(colnames(X))) {
     variable_names = colnames(X)
     if (!is.null(null_weight)) {
@@ -611,19 +547,19 @@ susie_ash_warmstart_re = function (X,y,L = min(10,ncol(X)),
       X = X[,1:(ncol(X) - 1)]
     s$z = calc_z(X,y,center = intercept,scale = standardize)
   }
-  
+
   # For prediction.
   s$X_column_scale_factors = attr(X,"scaled:scale")
-  
+
   if (refine) {
     if (!missing(s_init) && !is.null(s_init))
       warning("The given s_init is not used in refinement")
     if (!is.null(null_weight) && null_weight != 0) {
-      
+
       ## if null_weight is specified, we compute the original prior_weight
       pw_s = s$pi[-s$null_index]/(1-null_weight)
       if (!compute_univariate_zscore)
-        
+
         ## if null_weight is specified, and the extra 0 column is not
         ## removed from compute_univariate_zscore, we remove it here
         X = X[,1:(ncol(X) - 1)]

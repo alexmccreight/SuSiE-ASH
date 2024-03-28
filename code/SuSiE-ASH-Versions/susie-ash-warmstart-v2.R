@@ -419,7 +419,7 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
   }
 
   # Initialize elbo to NA.
-  elbo = rep(-Inf,max_iter - warm_start + 1)
+  elbo = rep(as.numeric(NA),max_iter - warm_start + 1)
   #elbo[1] = -Inf;
   tracking = list()
 
@@ -452,9 +452,9 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
     # Run Mr. ASH on Residuals
     mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals_mrash, sa2 = c(0, 0.025^2, 0.5^2,1))
     theta = mrash_output$beta
-    mrash_elbo = -(mrash_output$varobj)
+    elbo[i - warm_start + 1] = -(mrash_output$varobj)
     y_residuals_mrash = y_residuals_mrash - X %*% theta
-    elbo[i - warm_start + 1] = mrash_elbo
+
 
       #Convergence Criterion
       if (i > warm_start + 1 && (elbo[i - warm_start + 1] - elbo[i - warm_start]) < tol) {
@@ -482,7 +482,7 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
 
 
   # Remove first (infinite) entry, and trailing NAs. Combine SuSiE and mr. ash ELBO.
-  elbo = elbo[2:(i+1)]
+  elbo = elbo[!is.na(elbo)]
   s$elbo = elbo
   s$niter = i
 
