@@ -1,6 +1,6 @@
 [submodule "susieR"]
-	path = susieR
+	path = submodules/susieR
 	url = https://github.com/gaow/susieR
 [submodule "mr.ash.alpha"]
-	path = mr.ash.alpha
+	path = submodules/mr.ash.alpha
 	url = https://github.com/stephenslab/mr.ash.alpha
