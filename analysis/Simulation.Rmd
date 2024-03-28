@@ -146,7 +146,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     cs_size <- length(unlist(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
     
     # Calculate Coverage (proportion of cs with causal effect)
-    coverage_tmp <- sum(which(causal) %in% susie_get_cs(output, X = data$X, coverage = threshold)$cs) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
+    coverage <- sum(which(causal) %in% susie_get_cs(mod, X = data$X, coverage = threshold)$cs) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
       
     
     # CS Based FDR and Recall
@@ -162,7 +162,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     #   cs_recall = TP/(TP+FN)
 
     
-    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage_tmp = coverage_tmp))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
+    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage = coverage))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
   }
   
   # Calculate FDR and Recall for each method
@@ -176,7 +176,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
     Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall),
     CS_Size = c(susie_metrics$cs_size, susie_ash_v1_metrics$cs_size, susie_ash_v2_metrics$cs_size),
-    Coverage_tmp = c(susie_metrics$coverage_tmp, susie_ash_v1_metrics$coverage_tmp, susie_ash_v2_metrics$coverage_tmp)
+    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage)
     #CS_FDR = c(susie_metrics$cs_fdr, susie_ash_v1_metrics$cs_fdr, susie_ash_v2_metrics$cs_fdr),
     #CS_Recall = c(susie_metrics$cs_recall, susie_ash_v1_metrics$cs_recall, susie_ash_v2_metrics$cs_recall)
   )
@@ -245,7 +245,7 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
     FDR = Reduce("+", lapply(all_metrics, function(x) x$FDR)) / num_simulations,
     Recall = Reduce("+", lapply(all_metrics, function(x) x$Recall)) / num_simulations,
     CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
-    Coverage_tmp = Reduce("+", lapply(all_metrics, function(x) x$Coverage_tmp)) / num_simulations
+    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
     #CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
     #CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations
   )
