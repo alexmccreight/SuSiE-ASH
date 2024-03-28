@@ -1,0 +1,3 @@
+[submodule "susieR"]
+	path = susieR
+	url = https://github.com/gaow/susieR
