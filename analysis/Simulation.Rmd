@@ -94,28 +94,28 @@ plot(data$theta, ylim = c(-.5,.5), ylab = "theta")
 ```
 
 ```{r}
-output <- susie_ash_warmstart(X = data$X, y = data$y, L = 10, tol = 0.02)
-output2 <- susie(X = data$X, y = data$y, L = 10, tol = 0.001)
-output3 <- susie_ash_warmstart_re(X = data$X, y = data$y, L = 10, tol = 0.02)
-
-susie_get_cs(output, X = data$X)
-
-
-beta.true.index = which(data$beta != 0)
-theta.true.index = which(abs(data$theta) >= 0.025)
-
-# Color + Shape Differ for True Effects
-color_vector <- rep("black", length(output$pip))
-color_vector[beta.true.index] <- "red"
-shape_vector <- rep(1, length(output$pip))
-shape_vector[beta.true.index] <- 17
-
-color_vector[theta.true.index] <- "blue"
-shape_vector[theta.true.index] <- 16
-
-output$pip %>% plot(., main = "SuSiE-ASH (v2) PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
-output2$pip %>% plot(., main = "SuSiE PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
-output3$pip %>% plot(., main = "SuSiE-ASH (v1) PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
+# output <- susie_ash_warmstart(X = data$X, y = data$y, L = 10, tol = 0.02)
+# output2 <- susie(X = data$X, y = data$y, L = 10, tol = 0.001)
+# output3 <- susie_ash_warmstart_re(X = data$X, y = data$y, L = 10, tol = 0.02)
+# 
+# susie_get_cs(output, X = data$X)
+# 
+# 
+# beta.true.index = which(data$beta != 0)
+# theta.true.index = which(abs(data$theta) >= 0.025)
+# 
+# # Color + Shape Differ for True Effects
+# color_vector <- rep("black", length(output$pip))
+# color_vector[beta.true.index] <- "red"
+# shape_vector <- rep(1, length(output$pip))
+# shape_vector[beta.true.index] <- 17
+# 
+# color_vector[theta.true.index] <- "blue"
+# shape_vector[theta.true.index] <- 16
+# 
+# output$pip %>% plot(., main = "SuSiE-ASH (v2) PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
+# output2$pip %>% plot(., main = "SuSiE PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
+# output3$pip %>% plot(., main = "SuSiE-ASH (v1) PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2) 
 
 ```
 
@@ -263,10 +263,10 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
   ))
 }
 
-large_simulation <- simulate_and_score(num_simulations = 2, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
-
-print(large_simulation$avg_metrics)
-print(large_simulation$all_seeds)
+# large_simulation <- simulate_and_score(num_simulations = 5, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+# 
+# print(large_simulation$avg_metrics)
+# print(large_simulation$all_seeds)
 
 
 ```
