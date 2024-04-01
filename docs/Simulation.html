@@ -388,13 +388,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-03-31
+<strong>Last updated:</strong> 2024-04-01
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 2
 </p>
 <p>
 <strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
@@ -417,18 +417,21 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
@@ -569,15 +572,15 @@ code/SuSiE-ASH-Versions/susie-ash-warmstart-v2.R
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreeb2dd61f4bc07678742f78884adf914c48165bb60targetblankb2dd61fa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree945d3658f8770b49ebd2b71e2a0a723da15f7e0dtargetblank945d365a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/b2dd61f4bc07678742f78884adf914c48165bb60" target="_blank">b2dd61f</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/945d3658f8770b49ebd2b71e2a0a723da15f7e0d" target="_blank">945d365</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreeb2dd61f4bc07678742f78884adf914c48165bb60targetblankb2dd61fa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree945d3658f8770b49ebd2b71e2a0a723da15f7e0dtargetblank945d365a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -587,7 +590,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/b2dd61f4bc07678742f78884adf914c48165bb60" target="_blank">b2dd61f</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/945d3658f8770b49ebd2b71e2a0a723da15f7e0d" target="_blank">945d365</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -606,10 +609,13 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/.DS_Store
-    Ignored:    analysis/figure/
     Ignored:    code/.DS_Store
     Ignored:    code/SuSiE-ASH-Versions/.DS_Store
     Ignored:    submodules/.DS_Store
+
+Unstaged changes:
+    Modified:   analysis/Non-Sparse Simulation.Rmd
+    Modified:   analysis/Simulation.Rmd
 
 </code></pre>
 <p>
@@ -655,6 +661,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/227b9037ecf5601733a038791effd0f4c7490b0b/analysis/Simulation.Rmd" target="_blank">227b903</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-01
+</td>
+<td>
+more simulation scenario
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/cfc0da4ed29bf71c986b1ec9ed3a6d8bc5b5784e/docs/Simulation.html" target="_blank">cfc0da4</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-03-31
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -730,18 +770,6 @@ organization
 </div>
 </div>
 </div>
-<p>Note-to-self: - Recall/Power = Percentage of simulated LARGE EFFECTS
-among the top N variants when ranked by PIP (Note that recall for
-SuSiE-Inf was very similar to, but slightly lower than the recall of
-SuSiE) - False Discovery Rate = P(Non-Causal | PIP &gt; 0.9) -
-Calibration = Of variants with PIP = x%, we expect x% are truly causal -
-Replication Failure Rate = P(PIP Large Sample &lt; 0.1 | PIP Small
-Sample &gt; 0.9) - Expected Proportion of Non-Causal Variants (EPN)
-–&gt; Supp table 6,7,8 - Coverage: proportion of variants with nonzero
-effects - Heritability: proportion of outcome variance that can be
-attributed to genetic effects (our betas and thetas)</p>
-<p>If the RFR is significantly higher than the EPN, it suggests
-miscalibration.</p>
 <div id="simulated-data" class="section level1">
 <h1>Simulated Data</h1>
 <pre class="r"><code>generate_data &lt;- function(n, p, heritability, sparse_coverage, nonsparse_coverage) {
@@ -749,7 +777,7 @@ miscalibration.</p>
   num_sparse &lt;- round(p * sparse_coverage)
   beta.true &lt;- rep(0, p)
   #beta.true[sample(p, num_sparse)] &lt;- rnorm(num_sparse, 0, 0.5)
-  beta.true[sample(p, num_sparse)] &lt;- rbinorm(num_sparse, mean1 = 0.4, mean2 = -0.4, sd1 = 0.15, sd2 = 0.2, prop = 0.5)
+  beta.true[sample(p, num_sparse)] &lt;- rbinorm(num_sparse, mean1 = 0.4, mean2 = -0.4, sd1 = 0.15, sd2 = 0.15, prop = 0.5)
   
   # Generate nonsparse effects (theta.true)
   num_nonsparse &lt;- round(p * nonsparse_coverage)
@@ -760,6 +788,8 @@ miscalibration.</p>
   #nonsparse_sds &lt;- c(0.0001, 0.002, 0.05, 0.1) # William Mixture
   #nonsparse_sds &lt;- c(0.0001, 0.005, 0.0075, 0.05) 
   nonsparse_sds &lt;- c(0.0001, 0.002/2, 0.05/2, 0.1/2)
+  
+  # SuSiE-Inf Samples From N(0, v) where v = 2p(1-p)^-0.38 p = MAF and 
   
   theta.true[sample(p, num_nonsparse)] &lt;- sapply(1:num_nonsparse, function(i) {
     dist.sel &lt;- runif(1)
@@ -792,12 +822,10 @@ miscalibration.</p>
   return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
 }
 
-data &lt;- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
-
-plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
-<p><img src="figure/Simulation.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot(data$theta, ylim = c(-.5,.5), ylab = &quot;theta&quot;)</code></pre>
-<p><img src="figure/Simulation.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+# data &lt;- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
+# 
+#   plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)
+#   plot(data$theta, ylim = c(-.5,.5), ylab = &quot;theta&quot;)</code></pre>
 <pre class="r"><code># output &lt;- susie_ash_warmstart(X = data$X, y = data$y, L = 10, tol = 0.02)
 # output2 &lt;- susie(X = data$X, y = data$y, L = 10, tol = 0.001)
 # output3 &lt;- susie_ash_warmstart_re(X = data$X, y = data$y, L = 10, tol = 0.02)
@@ -833,6 +861,9 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
   calc_metrics &lt;- function(mod, beta = data$beta, threshold = 0.9) {
     # Identify causal variables (non-zero sparse effects)
     causal &lt;- beta != 0
+    
+    # Identify causal variables as non-zero sparse effects and infinitesimal effects with magnitude &gt; 0.03
+    #causal &lt;- (beta != 0) | (abs(theta) &gt; 0.03)
     significant &lt;- mod$pip &gt; threshold
     
     # Calculate FDR
@@ -846,6 +877,28 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
     
     # Calculate Coverage (proportion of cs with causal effect)
     coverage &lt;- sum(which(causal) %in% susie_get_cs(mod, X = data$X, coverage = threshold)$cs) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
+    
+    # Calibration
+    calibration &lt;- ifelse(sum(causal) &gt; 0, sum(causal &amp; significant) / sum(significant), 0)
+    
+    # CS Based FDR and Recall
+  # cs_list &lt;- susie_get_cs(mod, X = X, coverage = threshold)$cs
+  # cs_causal &lt;- sapply(cs_list, function(cs) any(causal[cs]))
+  # 
+  # cs_fdr &lt;- ifelse(length(cs_list) &gt; 0, sum(!cs_causal) / length(cs_list), 0)
+  # cs_recall &lt;- ifelse(sum(causal) &gt; 0, sum(causal %in% unlist(cs_list)) / sum(causal), 0)
+  
+    
+     # CS Based FDR and Recall
+  # test.true &lt;- which(causal)
+  # test.cs &lt;- susie_get_cs(mod, X = X, coverage = threshold)$cs
+  # 
+  # TP &lt;- sum(test.true %in% unlist(test.cs))
+  # FN &lt;- length(test.true) - TP
+  # FP &lt;- length(test.cs) - sum(sapply(test.cs, function(cs) any(cs %in% test.true)))
+  # 
+  # cs_fdr &lt;- ifelse((TP + FP) &gt; 0, FP / (TP + FP), 0)
+  # cs_recall &lt;- ifelse((TP + FN) &gt; 0, TP / (TP + FN), 0)
       
     
     # CS Based FDR and Recall
@@ -861,7 +914,7 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
     #   cs_recall = TP/(TP+FN)
 
     
-    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage = coverage))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
+    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage = coverage, calibration = calibration))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
   }
   
   # Calculate FDR and Recall for each method
@@ -875,7 +928,8 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
     FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
     Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall),
     CS_Size = c(susie_metrics$cs_size, susie_ash_v1_metrics$cs_size, susie_ash_v2_metrics$cs_size),
-    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage)
+    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage),
+    Calibration = c(susie_metrics$calibration, susie_ash_v1_metrics$calibration, susie_ash_v2_metrics$calibration)
     #CS_FDR = c(susie_metrics$cs_fdr, susie_ash_v1_metrics$cs_fdr, susie_ash_v2_metrics$cs_fdr),
     #CS_Recall = c(susie_metrics$cs_recall, susie_ash_v1_metrics$cs_recall, susie_ash_v2_metrics$cs_recall)
   )
@@ -895,9 +949,7 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
     betas = data$beta,
     thetas = data$theta)
   )
-}
-
-#tmp &lt;- method_and_score()</code></pre>
+}</code></pre>
 </div>
 <div id="scores-fdr-recall" class="section level1">
 <h1>Scores (FDR, Recall)</h1>
@@ -923,7 +975,7 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
     data &lt;- generate_data(n, p, heritability, sparse_coverage, nonsparse_coverage)
     
     # Run methods and calculate metrics
-    results &lt;- method_and_score(data$X, data$y, data$beta, L, threshold)
+    results &lt;- method_and_score(X = data$X, y = data$y, beta = data$beta, L = L, threshold = threshold)
     
     # Store results + betas/thetas
     all_metrics[[i]] &lt;- results$metrics
@@ -941,7 +993,8 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
     FDR = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$FDR)) / num_simulations,
     Recall = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$Recall)) / num_simulations,
     CS_Size = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
-    Coverage = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$Coverage)) / num_simulations
+    Coverage = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$Coverage)) / num_simulations,
+    Calibration = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$Calibration)) / num_simulations
     #CS_FDR = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
     #CS_Recall = Reduce(&quot;+&quot;, lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations
   )
@@ -959,10 +1012,20 @@ plot(data$beta, ylim = c(-1.5,1.5), ylab = &quot;beta&quot;)</code></pre>
   ))
 }
 
-# large_simulation &lt;- simulate_and_score(num_simulations = 5, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+# large_simulation &lt;- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.55, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
 # 
+# large_simulation2 &lt;- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+# 
+# large_simulation3 &lt;- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.88, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+
 # print(large_simulation$avg_metrics)
-# print(large_simulation$all_seeds)</code></pre>
+# print(large_simulation2$avg_metrics)
+# print(large_simulation3$avg_metrics)
+
+
+# CS-Size will change with real data</code></pre>
 <p>Note-to-self: - Recall/Power = Percentage of simulated LARGE EFFECTS
 among the top N variants when ranked by PIP (Note that recall for
 SuSiE-Inf was very similar to, but slightly lower than the recall of
@@ -970,13 +1033,15 @@ SuSiE) - False Discovery Rate = P(Non-Causal | PIP &gt; 0.9) -
 Calibration = Of variants with PIP = x%, we expect x% are truly causal -
 Replication Failure Rate = P(PIP Large Sample &lt; 0.1 | PIP Small
 Sample &gt; 0.9) - Expected Proportion of Non-Causal Variants (EPN)
-–&gt; Supp table 6,7,8 - Coverage: proportion of variants with nonzero
-effects - Heritability: proportion of outcome variance that can be
-attributed to genetic effects (our betas and thetas)</p>
-<p>To implement: 1) CS Size, similar to precision</p>
+–&gt; Supp table 6,7,8 “If the RFR is significantly higher than the EPN,
+it suggests miscalibration” - Coverage: proportion of variants with
+nonzero effects - Heritability: proportion of outcome variance that can
+be attributed to genetic effects (our betas and thetas)</p>
+<p>To implement: 1) CS Size, similar to precision (complete)</p>
 <ol start="2" style="list-style-type: decimal">
 <li><p>Coverage = proportion of credible sets with a causal effect, 95%
-coverage want CS with 95% prob of containing a causal effect</p></li>
+coverage want CS with 95% prob of containing a causal effect (complete,
+credible set-based calibration from susie-inf?)</p></li>
 <li><p>ROC curve with FDR vs Power, way of comparing PIP</p></li>
 <li><p>Coverage versus L (from susie) graph</p></li>
 <li><p>How does coverage change when we vary heritability versus the

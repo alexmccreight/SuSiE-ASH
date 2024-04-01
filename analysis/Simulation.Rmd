@@ -4,18 +4,6 @@ output: html_document
 date: "2024-03-20"
 ---
 
-Note-to-self: 
-- Recall/Power = Percentage of simulated LARGE EFFECTS among the top N variants when ranked by PIP (Note that recall for SuSiE-Inf was very similar to, but slightly lower than the recall of SuSiE)
-- False Discovery Rate = P(Non-Causal | PIP > 0.9)
-- Calibration = Of variants with PIP = x%, we expect x% are truly causal
-- Replication Failure Rate = P(PIP Large Sample < 0.1 | PIP Small Sample > 0.9)
-- Expected Proportion of Non-Causal Variants (EPN) --> Supp table 6,7,8
-- Coverage: proportion of variants with nonzero effects
-- Heritability: proportion of outcome variance that can be attributed to genetic effects (our betas and thetas)
-
-
-If the RFR is significantly higher than the EPN, it suggests miscalibration.
-
 ```{r, include = F}
 # Load Libraries
 library(tidyverse)
@@ -89,10 +77,10 @@ generate_data <- function(n, p, heritability, sparse_coverage, nonsparse_coverag
   return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
 }
 
-data <- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
-
-  # plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
-  # plot(data$theta, ylim = c(-.5,.5), ylab = "theta")
+# data <- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
+# 
+#   plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
+#   plot(data$theta, ylim = c(-.5,.5), ylab = "theta")
 ```
 
 
@@ -156,6 +144,9 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     # Calculate Coverage (proportion of cs with causal effect)
     coverage <- sum(which(causal) %in% susie_get_cs(mod, X = data$X, coverage = threshold)$cs) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
     
+    # Calibration
+    calibration <- ifelse(sum(causal) > 0, sum(causal & significant) / sum(significant), 0)
+    
     # CS Based FDR and Recall
   # cs_list <- susie_get_cs(mod, X = X, coverage = threshold)$cs
   # cs_causal <- sapply(cs_list, function(cs) any(causal[cs]))
@@ -189,7 +180,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     #   cs_recall = TP/(TP+FN)
 
     
-    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage = coverage))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
+    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage = coverage, calibration = calibration))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
   }
   
   # Calculate FDR and Recall for each method
@@ -203,7 +194,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
     Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall),
     CS_Size = c(susie_metrics$cs_size, susie_ash_v1_metrics$cs_size, susie_ash_v2_metrics$cs_size),
-    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage)#,
+    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage),
+    Calibration = c(susie_metrics$calibration, susie_ash_v1_metrics$calibration, susie_ash_v2_metrics$calibration)
     #CS_FDR = c(susie_metrics$cs_fdr, susie_ash_v1_metrics$cs_fdr, susie_ash_v2_metrics$cs_fdr),
     #CS_Recall = c(susie_metrics$cs_recall, susie_ash_v1_metrics$cs_recall, susie_ash_v2_metrics$cs_recall)
   )
@@ -270,7 +262,8 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
     FDR = Reduce("+", lapply(all_metrics, function(x) x$FDR)) / num_simulations,
     Recall = Reduce("+", lapply(all_metrics, function(x) x$Recall)) / num_simulations,
     CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
-    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations#,
+    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations,
+    Calibration = Reduce("+", lapply(all_metrics, function(x) x$Calibration)) / num_simulations
     #CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
     #CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations
   )
@@ -289,20 +282,19 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
 }
 
 
-large_simulation <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.55, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
-
-large_simulation2 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
-
-large_simulation3 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.88, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
-
-large_simulation4 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 1.00, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
-
-print(large_simulation$avg_metrics)
-print(large_simulation2$avg_metrics)
-print(large_simulation3$avg_metrics)
-print(large_simulation4$avg_metrics)
+# large_simulation <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.55, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+# 
+# large_simulation2 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+# 
+# large_simulation3 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.88, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
 
 
+# print(large_simulation$avg_metrics)
+# print(large_simulation2$avg_metrics)
+# print(large_simulation3$avg_metrics)
+
+
+# CS-Size will change with real data
 ```
 
 Note-to-self: 
@@ -311,17 +303,20 @@ Note-to-self:
 - Calibration = Of variants with PIP = x%, we expect x% are truly causal
 - Replication Failure Rate = P(PIP Large Sample < 0.1 | PIP Small Sample > 0.9)
 - Expected Proportion of Non-Causal Variants (EPN) --> Supp table 6,7,8
+"If the RFR is significantly higher than the EPN, it suggests miscalibration"
 - Coverage: proportion of variants with nonzero effects
 - Heritability: proportion of outcome variance that can be attributed to genetic effects (our betas and thetas)
 
 
 To implement: 
-1) CS Size, similar to precision
+1) CS Size, similar to precision (complete)
 
-2) Coverage = proportion of credible sets with a causal effect, 95% coverage want CS with 95% prob of containing a causal effect
+2) Coverage = proportion of credible sets with a causal effect, 95% coverage want CS with 95% prob of containing a causal effect (complete, credible set-based calibration from susie-inf?)
 
 3) ROC curve with FDR vs Power, way of comparing PIP
 
 4) Coverage versus L (from susie) graph 
 
 5) How does coverage change when we vary heritability versus the amount of actual simulated effects
+
+
