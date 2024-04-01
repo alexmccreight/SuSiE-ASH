@@ -44,7 +44,7 @@ generate_data <- function(n, p, heritability, sparse_coverage, nonsparse_coverag
   num_sparse <- round(p * sparse_coverage)
   beta.true <- rep(0, p)
   #beta.true[sample(p, num_sparse)] <- rnorm(num_sparse, 0, 0.5)
-  beta.true[sample(p, num_sparse)] <- rbinorm(num_sparse, mean1 = 0.4, mean2 = -0.4, sd1 = 0.15, sd2 = 0.2, prop = 0.5)
+  beta.true[sample(p, num_sparse)] <- rbinorm(num_sparse, mean1 = 0.4, mean2 = -0.4, sd1 = 0.15, sd2 = 0.15, prop = 0.5)
   
   # Generate nonsparse effects (theta.true)
   num_nonsparse <- round(p * nonsparse_coverage)
@@ -55,6 +55,8 @@ generate_data <- function(n, p, heritability, sparse_coverage, nonsparse_coverag
   #nonsparse_sds <- c(0.0001, 0.002, 0.05, 0.1) # William Mixture
   #nonsparse_sds <- c(0.0001, 0.005, 0.0075, 0.05) 
   nonsparse_sds <- c(0.0001, 0.002/2, 0.05/2, 0.1/2)
+  
+  # SuSiE-Inf Samples From N(0, v) where v = 2p(1-p)^-0.38 p = MAF and 
   
   theta.true[sample(p, num_nonsparse)] <- sapply(1:num_nonsparse, function(i) {
     dist.sel <- runif(1)
@@ -89,9 +91,12 @@ generate_data <- function(n, p, heritability, sparse_coverage, nonsparse_coverag
 
 data <- generate_data(n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1)
 
-plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
-plot(data$theta, ylim = c(-.5,.5), ylab = "theta")
+  # plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
+  # plot(data$theta, ylim = c(-.5,.5), ylab = "theta")
 ```
+
+
+
 
 ```{r}
 # output <- susie_ash_warmstart(X = data$X, y = data$y, L = 10, tol = 0.02)
@@ -134,6 +139,9 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
   calc_metrics <- function(mod, beta = data$beta, threshold = 0.9) {
     # Identify causal variables (non-zero sparse effects)
     causal <- beta != 0
+    
+    # Identify causal variables as non-zero sparse effects and infinitesimal effects with magnitude > 0.03
+    #causal <- (beta != 0) | (abs(theta) > 0.03)
     significant <- mod$pip > threshold
     
     # Calculate FDR
@@ -147,6 +155,25 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     
     # Calculate Coverage (proportion of cs with causal effect)
     coverage <- sum(which(causal) %in% susie_get_cs(mod, X = data$X, coverage = threshold)$cs) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
+    
+    # CS Based FDR and Recall
+  # cs_list <- susie_get_cs(mod, X = X, coverage = threshold)$cs
+  # cs_causal <- sapply(cs_list, function(cs) any(causal[cs]))
+  # 
+  # cs_fdr <- ifelse(length(cs_list) > 0, sum(!cs_causal) / length(cs_list), 0)
+  # cs_recall <- ifelse(sum(causal) > 0, sum(causal %in% unlist(cs_list)) / sum(causal), 0)
+  
+    
+     # CS Based FDR and Recall
+  # test.true <- which(causal)
+  # test.cs <- susie_get_cs(mod, X = X, coverage = threshold)$cs
+  # 
+  # TP <- sum(test.true %in% unlist(test.cs))
+  # FN <- length(test.true) - TP
+  # FP <- length(test.cs) - sum(sapply(test.cs, function(cs) any(cs %in% test.true)))
+  # 
+  # cs_fdr <- ifelse((TP + FP) > 0, FP / (TP + FP), 0)
+  # cs_recall <- ifelse((TP + FN) > 0, TP / (TP + FN), 0)
       
     
     # CS Based FDR and Recall
@@ -176,7 +203,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
     Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall),
     CS_Size = c(susie_metrics$cs_size, susie_ash_v1_metrics$cs_size, susie_ash_v2_metrics$cs_size),
-    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage)
+    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage)#,
     #CS_FDR = c(susie_metrics$cs_fdr, susie_ash_v1_metrics$cs_fdr, susie_ash_v2_metrics$cs_fdr),
     #CS_Recall = c(susie_metrics$cs_recall, susie_ash_v1_metrics$cs_recall, susie_ash_v2_metrics$cs_recall)
   )
@@ -197,8 +224,6 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, L = 10, t
     thetas = data$theta)
   )
 }
-
-#tmp <- method_and_score()
 ```
 
 
@@ -227,7 +252,7 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
     data <- generate_data(n, p, heritability, sparse_coverage, nonsparse_coverage)
     
     # Run methods and calculate metrics
-    results <- method_and_score(data$X, data$y, data$beta, L, threshold)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, L = L, threshold = threshold)
     
     # Store results + betas/thetas
     all_metrics[[i]] <- results$metrics
@@ -245,7 +270,7 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
     FDR = Reduce("+", lapply(all_metrics, function(x) x$FDR)) / num_simulations,
     Recall = Reduce("+", lapply(all_metrics, function(x) x$Recall)) / num_simulations,
     CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
-    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
+    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations#,
     #CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
     #CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations
   )
@@ -263,10 +288,19 @@ simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritab
   ))
 }
 
-# large_simulation <- simulate_and_score(num_simulations = 5, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
-# 
-# print(large_simulation$avg_metrics)
-# print(large_simulation$all_seeds)
+
+large_simulation <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.55, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+large_simulation2 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+large_simulation3 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 0.88, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+large_simulation4 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability = 1.00, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 10, threshold = 0.9)
+
+print(large_simulation$avg_metrics)
+print(large_simulation2$avg_metrics)
+print(large_simulation3$avg_metrics)
+print(large_simulation4$avg_metrics)
 
 
 ```
