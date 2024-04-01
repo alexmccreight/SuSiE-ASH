@@ -1,0 +1,243 @@
+---
+title: "Non-Sparse Simultion"
+output: html_document
+date: "2024-03-30"
+---
+
+```{r}
+generate_data <- function(n, p, heritability_sparse, heritability_nonsparse, sparse_coverage, nonsparse_coverage) {
+  
+  # Generate sparse effects (beta.true)
+  num_sparse <- round(p * sparse_coverage)
+  beta.true <- rep(0, p)
+  beta.true[sample(p, num_sparse)] <- rnorm(num_sparse, mean = 0, sd = 0.01)
+  
+  # Generate nonsparse effects (theta.true)
+  num_nonsparse <- round(p * nonsparse_coverage)
+  theta.true <- rep(0, p)
+  theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0, sd = 0.0001)
+  
+  # Create Design Matrix
+  X <- cbind(matrix(rnorm(n*p), nrow=n))
+  X <- scale(X, center=TRUE, scale=FALSE)
+  
+  # Scale sparse and nonsparse effects to achieve desired heritability
+  beta.true <- beta.true * sqrt(heritability_sparse / var(X %*% beta.true))
+  theta.true <- theta.true * sqrt(heritability_nonsparse / var(X %*% theta.true))
+  
+  # Create Residual Error
+  sigmasq_error <- (1 - heritability_sparse - heritability_nonsparse) * var(X %*% (beta.true + theta.true))
+  
+  # Create Outcomes
+  y <- X %*% matrix(beta.true, ncol=1) + X %*% matrix(theta.true, ncol=1) + rnorm(n, 0, sqrt(sigmasq_error))
+  y <- scale(y, center=TRUE, scale=FALSE)
+  
+  # Store Information
+  return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
+}
+
+data <- generate_data(n = 10000, p = 500, heritability_sparse = 0.45, heritability_nonsparse = 0.55,
+                      sparse_coverage = 0.01, nonsparse_coverage = 0.1)
+
+plot(data$beta, ylim = c(-1.5, 1.5), ylab = "beta")
+plot(data$theta, ylim = c(-1.5, 1.5), ylab = "theta")
+```
+
+```{r}
+# output <- susie_ash_warmstart(X = data$X, y = data$y, L = 10, tol = 0.02)
+# output2 <- susie(X = data$X, y = data$y, L = 10, tol = 0.001)
+# output3 <- susie_ash_warmstart_re(X = data$X, y = data$y, L = 10, tol = 0.02)
+# 
+# susie_get_cs(output, X = data$X)
+# 
+# 
+# beta.true.index = which(data$beta != 0)
+# theta.true.index = which(data$theta != 0)
+# 
+# # Color + Shape Differ for True Effects
+# color_vector <- rep("black", length(output$pip))
+# color_vector[beta.true.index] <- "red"
+# shape_vector <- rep(1, length(output$pip))
+# shape_vector[beta.true.index] <- 17
+# 
+# color_vector[theta.true.index] <- "blue"
+# shape_vector[theta.true.index] <- 16
+# 
+# output$pip %>% plot(., main = "SuSiE-ASH (v2) PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2)
+# output2$pip %>% plot(., main = "SuSiE PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2)
+# output3$pip %>% plot(., main = "SuSiE-ASH (v1) PIP", col = color_vector, pch = shape_vector) %>% abline(h = 0.9, col="black", lty = 2)
+```
+
+```{r}
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 50, threshold = 0.9) {
+  # Run various methods
+  susie_output <- susie(X = X, y = y, L = L)
+  susie_ash_output_v1 <- susie_ash_warmstart_re(X = X, y = y, L = L, warm_start = 5, tol = 0.03)
+  susie_ash_output_v2 <- susie_ash_warmstart(X = X, y = y, L = L, warm_start = 5, tol = 0.03)
+  
+  
+  calc_metrics <- function(mod, beta = data$beta, theta = data$theta, threshold = 0.9) {
+    # Identify causal variables as non-zero sparse effects and infinitesimal effects
+    causal <- (beta != 0) | (theta != 0)
+    significant <- mod$pip > threshold
+    
+    # Calculate FDR
+    fdr <- ifelse(sum(significant) > 0, sum(!causal & significant) / sum(significant), 0)
+    
+    # Calculate Recall
+    recall <- ifelse(sum(causal) > 0, sum(causal & significant) / sum(causal), 0)
+    
+    # Calculate Average CS Size
+    cs_size <- length(unlist(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
+    
+    # Calculate Coverage (proportion of cs with causal effect)
+    coverage <- sum(which(causal) %in% susie_get_cs(mod, X = data$X, coverage = threshold)$cs) / length(susie_get_cs(mod, X = data$X, coverage = threshold)$cs)
+    
+    # CS Based FDR and Recall
+  # cs_list <- susie_get_cs(mod, X = X, coverage = threshold)$cs
+  # cs_causal <- sapply(cs_list, function(cs) any(causal[cs]))
+  # 
+  # cs_fdr <- ifelse(length(cs_list) > 0, sum(!cs_causal) / length(cs_list), 0)
+  # cs_recall <- ifelse(sum(causal) > 0, sum(causal %in% unlist(cs_list)) / sum(causal), 0)
+  
+    
+     # CS Based FDR and Recall
+  # test.true <- which(causal)
+  # test.cs <- susie_get_cs(mod, X = X, coverage = threshold)$cs
+  # 
+  # TP <- sum(test.true %in% unlist(test.cs))
+  # FN <- length(test.true) - TP
+  # FP <- length(test.cs) - sum(sapply(test.cs, function(cs) any(cs %in% test.true)))
+  # 
+  # cs_fdr <- ifelse((TP + FP) > 0, FP / (TP + FP), 0)
+  # cs_recall <- ifelse((TP + FN) > 0, TP / (TP + FN), 0)
+      
+    
+    # CS Based FDR and Recall
+    # test.true <- which(data$X != 0)
+    # test.cs <- susie_get_cs(mod, X = data$X)$cs
+    # 
+    #   TP = sum(test.true %in% unlist(test.cs))
+    #   FN = length(test.true) - TP
+    #   FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in%test.true)!=0,T,F)}) %>% unlist(.) %>% sum(.) # FP based on CSs
+    #   FP = length(unlist(test.cs)) - sum(unlist(test.cs) %in% test.true) # FP based on elements
+    #   
+    #   cs_fdr = FP/(TP+FP)
+    #   cs_recall = TP/(TP+FN)
+
+    
+    return(list(fdr = fdr, recall = recall, cs_size = cs_size, coverage = coverage))#, cs_fdr = cs_fdr, cs_recall = cs_recall))
+  }
+  
+  # Calculate FDR and Recall for each method
+  susie_metrics <- calc_metrics(susie_output, beta, theta, threshold)
+  susie_ash_v1_metrics <- calc_metrics(susie_ash_output_v1, beta, theta, threshold)
+  susie_ash_v2_metrics <- calc_metrics(susie_ash_output_v2, beta, theta, threshold)
+  
+  #Create a data frame with the results
+  metrics_table  <- data.frame(
+    Model = c("SuSiE", "SuSiE-ASH v1", "SuSiE-ASH v2"),
+    FDR = c(susie_metrics$fdr, susie_ash_v1_metrics$fdr, susie_ash_v2_metrics$fdr),
+    Recall = c(susie_metrics$recall, susie_ash_v1_metrics$recall, susie_ash_v2_metrics$recall),
+    CS_Size = c(susie_metrics$cs_size, susie_ash_v1_metrics$cs_size, susie_ash_v2_metrics$cs_size),
+    Coverage = c(susie_metrics$coverage, susie_ash_v1_metrics$coverage, susie_ash_v2_metrics$coverage)#,
+    #CS_FDR = c(susie_metrics$cs_fdr, susie_ash_v1_metrics$cs_fdr, susie_ash_v2_metrics$cs_fdr),
+    #CS_Recall = c(susie_metrics$cs_recall, susie_ash_v1_metrics$cs_recall, susie_ash_v2_metrics$cs_recall)
+  )
+  
+  # metrics_table  <- data.frame(
+  #   Model = c("SuSiE", "SuSiE-ASH"),
+  #   FDR = c(susie_metrics$fdr, susie_ash_v2_metrics$fdr),
+  #   Recall = c(susie_metrics$recall, susie_ash_v2_metrics$recall)
+  # )
+  
+  # Return the results table
+  return(list(
+    metrics = metrics_table,
+    susie_output = susie_output,
+    susie_ash_output_v1 = susie_ash_output_v1,
+    susie_ash_output_v2 = susie_ash_output_v2,
+    betas = data$beta,
+    thetas = data$theta)
+  )
+}
+```
+
+```{r}
+simulate_and_score <- function(num_simulations = 10, n = 10000, p = 500, heritability_sparse = 0.25, heritability_nonsparse = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 50, threshold = 0.9) {
+  
+  # Initialize lists to store results
+  all_metrics <- list()
+  all_betas <- list()
+  all_thetas <- list()
+  all_susie_outputs <- list()
+  all_susie_ash_outputs_v1 <- list()
+  all_susie_ash_outputs_v2 <- list()
+  all_seeds <- numeric(num_simulations)
+  
+  for (i in 1:num_simulations) {
+    cat("Running simulation", i, "out of", num_simulations, "\n")
+    
+    # Set random seed for each simulation
+    seed <- abs(round(rnorm(1, mean = 0, sd = 1000)))
+    set.seed(seed)
+    
+    # Generate data
+    data <- generate_data(n, p, heritability_sparse, heritability_nonsparse, sparse_coverage, nonsparse_coverage)
+    
+    # Run methods and calculate metrics
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
+    
+    # Store results + betas/thetas
+    all_metrics[[i]] <- results$metrics
+    all_betas[[i]] <- data$beta
+    all_thetas[[i]] <- data$theta
+    all_susie_outputs[[i]] <- results$susie_output
+    all_susie_ash_outputs_v1[[i]] <- results$susie_ash_output_v1
+    all_susie_ash_outputs_v2[[i]] <- results$susie_ash_output_v2
+    all_seeds[i] <- seed
+  }
+  
+  # Calculate average metrics
+  avg_metrics <- data.frame(
+    Model = unique(all_metrics[[1]]$Model),
+    FDR = Reduce("+", lapply(all_metrics, function(x) x$FDR)) / num_simulations,
+    Recall = Reduce("+", lapply(all_metrics, function(x) x$Recall)) / num_simulations,
+    CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
+    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations#,
+    #CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
+    #CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations
+  )
+  
+  # Return all results
+  return(list(
+    avg_metrics = avg_metrics,
+    all_metrics = all_metrics,
+    all_betas = all_betas,
+    all_thetas = all_thetas,
+    all_susie_outputs = all_susie_outputs,
+    all_susie_ash_outputs_v1 = all_susie_ash_outputs_v1,
+    all_susie_ash_outputs_v2 = all_susie_ash_outputs_v2,
+    all_seeds = all_seeds
+  ))
+}
+
+#generate_data(n = 10000, p = 500, heritability_sparse = 0.25, heritability_nonsparse = 0.55, 
+#                       sparse_coverage = 0.01, nonsparse_coverage = 0.1)
+
+large_simulation_infinitesimal <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability_sparse = 0.45, heritability_nonsparse = 0.55, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 50, threshold = 0.9)
+
+large_simulation_infinitesimal2 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability_sparse = 0.25, heritability_nonsparse = 0.75, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 50, threshold = 0.9)
+
+large_simulation_infinitesimal3 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability_sparse = 0.12, heritability_nonsparse = 0.88, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 50, threshold = 0.9)
+
+large_simulation_infinitesimal4 <- simulate_and_score(num_simulations = 10, n = 10000, p = 500, heritability_sparse = 0, heritability_nonsparse = 1.00, sparse_coverage = 0.01, nonsparse_coverage = 0.1, L = 50, threshold = 0.9)
+
+print(large_simulation_infinitesimal$avg_metrics)
+print(large_simulation_infinitesimal2$avg_metrics)
+print(large_simulation_infinitesimal3$avg_metrics)
+print(large_simulation_infinitesimal4$avg_metrics)
+```
+
+
+
