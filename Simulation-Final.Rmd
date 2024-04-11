@@ -20,33 +20,33 @@ source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/SuSiE-AS
 ```
 
 ```{r}
-generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, ratio) {
+generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, theta_beta_ratio) {
   n <- nrow(X)
   p <- ncol(X)
   
   # Generate sparse effects (beta.true)
   beta.true <- rep(0, p)
-  beta.true[sample(p, sparse_effects)] <- rnorm(sparse_effects, mean = 0, sd = 0.5)
+  beta.true[sample(p, sparse_effects)] <- rnorm(sparse_effects, mean = 0, sd = 0.05)
   
   # Generate nonsparse effects (theta.true)
   num_nonsparse <- round(p * nonsparse_coverage)
   theta.true <- rep(0, p)
-  theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0, sd = 0.01)
+  theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0, sd = 0.0005)
   
   # Scale the genotype matrix
-  X <- scale(X, center = TRUE, scale = FALSE)
+  X <- scale(X, center = TRUE, scale = TRUE)
   
   # Calculate the variance of the sparse and nonsparse effects
   var_beta <- var(X %*% beta.true)
   var_theta <- var(X %*% theta.true)
   
   # Adjust the effect sizes based on the theta_beta_ratio
-  ratio_factor <- (ratio * var_beta) / var_theta
+  ratio_factor <- as.numeric((theta_beta_ratio * var_beta) / var_theta)
   theta.true <- theta.true * sqrt(ratio_factor)
-  
+
   # Recalculate the variance of the adjusted nonsparse effects
   var_theta_adjusted <- var(X %*% theta.true)
-  
+
   # Calculate the residual variance based on the total heritability
   sigmasq_error <- (var_beta + var_theta_adjusted) * (1 - total_heritability) / total_heritability
   
@@ -55,13 +55,16 @@ generate_data <- function(X, total_heritability, sparse_effects, nonsparse_cover
   y <- scale(y, center = TRUE, scale = FALSE)
   
   # Store Information
-  return(list(y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
+  return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
 }
+X20 = readRDS("X20")
+data <- generate_data(X = X20, total_heritability = 0.25, sparse_effects = 2, nonsparse_coverage = 0.1, theta_beta_ratio = 2)
 
-data <- generate_data(X = X[[20]], total_heritability = 0.25, sparse_effects = 3, nonsparse_coverage = 0.1, ratio = 0.5)
-
-plot(data$beta, ylim = c(-2.5,2.5), ylab = "beta")
+plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
 plot(data$theta, ylim = c(-1.5,1.5), ylab = "theta")
+
+min(abs(data$beta[data$beta!=0]))
+max(abs(data$theta))
 ```
 
 
@@ -74,8 +77,9 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
   
   calc_metrics_susie <- function(mod, beta = data$beta, theta = data$theta, threshold = 0.9) {
     # Identify causal variables (non-zero sparse/non-sparse effects)
-    all_causal <- c(which(beta != 0), which(theta != 0))
-    sparse_causal <- which(beta != 0)
+    #all_causal <- c(which(beta != 0), which(theta != 0))
+    #sparse_causal <- which(beta != 0)
+    all_causal <- c(which(beta != 0), which(abs(theta) > min(abs(data$beta[data$beta!=0]))))
     significant <- mod$pip > threshold
     
     # Calculate Average CS Size
