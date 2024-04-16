@@ -1,0 +1,192 @@
+---
+title: "Simulation Results"
+output: html_document
+---
+
+```{r, include = F}
+library(tidyverse)
+
+# large_simulation_1L10
+load("large_simulation_1.4to1_L10_0.01nonsparse.RData")
+
+large_simulation_1L10$avg_metrics$L <- 10
+large_simulation_1L10$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_1L10$avg_metrics$theta_beta_ratio <- 1.4
+
+# large_simulation_1L20
+load("large_simulation_1.4to1_L20_0.01nonsparse.RData")
+
+large_simulation_1L20$avg_metrics$L <- 20
+large_simulation_1L20$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_1L20$avg_metrics$theta_beta_ratio <- 1.4
+
+# large_simulation_1L30
+load("large_simulation_1.4to1_L30_0.01nonsparse.RData")
+
+large_simulation_1L30$avg_metrics$L <- 30
+large_simulation_1L30$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_1L30$avg_metrics$theta_beta_ratio <- 1.4
+
+# large_simulation_2L10
+load("large_simulation_3to1_L10_0.01nonsparse.RData")
+
+large_simulation_2L10$avg_metrics$L <- 10
+large_simulation_2L10$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_2L10$avg_metrics$theta_beta_ratio <- 3
+
+# large_simulation_2L20
+load("large_simulation_3to1_L20_0.01nonsparse.RData")
+
+large_simulation_2L20$avg_metrics$L <- 20
+large_simulation_2L20$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_2L20$avg_metrics$theta_beta_ratio <- 3
+
+# large_simulation_2L30
+load("large_simulation_3to1_L30_0.01nonsparse.RData")
+
+large_simulation_2L30$avg_metrics$L <- 30
+large_simulation_2L30$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_2L30$avg_metrics$theta_beta_ratio <- 3
+
+
+# large_simulation_3L10
+load("large_simulation_5to1_L10_0.01nonsparse.RData")
+
+large_simulation_3L10$avg_metrics$L <- 10
+large_simulation_3L10$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_3L10$avg_metrics$theta_beta_ratio <- 5
+
+# large_simulation_3L20
+load("large_simulation_5to1_L20_0.01nonsparse.RData")
+
+large_simulation_3L20$avg_metrics$L <- 20
+large_simulation_3L20$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_3L20$avg_metrics$theta_beta_ratio <- 5
+
+# large_simulation_3L30
+load("large_simulation_5to1_L30_0.01nonsparse.RData")
+
+large_simulation_3L30$avg_metrics$L <- 30
+large_simulation_3L30$avg_metrics$nonsparse_coverage <- 0.01
+large_simulation_3L30$avg_metrics$theta_beta_ratio <- 5
+
+##################################################################
+
+# large_simulation_4L10
+load("large_simulation_1.4to1_L10_0.05nonsparse.RData")
+
+large_simulation_4L10$avg_metrics$L <- 10
+large_simulation_4L10$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_4L10$avg_metrics$theta_beta_ratio <- 1.4
+
+# large_simulation_4L20
+load("large_simulation_1.4to1_L20_0.05nonsparse.RData")
+
+large_simulation_4L20$avg_metrics$L <- 20
+large_simulation_4L20$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_4L20$avg_metrics$theta_beta_ratio <- 1.4
+
+# large_simulation_4L30
+load("large_simulation_1.4to1_L30_0.05nonsparse.RData")
+
+large_simulation_4L30$avg_metrics$L <- 30
+large_simulation_4L30$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_4L30$avg_metrics$theta_beta_ratio <- 1.4
+
+# large_simulation_5L10
+load("large_simulation_3to1_L10_0.05nonsparse.RData")
+
+large_simulation_5L10$avg_metrics$L <- 10
+large_simulation_5L10$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_5L10$avg_metrics$theta_beta_ratio <- 3
+
+# large_simulation_5L20
+load("large_simulation_3to1_L20_0.05nonsparse.RData")
+
+large_simulation_5L20$avg_metrics$L <- 20
+large_simulation_5L20$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_5L20$avg_metrics$theta_beta_ratio <- 3
+
+# large_simulation_5L30
+load("large_simulation_3to1_L30_0.05nonsparse.RData")
+
+large_simulation_5L30$avg_metrics$L <- 30
+large_simulation_5L30$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_5L30$avg_metrics$theta_beta_ratio <- 3
+
+
+# large_simulation_6L10
+load("large_simulation_5to1_L10_0.05nonsparse.RData")
+
+large_simulation_6L10$avg_metrics$L <- 10
+large_simulation_6L10$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_6L10$avg_metrics$theta_beta_ratio <- 5
+
+# large_simulation_6L20
+load("large_simulation_5to1_L20_0.05nonsparse.RData")
+
+large_simulation_6L20$avg_metrics$L <- 20
+large_simulation_6L20$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_6L20$avg_metrics$theta_beta_ratio <- 5
+
+# large_simulation_6L30
+load("large_simulation_5to1_L30_0.05nonsparse.RData")
+
+large_simulation_6L30$avg_metrics$L <- 30
+large_simulation_6L30$avg_metrics$nonsparse_coverage <- 0.05
+large_simulation_6L30$avg_metrics$theta_beta_ratio <- 5
+
+combined <- rbind(large_simulation_1L10$avg_metrics,
+                  large_simulation_1L20$avg_metrics,
+                  large_simulation_1L30$avg_metrics,
+                  large_simulation_2L10$avg_metrics,
+                  large_simulation_2L20$avg_metrics,
+                  large_simulation_2L30$avg_metrics,
+                  large_simulation_3L10$avg_metrics,
+                  large_simulation_3L20$avg_metrics,
+                  large_simulation_3L30$avg_metrics,
+                  large_simulation_4L10$avg_metrics,
+                  large_simulation_4L20$avg_metrics,
+                  large_simulation_4L30$avg_metrics,
+                  large_simulation_5L10$avg_metrics,
+                  large_simulation_5L20$avg_metrics,
+                  large_simulation_5L30$avg_metrics,
+                  large_simulation_6L10$avg_metrics,
+                  large_simulation_6L20$avg_metrics,
+                  large_simulation_6L30$avg_metrics)
+                  
+```
+
+# 1.4:1 Theta to Beta Ratio
+
+```{r, warning = F, echo = F}
+combined %>% 
+  filter(theta_beta_ratio == 1.4) %>% 
+  mutate(across(where(is.numeric), round, digits = 3)) %>% 
+  knitr::kable()
+```
+
+
+# 3:1 Theta to Beta Ratio
+
+
+```{r, warning = F, echo = F}
+combined %>% 
+  filter(theta_beta_ratio == 3) %>% 
+  mutate(across(where(is.numeric), round, digits = 3)) %>% 
+  knitr::kable()
+```
+
+
+# 5:1 Theta to Beta Ratio
+
+
+```{r, warning = F, echo = F}
+# Theta to Beta 5 Ratio
+combined %>% 
+  filter(theta_beta_ratio == 5) %>% 
+  mutate(across(where(is.numeric), round, digits = 3)) %>% 
+  knitr::kable()
+
+```
+
