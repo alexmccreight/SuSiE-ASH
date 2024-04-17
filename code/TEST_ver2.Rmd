@@ -1,0 +1,240 @@
+---
+title: "TEST_ver2"
+output: html_document
+date: "2024-04-16"
+---
+```{r setup, include=FALSE}
+library(dplyr)
+ls.susieR = list.files("susieR_modified")
+for(i in ls.susieR){eval(parse(text=paste0("source('susieR_modified/",i,"')")))}
+
+ls.mrashR = list.files("mrash_R")
+for(i in ls.mrashR){eval(parse(text=paste0("source('mrash_R/",i,"')")))}
+
+
+# library(mr.ash.alpha)
+devtools::load_all("../submodules/susieR")
+devtools::load_all("../submodules/mr.ash.alpha")
+source("../code/SuSiE-ASH-Versions/susie-ash-warmstart-v2.R")
+
+X = readRDS("../X20")
+X <- scale(X, center = TRUE, scale = FALSE)
+
+```
+
+
+# Original Version: total_heritability = V(Xb) + V(Xtheta)
+```{r}
+
+generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, ratio) {
+  n <- nrow(X)
+  p <- ncol(X)
+  # Generate sparse effects (beta.true)
+  beta.true <- rep(0, p)
+  beta.true[sample(p, sparse_effects)] <- rnorm(sparse_effects, mean = 0, sd = 0.5)
+  # Generate nonsparse effects (theta.true)
+  num_nonsparse <- round(p * nonsparse_coverage)
+  theta.true <- rep(0, p)
+  theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0, sd = 0.01)
+  # Scale the genotype matrix
+  # X <- scale(X, center = TRUE, scale = FALSE) VVVVVVVVVV
+  # Calculate the variance of the sparse and nonsparse effects
+  var_beta <- var(X %*% beta.true)
+  var_theta <- var(X %*% theta.true)
+  # Adjust the effect sizes based on the theta_beta_ratio
+  ratio_factor <- as.numeric((ratio * var_beta) / var_theta) # VVVVVVVVV Warning: Recycling array of length 1 in vector-array arithmetic is deprecated.  Use c() or as.vector() instead.
+  theta.true <- theta.true * sqrt(ratio_factor)
+  # Recalculate the variance of the adjusted nonsparse effects
+  var_theta_adjusted <- var(X %*% theta.true)
+  # Calculate the residual variance based on the total heritability
+  sigmasq_error <- (var_beta + var_theta_adjusted) * (1 - total_heritability) / total_heritability
+  # Create Outcomes
+  y <- X %*% matrix(beta.true, ncol = 1) + X %*% matrix(theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
+  y_oracle <- y- X %*% matrix(theta.true, ncol = 1)
+  
+  plot(theta.true+beta.true)
+  # y <- scale(y, center = TRUE, scale = FALSE) VVVVVVVVVV
+  # Store Information
+  return(list(y = y,X = X, error = sigmasq_error, beta = beta.true, theta = theta.true, y_oracle = y_oracle))
+}
+```
+
+
+# New Version: Redefine total heritability as V(Xb)
+
+```{r}
+generate_data_new <- function(X, total_heritability, sparse_effects, nonsparse_coverage, ratio) {
+  
+  n <- nrow(X)
+  p <- ncol(X)
+  
+  # sig2.beta = 0.5^2
+  # 
+  # # Generate sparse effects (beta.true)
+  # beta.true <- rep(0, p)
+  # beta.true[sample(p, sparse_effects, replace = T)] <- rnorm(sparse_effects, mean = 0, sd = sqrt(sig2.beta))
+  # 
+  other_proportion <- nonsparse_coverage* c(0.5,0.45,0.05)
+  proportion <- c(1-nonsparse_coverage, other_proportion); sum(proportion)
+  mixture_sd = c(0.0000, 0.0001,0.01,0.5)
+  idx <- sample( 1:4, 
+          prob = proportion,
+          replace=TRUE,
+          size=p)
+  
+  beta.theta.true = c()
+  for(i in 1: p){
+    
+    tt <- rnorm( 1, sd= mixture_sd [idx[i]])
+    beta.theta.true  <- c(beta.theta.true, tt)
+  
+  }
+  
+  plot(beta.theta.true)
+ 
+  var_beta <- var(X %*% beta.theta.true)
+  # var_theta <- var(X %*% theta.true)
+  # var_theta/var_beta
+  # Adjust the effect sizes based on the theta_beta_ratio
+  # ratio_factor <- as.numeric(ratio * var_beta / var_theta); ratio_factor
+  # mixture_sd_adj <- sqrt(ratio_factor) *  (mixture_sd )
+  
+  # theta.true.adj = c()
+  # for(i in 1: p){
+  #   
+  #   tt <- rnorm( 1, sd= mixture_sd_adj [idx[i]])
+  #   theta.true.adj  <- c(theta.true.adj, tt)
+  # 
+  # }
+  # 
+  # var_theta.adj <- var(X %*% theta.true.adj)
+  # 
+  
+  # print(var_theta.adj/var_beta)
+  
+  
+  # # coverage
+  # nonsparse_coverage = min( ratio * sparse_effects/k/p, 1)
+  # # Generate nonsparse effects (theta.true)
+  # num_nonsparse <- round(p * nonsparse_coverage)
+  # theta.true <- rep(0, p)
+  # theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0, sd = sqrt(sig2.theta))
+  # # Scale the genotype matrix
+  # # X <- scale(X, center = TRUE, scale = FALSE) VVVVVVVVVV
+  # # Calculate the variance of the sparse and nonsparse effects
+  # var_beta <- var(X %*% beta.true)
+  # var_theta <- var(X %*% theta.true)
+  # var_theta/var_beta
+  # # Adjust the effect sizes based on the theta_beta_ratio
+  # ratio_factor <- as.numeric((ratio * var_beta) / var_theta) # VVVVVVVVV Warning: Recycling array of length 1 in vector-array arithmetic is deprecated.  Use c() or as.vector() instead.
+  # theta.true <- theta.true * sqrt(ratio_factor)
+  #
+  # # Recalculate the variance of the adjusted nonsparse effects
+  # var_theta_adjusted <- var(X %*% theta.true)
+  #
+  # # Calculate the residual variance based on the total heritability
+  # sigmasq_error <- (var_beta) * (1 - total_heritability) / total_heritability
+  sigmasq_error <- (var_beta) * (1 - total_heritability) / total_heritability 
+  # Create Outcomes
+  # y <- X %*% matrix(beta.true, ncol = 1) + X %*% matrix(theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
+  y <- X %*% matrix(beta.theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
+  # y_oracle <- y- X %*% matrix(theta.true, ncol = 1)
+  
+  theta.true = idx %in% c(2,3)
+  beta.true = idx %in% c(4)
+  #y_oracle <- X %*% matrix(beta.true, ncol =1)
+  # y <- scale(y, center = TRUE, scale = FALSE) VVVVVVVVVV
+  # Store Information
+  return(list(y = y,X = X, error = sigmasq_error, beta = beta.true, theta = theta.true))
+}
+```
+
+
+
+# Scenarios
+```{r}
+Scenarios = expand.grid( total_heritability = c(0.25), sparse_effects = 3, nonsparse_coverage = c(0.01), ratio = c(1.4,3,5))
+Scenarios
+```
+
+
+
+# Performance
+```{r, include=F}
+metrics <- function(res, true, true.beta.def = "not.combined"){
+                if(true.beta.def == "not.combined"){
+                  tr = which(true$beta!=0); tr.l = length(tr)
+                  res.s = res$sets$cs; res.l = length(res.s)
+                  TP = sum(tr %in% unlist(res.s))
+                  FN = tr.l - TP
+                  FP = res.l - (lapply(1:res.l, function(cs.l){ifelse(sum(res.s[[cs.l]] %in% tr)!=0,T,F)}) %>% unlist(.) %>% sum(.))
+                  results =c(TP/(TP+FN), FP/(TP+FP))
+                  names(results) = c("Power", "FDR")
+                } else {
+                #tr = unique(c(which(true$beta!=0), which(abs(true$theta) > min(abs(true$beta[which(true$beta!=0)]))))); tr.l = length(tr)
+                tr = unique(c(which(true$beta!=0), which(true$theta!=0))); tr.l = length(tr)
+                res.s = res$sets$cs; res.l = length(res.s)
+                TP = sum(tr %in% unlist(res.s))
+                FN = tr.l - TP
+                FP = res.l - (lapply(1:res.l, function(cs.l){ifelse(sum(res.s[[cs.l]] %in% tr)!=0,T,F)}) %>% unlist(.) %>% sum(.))
+                results =c(TP/(TP+FN), FP/(TP+FP))
+                names(results) = c("Power", "FDR")
+                }
+                return(results)
+}
+
+
+```
+
+```{r}
+
+for(s in 1:nrow(Scenarios)){
+  
+  total_heritability = Scenarios[s, "total_heritability"]; sparse_effects = Scenarios[s, "sparse_effects"];
+  nonsparse_coverage = Scenarios[s,"nonsparse_coverage"]; ratio = Scenarios[s, "ratio"];
+  
+  # Data Generation
+  data.ori.s <- generate_data(X = X, total_heritability, sparse_effects, nonsparse_coverage, ratio)
+  data.new.s <- generate_data_new(X = X, total_heritability, sparse_effects, nonsparse_coverage, ratio)
+  
+  # SuSiE vs SuSiE-ASH Original y
+  SuSiE.ori <- susie(X = data.ori.s$X, y = data.ori.s$y, L = 10, intercept = F, standardize = F)
+  SuSiE.ASH.ori <- susie_ash_warmstart(X = data.ori.s$X, y = data.ori.s$y, L = 10, intercept = F, standardize = F, tol = 1e-2, max_iter = 10)
+  
+  # SuSiE vs SuSiE-ASH New y
+  SuSiE.new <- susie(X = data.new.s$X, y = data.new.s$y, L = 10, intercept = F, standardize = F)
+  SuSiE.ASH.new <- susie_ash_warmstart(X = data.new.s$X, y = data.new.s$y, L = 10, intercept = F, standardize = F, tol = 1e-2, max_iter = 10)
+  
+  # SuSiE vs SuSiE-ASH original y_oracle
+  SuSiE.ori.oracle <- susie(X = data.ori.s$X, y = data.ori.s$y_oracle, L = 10, intercept = F, standardize = F)
+  SuSiE.ASH.ori.oracle <- susie_ash_warmstart(X = data.ori.s$X, y = data.ori.s$y_oracle, L = 10, intercept = F, standardize = F, tol = 1e-2, max_iter = 10)
+  
+  
+  print(paste0("Scenario: ", s))
+  print("SuSiE vs SuSiE-ASH Original Code (Combined): ")
+  print(metrics(SuSiE.ori, data.ori.s, true.beta.def = "Combined"))
+  print(metrics(SuSiE.ASH.ori, data.ori.s, true.beta.def = "Combined"))
+  cat("\n")
+  print("SuSiE vs SuSiE-ASH Original Code (Not Combined): ")
+  print(metrics(SuSiE.ori, data.ori.s))
+  print(metrics(SuSiE.ASH.ori, data.ori.s))
+  cat("\n")
+  print("SuSiE vs SuSiE-ASH New Code (Combined): ")
+  print(metrics(SuSiE.new, data.new.s, true.beta.def = "Combined"))
+  print(metrics(SuSiE.ASH.new, data.new.s, true.beta.def = "Combined"))
+  cat("\n")
+  print("SuSiE vs SuSiE-ASH New Code (Not Combined): ")
+  print(metrics(SuSiE.new, data.new.s))
+  print(metrics(SuSiE.ASH.new, data.new.s))
+  cat("\n")
+  print("SuSiE vs SuSiE-ASH Original Code at Oracle: ")
+  print(metrics(SuSiE.ori.oracle, data.ori.s))
+  print(metrics(SuSiE.ASH.ori.oracle, data.ori.s))
+  # print(metrics(SuSiE.new.oracle, data.new.s, true.beta.def = "Com"))
+}
+
+```
+
+
+
+

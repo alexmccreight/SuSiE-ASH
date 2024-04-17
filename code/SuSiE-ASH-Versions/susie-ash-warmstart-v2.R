@@ -450,13 +450,14 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
     }
 
     # Run Mr. ASH on Residuals
-    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals_mrash, sa2 = (2^(0.05 * (1:21 - 1)) - 1)^2) # the R code recommends this
+    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals_mrash, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
+                                          #(2^(0.05 * (1:21 - 1)) - 1)^2) # the R code recommends this
     #sa2 = c(0, 0.025^2, 0.5^2,1)) # we initially had this
     theta = mrash_output$beta
     elbo[i - warm_start + 1] = -(mrash_output$varobj)
     y_residuals_mrash = y_residuals_mrash - X %*% theta
 
-    print((elbo[i - warm_start + 1] - elbo[i - warm_start]))
+    print(c(elbo[i - warm_start + 1], (elbo[i - warm_start + 1] - elbo[i - warm_start])))
 
       #Convergence Criterion
       if (i > warm_start + 1 && (elbo[i - warm_start + 1] - elbo[i - warm_start]) < tol) {
@@ -489,7 +490,7 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
   s$niter = i
 
   if (is.null(s$converged)) {
-    warning(paste("IBSS algorithm did not converge in",max_iter,"iterations!"))
+    warning(paste("Mr.ASH algorithm did not converge in",max_iter,"iterations!"))
     s$converged = FALSE
   }
 
@@ -515,7 +516,7 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
     #                       min_abs_corr = min_abs_corr,
     #                       # median_abs_corr = median_abs_corr, ## muted
     #                       n_purity = n_purity)
-    s$sets = susie_get_cs_attainable(s, coverage = coverage, max_entropy = log(20))
+    s$sets = susie_get_cs_attainable(s, coverage = 0.95, ethres = 20)
     s$pip = susie_get_pip(s,prune_by_cs = FALSE,prior_tol = prior_tol)
   }
 

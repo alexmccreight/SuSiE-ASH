@@ -62,10 +62,17 @@ generate_data <- function(n, p, total_heritability, sparse_coverage, nonsparse_c
   return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
 }
 
-data <- generate_data(n = 10000, p = 500, total_heritability = 0.25, sparse_coverage = 0.01, nonsparse_coverage = 0.1, ratio = 0.5)
+data <- generate_data(n = 10000, p = 500, total_heritability = 0.25, sparse_coverage = 0.01, nonsparse_coverage = 0.01, ratio = 0.0005)
 
 plot(data$beta, ylim = c(-1.5,1.5), ylab = "beta")
 plot(data$theta, ylim = c(-1.5,1.5), ylab = "theta")
+
+var(data$X%*%data$theta) / var(data$X%*%data$beta)
+data$error
+
+tmp <- susie(X = data$X, y = data$y, L = 10)
+
+tmp$sets
 ```
 
 ```{r}
