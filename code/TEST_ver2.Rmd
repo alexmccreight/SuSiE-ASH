@@ -63,17 +63,11 @@ generate_data <- function(X, total_heritability, sparse_effects, nonsparse_cover
 # New Version: Redefine total heritability as V(Xb)
 
 ```{r}
-generate_data_new <- function(X, total_heritability, sparse_effects, nonsparse_coverage, ratio) {
+generate_data_new <- function(X, total_heritability, sparse_effects, nonsparse_coverage, theta_beta_ratio) {
   
   n <- nrow(X)
   p <- ncol(X)
   
-  # sig2.beta = 0.5^2
-  # 
-  # # Generate sparse effects (beta.true)
-  # beta.true <- rep(0, p)
-  # beta.true[sample(p, sparse_effects, replace = T)] <- rnorm(sparse_effects, mean = 0, sd = sqrt(sig2.beta))
-  # 
   other_proportion <- nonsparse_coverage* c(0.5,0.45,0.05)
   proportion <- c(1-nonsparse_coverage, other_proportion); sum(proportion)
   mixture_sd = c(0.0000, 0.0001,0.01,0.5)
@@ -91,59 +85,25 @@ generate_data_new <- function(X, total_heritability, sparse_effects, nonsparse_c
   }
   
   plot(beta.theta.true)
- 
+  
+  theta.true = idx %in% c(2,3)
+  beta.true = idx %in% c(4)
+  
+  var_beta <- var(X %*% beta.true)
+  var_theta <- var(X %*% theta.true)
+  
+  # Adjust heritability ratio (theta:beta)
+  ratio_factor <- as.numeric(sqrt((theta_beta_ratio * var_beta) / var_theta))
+  beta.theta.true[idx %in% c(2, 3)] <- beta.theta.true[idx %in% c(2, 3)] * ratio_factor
   var_beta <- var(X %*% beta.theta.true)
-  # var_theta <- var(X %*% theta.true)
-  # var_theta/var_beta
-  # Adjust the effect sizes based on the theta_beta_ratio
-  # ratio_factor <- as.numeric(ratio * var_beta / var_theta); ratio_factor
-  # mixture_sd_adj <- sqrt(ratio_factor) *  (mixture_sd )
-  
-  # theta.true.adj = c()
-  # for(i in 1: p){
-  #   
-  #   tt <- rnorm( 1, sd= mixture_sd_adj [idx[i]])
-  #   theta.true.adj  <- c(theta.true.adj, tt)
-  # 
-  # }
-  # 
-  # var_theta.adj <- var(X %*% theta.true.adj)
-  # 
-  
-  # print(var_theta.adj/var_beta)
-  
-  
-  # # coverage
-  # nonsparse_coverage = min( ratio * sparse_effects/k/p, 1)
-  # # Generate nonsparse effects (theta.true)
-  # num_nonsparse <- round(p * nonsparse_coverage)
-  # theta.true <- rep(0, p)
-  # theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0, sd = sqrt(sig2.theta))
-  # # Scale the genotype matrix
-  # # X <- scale(X, center = TRUE, scale = FALSE) VVVVVVVVVV
-  # # Calculate the variance of the sparse and nonsparse effects
-  # var_beta <- var(X %*% beta.true)
-  # var_theta <- var(X %*% theta.true)
-  # var_theta/var_beta
-  # # Adjust the effect sizes based on the theta_beta_ratio
-  # ratio_factor <- as.numeric((ratio * var_beta) / var_theta) # VVVVVVVVV Warning: Recycling array of length 1 in vector-array arithmetic is deprecated.  Use c() or as.vector() instead.
-  # theta.true <- theta.true * sqrt(ratio_factor)
-  #
-  # # Recalculate the variance of the adjusted nonsparse effects
-  # var_theta_adjusted <- var(X %*% theta.true)
-  #
-  # # Calculate the residual variance based on the total heritability
-  # sigmasq_error <- (var_beta) * (1 - total_heritability) / total_heritability
+
   sigmasq_error <- (var_beta) * (1 - total_heritability) / total_heritability 
   # Create Outcomes
   # y <- X %*% matrix(beta.true, ncol = 1) + X %*% matrix(theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
   y <- X %*% matrix(beta.theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
   # y_oracle <- y- X %*% matrix(theta.true, ncol = 1)
   
-  theta.true = idx %in% c(2,3)
-  beta.true = idx %in% c(4)
-  #y_oracle <- X %*% matrix(beta.true, ncol =1)
-  # y <- scale(y, center = TRUE, scale = FALSE) VVVVVVVVVV
+  
   # Store Information
   return(list(y = y,X = X, error = sigmasq_error, beta = beta.true, theta = theta.true))
 }
