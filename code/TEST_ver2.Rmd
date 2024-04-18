@@ -50,7 +50,7 @@ generate_data <- function(X, total_heritability, sparse_effects, nonsparse_cover
   sigmasq_error <- (var_beta + var_theta_adjusted) * (1 - total_heritability) / total_heritability
   # Create Outcomes
   y <- X %*% matrix(beta.true, ncol = 1) + X %*% matrix(theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
-  y_oracle <- y- X %*% matrix(theta.true, ncol = 1)
+  y_oracle <- y- X %*% matrix(beta.true, ncol = 1)
   
   plot(theta.true+beta.true)
   # y <- scale(y, center = TRUE, scale = FALSE) VVVVVVVVVV
@@ -113,7 +113,8 @@ generate_data_new <- function(X, total_heritability, sparse_effects, nonsparse_c
 
 # Scenarios
 ```{r}
-Scenarios = expand.grid( total_heritability = c(0.25), sparse_effects = 3, nonsparse_coverage = c(0.01), ratio = c(1.4,3,5))
+#Scenarios = expand.grid( total_heritability = c(0.25), sparse_effects = 3, nonsparse_coverage = c(0.01), ratio = c(1.4,3,5))
+Scenarios = expand.grid( total_heritability = c(0.25), sparse_effects = 3, nonsparse_coverage = c(0.01), ratio = c(1.4))
 Scenarios
 ```
 
@@ -147,6 +148,12 @@ metrics <- function(res, true, true.beta.def = "not.combined"){
 ```
 
 ```{r}
+results <- data.frame(Scenario = character(),
+                      Method = character(),
+                      Type = character(),
+                      Power = numeric(),
+                      FDR = numeric(),
+                      stringsAsFactors = FALSE)
 
 for(s in 1:nrow(Scenarios)){
   
@@ -169,29 +176,65 @@ for(s in 1:nrow(Scenarios)){
   SuSiE.ori.oracle <- susie(X = data.ori.s$X, y = data.ori.s$y_oracle, L = 10, intercept = F, standardize = F)
   SuSiE.ASH.ori.oracle <- susie_ash_warmstart(X = data.ori.s$X, y = data.ori.s$y_oracle, L = 10, intercept = F, standardize = F, tol = 1e-2, max_iter = 10)
   
-  
-  print(paste0("Scenario: ", s))
-  print("SuSiE vs SuSiE-ASH Original Code (Combined): ")
-  print(metrics(SuSiE.ori, data.ori.s, true.beta.def = "Combined"))
-  print(metrics(SuSiE.ASH.ori, data.ori.s, true.beta.def = "Combined"))
-  cat("\n")
-  print("SuSiE vs SuSiE-ASH Original Code (Not Combined): ")
-  print(metrics(SuSiE.ori, data.ori.s))
-  print(metrics(SuSiE.ASH.ori, data.ori.s))
-  cat("\n")
-  print("SuSiE vs SuSiE-ASH New Code (Combined): ")
-  print(metrics(SuSiE.new, data.new.s, true.beta.def = "Combined"))
-  print(metrics(SuSiE.ASH.new, data.new.s, true.beta.def = "Combined"))
-  cat("\n")
-  print("SuSiE vs SuSiE-ASH New Code (Not Combined): ")
-  print(metrics(SuSiE.new, data.new.s))
-  print(metrics(SuSiE.ASH.new, data.new.s))
-  cat("\n")
-  print("SuSiE vs SuSiE-ASH Original Code at Oracle: ")
-  print(metrics(SuSiE.ori.oracle, data.ori.s))
-  print(metrics(SuSiE.ASH.ori.oracle, data.ori.s))
-  # print(metrics(SuSiE.new.oracle, data.new.s, true.beta.def = "Com"))
+  results <- rbind(results,
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE",
+                              Type = "Original_Combined",
+                              Power = metrics(SuSiE.ori, data.ori.s, true.beta.def = "Combined")["Power"],
+                              FDR = metrics(SuSiE.ori, data.ori.s, true.beta.def = "Combined")["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE-ASH",
+                              Type = "Original_Combined",
+                              Power = metrics(SuSiE.ASH.ori, data.ori.s, true.beta.def = "Combined")["Power"],
+                              FDR = metrics(SuSiE.ASH.ori, data.ori.s, true.beta.def = "Combined")["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE",
+                              Type = "Original_Not_Combined",
+                              Power = metrics(SuSiE.ori, data.ori.s)["Power"],
+                              FDR = metrics(SuSiE.ori, data.ori.s)["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE-ASH",
+                              Type = "Original_Not_Combined",
+                              Power = metrics(SuSiE.ASH.ori, data.ori.s)["Power"],
+                              FDR = metrics(SuSiE.ASH.ori, data.ori.s)["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE",
+                              Type = "New_Combined",
+                              Power = metrics(SuSiE.new, data.new.s, true.beta.def = "Combined")["Power"],
+                              FDR = metrics(SuSiE.new, data.new.s, true.beta.def = "Combined")["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE-ASH",
+                              Type = "New_Combined",
+                              Power = metrics(SuSiE.ASH.new, data.new.s, true.beta.def = "Combined")["Power"],
+                              FDR = metrics(SuSiE.ASH.new, data.new.s, true.beta.def = "Combined")["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE",
+                              Type = "New_Not_Combined",
+                              Power = metrics(SuSiE.new, data.new.s)["Power"],
+                              FDR = metrics(SuSiE.new, data.new.s)["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE-ASH",
+                              Type = "New_Not_Combined",
+                              Power = metrics(SuSiE.ASH.new, data.new.s)["Power"],
+                              FDR = metrics(SuSiE.ASH.new, data.new.s)["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE",
+                              Type = "Original_Oracle",
+                              Power = metrics(SuSiE.ori.oracle, data.ori.s)["Power"],
+                              FDR = metrics(SuSiE.ori.oracle, data.ori.s)["FDR"]),
+                   data.frame(Scenario = paste0("Scenario_", s),
+                              Method = "SuSiE-ASH",
+                              Type = "Original_Oracle",
+                              Power = metrics(SuSiE.ASH.ori.oracle, data.ori.s)["Power"],
+                              FDR = metrics(SuSiE.ASH.ori.oracle, data.ori.s)["FDR"]))
 }
+
+rownames(results) <- NULL
+
+results <- results %>% 
+  mutate_if(is.numeric, round, 3)
+
+results
 
 ```
 
