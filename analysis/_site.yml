@@ -9,7 +9,7 @@ navbar:
     href: about.html
   - text: License
     href: license.html
-  - text: Simulation-Results
+  - text: "Simulation Results"
     href: Simulation-Results.html
   right:
   - icon: fab fa-github
