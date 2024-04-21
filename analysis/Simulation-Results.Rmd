@@ -3,46 +3,51 @@ title: "Simulation Results"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH")
+```
+
 ```{r, include = F}
 library(tidyverse)
+library(ROCR)
 
 # large_simulation_1L10
-load("large_simulation_1.4to1_L10_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_1.4to1_L10_0.01nonsparse.RData")
 
 large_simulation_1L10$avg_metrics$L <- 10
 large_simulation_1L10$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_1L10$avg_metrics$theta_beta_ratio <- 1.4
 
 # large_simulation_1L20
-load("large_simulation_1.4to1_L20_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_1.4to1_L20_0.01nonsparse.RData")
 
 large_simulation_1L20$avg_metrics$L <- 20
 large_simulation_1L20$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_1L20$avg_metrics$theta_beta_ratio <- 1.4
 
 # large_simulation_1L30
-load("large_simulation_1.4to1_L30_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_1.4to1_L30_0.01nonsparse.RData")
 
 large_simulation_1L30$avg_metrics$L <- 30
 large_simulation_1L30$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_1L30$avg_metrics$theta_beta_ratio <- 1.4
 
 # large_simulation_2L10
-load("large_simulation_3to1_L10_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_3to1_L10_0.01nonsparse.RData")
 
 large_simulation_2L10$avg_metrics$L <- 10
 large_simulation_2L10$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_2L10$avg_metrics$theta_beta_ratio <- 3
 
 # large_simulation_2L20
-load("large_simulation_3to1_L20_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_3to1_L20_0.01nonsparse.RData")
 
 large_simulation_2L20$avg_metrics$L <- 20
 large_simulation_2L20$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_2L20$avg_metrics$theta_beta_ratio <- 3
 
 # large_simulation_2L30
-load("large_simulation_3to1_L30_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_3to1_L30_0.01nonsparse.RData")
 
 large_simulation_2L30$avg_metrics$L <- 30
 large_simulation_2L30$avg_metrics$nonsparse_coverage <- 0.01
@@ -50,87 +55,84 @@ large_simulation_2L30$avg_metrics$theta_beta_ratio <- 3
 
 
 # large_simulation_3L10
-load("large_simulation_5to1_L10_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_5to1_L10_0.01nonsparse.RData")
 
 large_simulation_3L10$avg_metrics$L <- 10
 large_simulation_3L10$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_3L10$avg_metrics$theta_beta_ratio <- 5
 
 # large_simulation_3L20
-load("large_simulation_5to1_L20_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_5to1_L20_0.01nonsparse.RData")
 
 large_simulation_3L20$avg_metrics$L <- 20
 large_simulation_3L20$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_3L20$avg_metrics$theta_beta_ratio <- 5
 
 # large_simulation_3L30
-load("large_simulation_5to1_L30_0.01nonsparse.RData")
+load("data/SimulationData/large_simulation_5to1_L30_0.01nonsparse.RData")
 
 large_simulation_3L30$avg_metrics$L <- 30
 large_simulation_3L30$avg_metrics$nonsparse_coverage <- 0.01
 large_simulation_3L30$avg_metrics$theta_beta_ratio <- 5
 
-##################################################################
-
 # large_simulation_4L10
-load("large_simulation_1.4to1_L10_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_1.4to1_L10_0.05nonsparse.RData")
 
 large_simulation_4L10$avg_metrics$L <- 10
 large_simulation_4L10$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_4L10$avg_metrics$theta_beta_ratio <- 1.4
 
 # large_simulation_4L20
-load("large_simulation_1.4to1_L20_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_1.4to1_L20_0.05nonsparse.RData")
 
 large_simulation_4L20$avg_metrics$L <- 20
 large_simulation_4L20$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_4L20$avg_metrics$theta_beta_ratio <- 1.4
 
 # large_simulation_4L30
-load("large_simulation_1.4to1_L30_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_1.4to1_L30_0.05nonsparse.RData")
 
 large_simulation_4L30$avg_metrics$L <- 30
 large_simulation_4L30$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_4L30$avg_metrics$theta_beta_ratio <- 1.4
 
 # large_simulation_5L10
-load("large_simulation_3to1_L10_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_3to1_L10_0.05nonsparse.RData")
 
 large_simulation_5L10$avg_metrics$L <- 10
 large_simulation_5L10$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_5L10$avg_metrics$theta_beta_ratio <- 3
 
 # large_simulation_5L20
-load("large_simulation_3to1_L20_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_3to1_L20_0.05nonsparse.RData")
 
 large_simulation_5L20$avg_metrics$L <- 20
 large_simulation_5L20$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_5L20$avg_metrics$theta_beta_ratio <- 3
 
 # large_simulation_5L30
-load("large_simulation_3to1_L30_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_3to1_L30_0.05nonsparse.RData")
 
 large_simulation_5L30$avg_metrics$L <- 30
 large_simulation_5L30$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_5L30$avg_metrics$theta_beta_ratio <- 3
 
-
 # large_simulation_6L10
-load("large_simulation_5to1_L10_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_5to1_L10_0.05nonsparse.RData")
 
 large_simulation_6L10$avg_metrics$L <- 10
 large_simulation_6L10$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_6L10$avg_metrics$theta_beta_ratio <- 5
 
 # large_simulation_6L20
-load("large_simulation_5to1_L20_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_5to1_L20_0.05nonsparse.RData")
 
 large_simulation_6L20$avg_metrics$L <- 20
 large_simulation_6L20$avg_metrics$nonsparse_coverage <- 0.05
 large_simulation_6L20$avg_metrics$theta_beta_ratio <- 5
 
 # large_simulation_6L30
-load("large_simulation_5to1_L30_0.05nonsparse.RData")
+load("data/SimulationData/large_simulation_5to1_L30_0.05nonsparse.RData")
 
 large_simulation_6L30$avg_metrics$L <- 30
 large_simulation_6L30$avg_metrics$nonsparse_coverage <- 0.05
@@ -190,3 +192,117 @@ combined %>%
 
 ```
 
+# Figures
+
+## 1. ROC Curve TPR vs FPR
+
+
+```{r, echo = F, warning = F}
+generate_roc_plots <- function(simulation_list) {
+  for (simulation in simulation_list) {
+    # Simulation parameters settings
+    L <- simulation$avg_metrics$L
+    nonsparse_coverage <- simulation$avg_metrics$nonsparse_coverage
+    theta_beta_ratio <- simulation$avg_metrics$theta_beta_ratio
+    
+    susie_predictions <- c()
+    susie_labels <- c()
+    susie_ash_predictions <- c()
+    susie_ash_labels <- c()
+    
+    # Loop through each simulation iteration
+    for (i in 1:10) {
+      
+      # SuSiE outputs
+      susie_pip <- simulation$all_susie_outputs[[i]]$pip
+      susie_betas <- simulation$all_betas[[i]]
+      susie_thetas <- simulation$all_thetas[[i]]
+      
+      # Create true causal effect labels for SuSiE
+      susie_causal_beta <- (susie_betas != 0) | (susie_thetas != 0)
+      
+      # SuSiE predictions and labels
+      susie_predictions <- c(susie_predictions, susie_pip)
+      susie_labels <- c(susie_labels, susie_causal_beta)
+      
+      # Extract SuSiE-ASH outputs
+      susie_ash_pip <- simulation$all_susie_ash_outputs[[i]]$pip
+      susie_ash_betas <- simulation$all_betas[[i]]
+      susie_ash_thetas <- simulation$all_thetas[[i]]
+      
+      # Create true causal effect labels for SuSiE-ASH
+      susie_ash_causal_beta <- (susie_ash_betas != 0) | (susie_ash_thetas != 0)
+      
+      # SuSiE-ASH predictions and labels
+      susie_ash_predictions <- c(susie_ash_predictions, susie_ash_pip)
+      susie_ash_labels <- c(susie_ash_labels, susie_ash_causal_beta)
+    }
+    
+    # Create prediction objects for SuSiE and SuSiE-ASH
+    pred_susie <- prediction(susie_predictions, susie_labels)
+    pred_susie_ash <- prediction(susie_ash_predictions, susie_ash_labels)
+    
+    # Create performance objects for SuSiE and SuSiE-ASH
+    perf_susie <- performance(pred_susie, "tpr", "fpr")
+    perf_susie_ash <- performance(pred_susie_ash, "tpr", "fpr")
+    
+    # Create plot title with simulation parameters
+    plot_title <- paste0("ROC Curve (L = ", L, ", ", nonsparse_coverage * 100, 
+                         "% Nonsparse Coverage, Theta to Beta Ratio = ", theta_beta_ratio, ":1)")
+    
+    
+    # Plot the ROC curves for SuSiE and SuSiE-ASH
+    plot(perf_susie, col = "blue", lwd = 2)
+    plot(perf_susie_ash, col = "red", add = TRUE, lwd = 2)
+    title(main = plot_title[1], cex.main = 1)
+    legend("bottomright", legend = c("SuSiE", "SuSiE-ASH"), col = c("blue", "red"), lwd = 2, cex = 1)
+  }
+}
+
+# Simulation Settings
+simulation_list <- list(large_simulation_1L10, large_simulation_1L20, large_simulation_1L30,
+                        large_simulation_2L10, large_simulation_2L20, large_simulation_2L30,
+                        large_simulation_3L10, large_simulation_3L20, large_simulation_3L30,
+                        large_simulation_4L10, large_simulation_4L20, large_simulation_4L30,
+                        large_simulation_5L10, large_simulation_5L20, large_simulation_5L30,
+                        large_simulation_6L10, large_simulation_6L20, large_simulation_6L30)
+
+# Generate ROC curve plots for all simulations
+generate_roc_plots(simulation_list)
+```
+
+## 2. Coverage vs L
+
+```{r, warning = F, echo = F}
+generate_coverage_plots <- function(combined_data) {
+  combinations <- expand.grid(
+    nonsparse_coverage = unique(combined_data$nonsparse_coverage),
+    theta_beta_ratio = unique(combined_data$theta_beta_ratio)
+  )
+  
+  # Loop through each simulation setting
+  for (i in 1:nrow(combinations)) {
+    nonsparse_coverage <- combinations$nonsparse_coverage[i]
+    theta_beta_ratio <- combinations$theta_beta_ratio[i]
+    
+    plot <- combined_data %>%
+      filter(nonsparse_coverage == !!nonsparse_coverage & theta_beta_ratio == !!theta_beta_ratio) %>%
+      ggplot(aes(x = L, y = Coverage, color = Model)) +
+      geom_line() +
+      geom_point() +
+      labs(title = paste0(nonsparse_coverage * 100, "% Non-sparse Coverage and ",
+                          theta_beta_ratio, ":1 Theta to Beta Heritability Ratio")) +
+      theme_classic() +
+      ylim(0, 1)
+  
+    print(plot)
+  }
+}
+
+generate_coverage_plots(combined)
+```
+
+
+## 3. Proportion Causal vs PIP bins (vary simulation type + method)
+
+[0, 0.01], (0.1, 0.5], (0.5, 0.9], (0.9, 1]
