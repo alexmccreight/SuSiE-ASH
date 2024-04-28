@@ -452,12 +452,11 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
     # Run Mr. ASH on Residuals
     mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals_mrash, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
                                           #(2^(0.05 * (1:21 - 1)) - 1)^2) # the R code recommends this
-    #sa2 = c(0, 0.025^2, 0.5^2,1)) # we initially had this
     theta = mrash_output$beta
-    elbo[i - warm_start + 1] = -(mrash_output$varobj)
-    y_residuals_mrash = y_residuals_mrash - X %*% theta
+    elbo[i - warm_start + 1] = -(mrash_output$varobj)[length(mrash_output$varobj)]
+    #y_residuals_mrash = y_residuals_mrash - X %*% theta
+    y_residuals_mrash = y_residuals_mrash - mrash_output$data$X %*% theta
 
-    print(c(elbo[i - warm_start + 1], (elbo[i - warm_start + 1] - elbo[i - warm_start])))
 
       #Convergence Criterion
       if (i > warm_start + 1 && (elbo[i - warm_start + 1] - elbo[i - warm_start]) < tol) {
@@ -499,10 +498,12 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
     # Estimate unshrunk intercept.
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
                                  (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
-    s$fitted = s$Xr + mean_y + X%*%(mr.ash.alpha::coef.mr.ash(mrash_output)[-1]) # do we need to do anything with mr ash intercept
+    #s$fitted = s$Xr + mean_y + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1]) # do we need to do anything with mr ash intercept
+    s$fitted = s$Xr + mean_y + mrash_output$data$X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
   } else {
     s$intercept = 0
-    s$fitted = s$Xr + X%*%(mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
+    #s$fitted = s$Xr + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
+    s$fitted = s$Xr + mrash_output$data$X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
   }
   s$fitted = drop(s$fitted)
   names(s$fitted) = `if`(is.null(names(y)),rownames(X),names(y))
@@ -512,11 +513,11 @@ susie_ash_warmstart = function (X,y,L = min(10,ncol(X)),
 
   # SuSiE CS and PIP.
   if (!is.null(coverage) && !is.null(min_abs_corr)) {
-    # s$sets = susie_get_cs(s,coverage = coverage,X = X,
-    #                       min_abs_corr = min_abs_corr,
-    #                       # median_abs_corr = median_abs_corr, ## muted
-    #                       n_purity = n_purity)
-    s$sets = susie_get_cs_attainable(s, coverage = 0.95, ethres = 20)
+    s$sets = susie_get_cs(s,coverage = coverage,X = X,
+                          min_abs_corr = min_abs_corr,
+                          # median_abs_corr = median_abs_corr, ## muted
+                          n_purity = n_purity)
+    #s$sets = susie_get_cs_attainable(s, coverage = 0.95, ethres = 20)
     s$pip = susie_get_pip(s,prune_by_cs = FALSE,prior_tol = prior_tol)
   }
 
