@@ -17,6 +17,7 @@ devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/s
 
 # SuSiE-ASH (v2; Gao's Version)
 source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/SuSiE-ASH-Versions/susie-ash-warmstart-v2.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie-inf.R")
 ```
 
 ```{r}
@@ -57,12 +58,8 @@ generate_data <- function(X, total_heritability, sparse_effects, nonsparse_cover
   # Store Information
   return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
 }
-X20 = readRDS("X20")
-# data <- generate_data(X = X20, total_heritability = 0.25, sparse_effects = 3, nonsparse_coverage = 0.01, theta_beta_ratio = 2)
-# 
-# plot(data$theta)
-# 
-# mod <- susie(X = data$X, y = data$y, L = 10, intercept = F, standardize = F)
+X20 = readRDS("../X20")
+#data <- generate_data(X = X20, total_heritability = 0.25, sparse_effects = 3, nonsparse_coverage = 0.01, theta_beta_ratio = 3)
 ```
 
 
@@ -71,7 +68,7 @@ X20 = readRDS("X20")
 method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 10, threshold = 0.95) {
   # Run various methods
   susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
-  susie_ash_output <- susie_ash_warmstart(X = X, y = y, L = L, warm_start = 5, tol = 0.03, intercept = F, standardize = F)
+  susie_ash_output <- susie_ash_warmstart(X = X, y = y, L = L, warm_start = 5, tol = 0.03, intercept = F, standardize = F, max_iter = 25)
   
   calc_metrics <- function(mod, beta = beta, theta = theta, threshold = threshold) {
     all_causal <-  c(which(beta != 0), which(theta != 0))
@@ -201,67 +198,66 @@ simulate_and_score <- function(num_simulations = 10, X = X20, total_heritability
     all_seeds = all_seeds
   ))
 }
-X20 = readRDS("X20")
-large_simulation_1L10 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 1.4, L = 10, threshold = 0.95)
+```
 
-large_simulation_2L10 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 3, L = 10, threshold = 0.95)
+```{r}
+# parameter_grid <- expand.grid(
+#   num_simulations = c(25),
+#   total_heritability = c(0.25, 0.50),
+#   sparse_effects = c(2),
+#   nonsparse_coverages = c(0.01, 0.025, 0.05),
+#   theta_beta_ratios = c(1.4, 3, 5),
+#   L_values = c(5, 10, 15, 20, 25),
+#   thresholds = c(0.95),
+#   stringsAsFactors = FALSE
+# )
 
-large_simulation_3L10 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 5, L = 10, threshold = 0.95)
+parameter_grid <- expand.grid(
+  num_simulations = c(25),
+  total_heritability = c(0.25, 0.50),
+  sparse_effects = c(2),
+  nonsparse_coverage = c(0.01, 0.025, 0.05),
+  theta_beta_ratio = c(1.4, 3, 5),
+  L = c(10, 15, 20),
+  threshold = c(0.90),
+  stringsAsFactors = FALSE
+)
 
-large_simulation_1L20 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 1.4, L = 20, threshold = 0.95)
-
-large_simulation_2L20 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 3, L = 20, threshold = 0.95)
-
-large_simulation_3L20 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 5, L = 20, threshold = 0.95)
-
-large_simulation_1L30 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 1.4, L = 30, threshold = 0.95)
-
-large_simulation_2L30 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 3, L = 30, threshold = 0.95)
-
-large_simulation_3L30 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.01, theta_beta_ratio = 5, L = 30, threshold = 0.95)
-
-
-save(large_simulation_1L10, file = "large_simulation_1.4to1_L10_0.01nonsparse.RData")
-save(large_simulation_1L20, file = "large_simulation_1.4to1_L20_0.01nonsparse.RData")
-save(large_simulation_1L30, file = "large_simulation_1.4to1_L30_0.01nonsparse.RData")
-
-save(large_simulation_2L10, file = "large_simulation_3to1_L10_0.01nonsparse.RData")
-save(large_simulation_2L20, file = "large_simulation_3to1_L20_0.01nonsparse.RData")
-save(large_simulation_2L30, file = "large_simulation_3to1_L30_0.01nonsparse.RData")
-
-save(large_simulation_3L10, file = "large_simulation_5to1_L10_0.01nonsparse.RData")
-save(large_simulation_3L20, file = "large_simulation_5to1_L20_0.01nonsparse.RData")
-save(large_simulation_3L30, file = "large_simulation_5to1_L30_0.01nonsparse.RData")
-
-large_simulation_4L10 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 1.4, L = 10, threshold = 0.95)
-
-large_simulation_5L10 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 3, L = 10, threshold = 0.95)
-
-large_simulation_6L10 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 5, L = 10, threshold = 0.95)
-
-large_simulation_4L20 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 1.4, L = 20, threshold = 0.95)
-
-large_simulation_5L20 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 3, L = 20, threshold = 0.95)
-
-large_simulation_6L20 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 5, L = 20, threshold = 0.95)
-
-large_simulation_4L30 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 1.4, L = 30, threshold = 0.95)
-
-large_simulation_5L30 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 3, L = 30, threshold = 0.95)
-
-large_simulation_6L30 <- simulate_and_score(num_simulations = 10, X = X20, total_heritability = 0.25, nonsparse_coverage = 0.05, theta_beta_ratio = 5, L = 30, threshold = 0.95)
-
-
-save(large_simulation_4L10, file = "large_simulation_1.4to1_L10_0.05nonsparse.RData")
-save(large_simulation_4L20, file = "large_simulation_1.4to1_L20_0.05nonsparse.RData")
-save(large_simulation_4L30, file = "large_simulation_1.4to1_L30_0.05nonsparse.RData")
-
-save(large_simulation_5L10, file = "large_simulation_3to1_L10_0.05nonsparse.RData")
-save(large_simulation_5L20, file = "large_simulation_3to1_L20_0.05nonsparse.RData")
-save(large_simulation_5L30, file = "large_simulation_3to1_L30_0.05nonsparse.RData")
-
-save(large_simulation_6L10, file = "large_simulation_5to1_L10_0.05nonsparse.RData")
-save(large_simulation_6L20, file = "large_simulation_5to1_L20_0.05nonsparse.RData")
-save(large_simulation_6L30, file = "large_simulation_5to1_L30_0.05nonsparse.RData")
+apply(parameter_grid[8:54,], 1, function(params) {
+  # Extract parameters for this simulation
+  num_simulations <- params["num_simulations"]
+  total_heritability <- params["total_heritability"]
+  sparse_effects <- params["sparse_effects"]
+  nonsparse_coverage <- params["nonsparse_coverage"]
+  theta_beta_ratio <- params["theta_beta_ratio"]
+  L <- params["L"]
+  threshold <- params["threshold"]
+  
+  # Generate the file name
+  file_name <- paste0("simulation_nonsparse", nonsparse_coverage, "_ratio", theta_beta_ratio, "_L", L,"_total_heritability",total_heritability,".rds")
+  
+  # Run the simulation
+  results <- tryCatch({simulate_and_score(num_simulations = as.numeric(num_simulations),
+                                total_heritability = as.numeric(total_heritability),
+                                sparse_effects = as.numeric(sparse_effects),
+                                nonsparse_coverage = as.numeric(nonsparse_coverage),
+                                theta_beta_ratio = as.numeric(theta_beta_ratio),
+                                L = as.numeric(L),
+                                threshold = as.numeric(threshold)
+                                )},
+                      error = function(e) {
+                        cat("Error in simulation with parameters: Nonsparse Coverage =", nonsparse_coverage,
+        "Theta-Beta Ratio =", theta_beta_ratio, "L =", L, "\nError Message:", e$message, "\n")
+    return(NULL)
+})
+  
+ if (!is.null(results)) {
+    # Save the results to an .rds file
+    saveRDS(results, file = file_name)
+    cat("Saved results to", file_name, "\n")
+  } else {
+    cat("Skipping save due to error for", file_name, "\n")
+  }
+})
 ```
 
