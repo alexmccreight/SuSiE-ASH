@@ -51,7 +51,7 @@ for (file_path in files) {
 
 # 1. ROC Curves
 
-```{r, warning = F}
+```{r, warning = F, echo = F}
 # Adjusted function to handle the results_list
 generate_roc_plots <- function(results_list) {
   # Iterate through each simulation in the list
@@ -120,7 +120,7 @@ generate_roc_plots(results_list)
 
 # 2. PIP Bins vs Proportion Causal
 
-```{r, warning = F}
+```{r, warning = F, echo = F}
 # Function to generate and plot proportion causal for each simulation
 generate_causal_plots <- function(results_list) {
   # Iterate through each simulation in the list
@@ -180,7 +180,6 @@ generate_causal_plots <- function(results_list) {
   }
 }
 
-# Call the function with your results list
 generate_causal_plots(results_list)
 
 ```

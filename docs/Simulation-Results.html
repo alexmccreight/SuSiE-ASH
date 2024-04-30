@@ -549,15 +549,15 @@ relative
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree2bd2175ea3edd3fbe5ab53219453f819513e77adtargetblank2bd2175a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree3aa8481b30b3cfa697e1381ac8b67a737add1be7targetblank3aa8481a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/2bd2175ea3edd3fbe5ab53219453f819513e77ad" target="_blank">2bd2175</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/3aa8481b30b3cfa697e1381ac8b67a737add1be7" target="_blank">3aa8481</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree2bd2175ea3edd3fbe5ab53219453f819513e77adtargetblank2bd2175a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree3aa8481b30b3cfa697e1381ac8b67a737add1be7targetblank3aa8481a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -567,7 +567,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/2bd2175ea3edd3fbe5ab53219453f819513e77ad" target="_blank">2bd2175</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/3aa8481b30b3cfa697e1381ac8b67a737add1be7" target="_blank">3aa8481</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -643,7 +643,6 @@ Untracked files:
 
 Unstaged changes:
     Modified:   analysis/Simulation-Results.Rmd
-    Modified:   code/Simulation-Final.Rmd
     Modified:   submodules/susieR
 
 </code></pre>
@@ -690,6 +689,42 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/analysis/Simulation-Results.Rmd" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+<td>
+updated simulation results. added new nonsparse coverage 2.5% setting.
+25 iterations each setting.
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/139ac16f3abc814f7807eca42617a34c21384945/docs/Simulation-Results.html" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+<td>
+updated simulation results. added new nonsparse coverage 2.5% setting.
+25 iterations each setting.
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -801,136 +836,3125 @@ move folder
 </div>
 <div id="roc-curves" class="section level1">
 <h1>1. ROC Curves</h1>
-<pre class="r"><code># Adjusted function to handle the results_list
-generate_roc_plots &lt;- function(results_list) {
-  # Iterate through each simulation in the list
-  for (simulation_name in names(results_list)) {
-    simulation &lt;- results_list[[simulation_name]]
-    
-    # Simulation parameters settings
-    L &lt;- simulation$avg_metrics$L
-    nonsparse_coverage &lt;- simulation$avg_metrics$nonsparse_coverage
-    theta_beta_ratio &lt;- simulation$avg_metrics$theta_beta_ratio
-    total_heritability &lt;- simulation$avg_metrics$total_heritability
-    
-    susie_predictions &lt;- c()
-    susie_labels &lt;- c()
-    susie_ash_predictions &lt;- c()
-    susie_ash_labels &lt;- c()
-    
-    # Loop through each simulation iteration (assuming 25 iterations as in your original script)
-    for (i in 1:25) {
-      # SuSiE outputs
-      susie_pip &lt;- simulation$all_susie_outputs[[i]]$pip
-      susie_betas &lt;- simulation$all_betas[[i]]
-      susie_thetas &lt;- simulation$all_thetas[[i]]
-      
-      # Create true causal effect labels
-      susie_causal_beta &lt;- (susie_betas != 0) | (susie_thetas != 0)
-      susie_predictions &lt;- c(susie_predictions, susie_pip)
-      susie_labels &lt;- c(susie_labels, susie_causal_beta)
-      
-      # SuSiE-ASH outputs
-      susie_ash_pip &lt;- simulation$all_susie_ash_outputs[[i]]$pip
-      susie_ash_betas &lt;- simulation$all_betas[[i]]
-      susie_ash_thetas &lt;- simulation$all_thetas[[i]]
-      
-      # Create true causal effect labels 
-      susie_ash_causal_beta &lt;- (susie_ash_betas != 0) | (susie_ash_thetas != 0)
-      susie_ash_predictions &lt;- c(susie_ash_predictions, susie_ash_pip)
-      susie_ash_labels &lt;- c(susie_ash_labels, susie_ash_causal_beta)
-    }
-    
-    # Create prediction objects 
-    pred_susie &lt;- prediction(susie_predictions, susie_labels)
-    pred_susie_ash &lt;- prediction(susie_ash_predictions, susie_ash_labels)
-    
-    # Create performance objects
-    perf_susie &lt;- performance(pred_susie, &quot;tpr&quot;, &quot;fpr&quot;)
-    perf_susie_ash &lt;- performance(pred_susie_ash, &quot;tpr&quot;, &quot;fpr&quot;)
-    
-    # Create plot title with simulation parameters
-    plot_title &lt;- paste0(&quot;ROC Curve (L = &quot;, L, &quot;, &quot;, nonsparse_coverage * 100, 
-                         &quot;% Nonsparse Coverage, Theta to Beta Ratio = &quot;, theta_beta_ratio, &quot;:1\n&quot;,
-                         &quot;Heritability = &quot;,total_heritability, &quot;)&quot;)
-    
-    # Plot the ROC curves for SuSiE and SuSiE-ASH
-    plot(perf_susie, col = &quot;blue&quot;, lwd = 2)
-    lines(x = c(0, 1), y = c(0, 1), col = &quot;gray&quot;, lty = 2)  # No information line
-    plot(perf_susie_ash, col = &quot;red&quot;, add = TRUE, lwd = 2)
-    title(main = plot_title[1], cex.main = 1)
-    legend(&quot;bottomright&quot;, legend = c(&quot;SuSiE&quot;, &quot;SuSiE-ASH&quot;), col = c(&quot;blue&quot;, &quot;red&quot;), lwd = 2, cex = 1)
-  }
-}
-
-# Generate ROC curve plots for all simulations
-generate_roc_plots(results_list)</code></pre>
-<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-16.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-24.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-25.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-26.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-27.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-28.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-29.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-30.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-31.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-32.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-33.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-34.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-35.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-36.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-37.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-38.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-39.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-40.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-41.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
+Past versions of unnamed-chunk-1-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-1.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-2">
+Past versions of unnamed-chunk-1-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-2.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-3">
+Past versions of unnamed-chunk-1-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-3.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-4">
+Past versions of unnamed-chunk-1-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-4.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-5">
+Past versions of unnamed-chunk-1-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-5.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-6">
+Past versions of unnamed-chunk-1-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-6.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-7">
+Past versions of unnamed-chunk-1-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-7.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-8">
+Past versions of unnamed-chunk-1-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-8.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-9">
+Past versions of unnamed-chunk-1-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-9.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-10">
+Past versions of unnamed-chunk-1-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-10.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-11">
+Past versions of unnamed-chunk-1-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-11.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-12">
+Past versions of unnamed-chunk-1-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-12.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-13.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-13">
+Past versions of unnamed-chunk-1-13.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-13" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-13.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-14">
+Past versions of unnamed-chunk-1-14.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-14" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-14.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-15">
+Past versions of unnamed-chunk-1-15.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-15" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-15.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-16">
+Past versions of unnamed-chunk-1-16.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-16" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-16.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-17.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-17">
+Past versions of unnamed-chunk-1-17.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-17" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-17.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-18.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-18">
+Past versions of unnamed-chunk-1-18.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-18" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-18.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-19.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-19">
+Past versions of unnamed-chunk-1-19.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-19" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-19.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-20.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-20">
+Past versions of unnamed-chunk-1-20.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-20" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-20.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-21.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-21">
+Past versions of unnamed-chunk-1-21.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-21" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-21.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-22.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-22">
+Past versions of unnamed-chunk-1-22.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-22" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-22.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-23.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-23">
+Past versions of unnamed-chunk-1-23.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-23" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-23.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-24.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-24">
+Past versions of unnamed-chunk-1-24.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-24" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-24.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-25.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-25">
+Past versions of unnamed-chunk-1-25.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-25" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-25.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-26.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-26">
+Past versions of unnamed-chunk-1-26.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-26" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-26.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-27.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-27">
+Past versions of unnamed-chunk-1-27.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-27" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-27.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-28.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-28">
+Past versions of unnamed-chunk-1-28.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-28" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-28.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-29.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-29">
+Past versions of unnamed-chunk-1-29.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-29" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-29.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-30.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-30">
+Past versions of unnamed-chunk-1-30.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-30" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-30.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-31.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-31">
+Past versions of unnamed-chunk-1-31.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-31" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-31.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-32.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-32">
+Past versions of unnamed-chunk-1-32.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-32" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-32.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-33.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-33">
+Past versions of unnamed-chunk-1-33.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-33" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-33.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-34.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-34">
+Past versions of unnamed-chunk-1-34.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-34" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-34.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-35.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-35">
+Past versions of unnamed-chunk-1-35.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-35" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-35.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-36.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-36">
+Past versions of unnamed-chunk-1-36.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-36" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-36.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-37.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-37">
+Past versions of unnamed-chunk-1-37.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-37" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-37.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-38.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-38">
+Past versions of unnamed-chunk-1-38.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-38" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-38.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-39.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-39">
+Past versions of unnamed-chunk-1-39.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-39" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-39.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-40.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-40">
+Past versions of unnamed-chunk-1-40.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-40" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-40.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-1-41.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-41">
+Past versions of unnamed-chunk-1-41.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-1-41" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-1-41.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="pip-bins-vs-proportion-causal" class="section level1">
 <h1>2. PIP Bins vs Proportion Causal</h1>
-<pre class="r"><code># Function to generate and plot proportion causal for each simulation
-generate_causal_plots &lt;- function(results_list) {
-  # Iterate through each simulation in the list
-  for (simulation_name in names(results_list)) {
-    simulation &lt;- results_list[[simulation_name]]
-
-    # Simulation parameters settings
-    L &lt;- simulation$avg_metrics$L
-    nonsparse_coverage &lt;- simulation$avg_metrics$nonsparse_coverage
-    theta_beta_ratio &lt;- simulation$avg_metrics$theta_beta_ratio
-    total_heritability &lt;- simulation$avg_metrics$total_heritability
-    
-    # Initialize a dataframe to hold all PIPs, their causal statuses, and method tags
-    all_pips &lt;- data.frame(pip = numeric(), causal = numeric(), method = character())
-
-    # Process each simulation&#39;s iterations
-    for (i in seq_along(simulation$all_susie_outputs)) {
-      # For SuSiE
-      susie_pips &lt;- simulation$all_susie_outputs[[i]]$pip
-      betas &lt;- simulation$all_betas[[i]]
-      thetas &lt;- simulation$all_thetas[[i]]
-      causal &lt;- (betas != 0) | (thetas != 0)
-      all_pips &lt;- rbind(all_pips, data.frame(pip = susie_pips, causal = as.integer(causal), method = &quot;SuSiE&quot;))
-
-      # For SuSiE-ASH
-      susie_ash_pips &lt;- simulation$all_susie_ash_outputs[[i]]$pip
-      all_pips &lt;- rbind(all_pips, data.frame(pip = susie_ash_pips, causal = as.integer(causal), method = &quot;SuSiE-ASH&quot;))
-    }
-
-    # Define PIP bins
-    breaks &lt;- c(0, 0.01, 0.1, 0.5, 0.9, 1)
-    labels &lt;- c(&quot;[0,0.01)&quot;, &quot;[0.01,0.1)&quot;, &quot;(0.1,0.5]&quot;, &quot;(0.5,0.9]&quot;, &quot;(0.9,1]&quot;)
-    all_pips$bin &lt;- cut(all_pips$pip, breaks = breaks, labels = labels, include.lowest = TRUE)
-
-    # Calculate the proportion causal for each bin and method
-    proportion_causal &lt;- all_pips %&gt;%
-      group_by(bin, method) %&gt;%
-      summarise(proportion = mean(causal == 1), .groups = &#39;drop&#39;)
-
-    # Create plot title with simulation parameters
-    plot_title &lt;- paste0(&quot;PIP Bins vs. Proportion Causal by Method\n&quot;,
-                         &quot; (L = &quot;, L, &quot;, &quot;,
-                         nonsparse_coverage * 100, &quot;% Nonsparse Coverage, Theta to Beta Ratio = &quot;,
-                         theta_beta_ratio, &quot;:1, Heritability = &quot;, total_heritability, &quot;)&quot;)
-
-    # Plot
-    ggplot(proportion_causal, aes(x = bin, y = proportion, color = method)) +
-      geom_point(size = 2, position = position_dodge(width = 0.25), na.rm = TRUE) +
-      labs(x = &quot;PIP Bins&quot;, y = &quot;Proportion Causal&quot;, title = plot_title, color = &quot;Method&quot;) +
-      scale_fill_manual(values = c(&quot;SuSiE&quot; = &quot;blue&quot;, &quot;SuSiE-ASH&quot; = &quot;red&quot;)) +
-      theme_minimal() +
-      ylim(0, 1) +
-      theme(plot.title = element_text(size = 10))
-    
-    # Print each plot
-    print(ggplot2::last_plot())
-  }
-}
-
-# Call the function with your results list
-generate_causal_plots(results_list)</code></pre>
-<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-16.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-24.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-25.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-26.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-27.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-28.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-29.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-30.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-31.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-32.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-33.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-34.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-35.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-36.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-37.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-38.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-39.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-40.png" width="672" style="display: block; margin: auto;" /><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-41.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-1.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
+Past versions of unnamed-chunk-2-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-2.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-3">
+Past versions of unnamed-chunk-2-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-3.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-4">
+Past versions of unnamed-chunk-2-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-4.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-5">
+Past versions of unnamed-chunk-2-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-5.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-6">
+Past versions of unnamed-chunk-2-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-6.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-7">
+Past versions of unnamed-chunk-2-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-7.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-8">
+Past versions of unnamed-chunk-2-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-8.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-9">
+Past versions of unnamed-chunk-2-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-9.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-10">
+Past versions of unnamed-chunk-2-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-10.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-11">
+Past versions of unnamed-chunk-2-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-11.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-12">
+Past versions of unnamed-chunk-2-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-12.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-13.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-13">
+Past versions of unnamed-chunk-2-13.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-13" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-13.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-14">
+Past versions of unnamed-chunk-2-14.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-14" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-14.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-15">
+Past versions of unnamed-chunk-2-15.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-15" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-15.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-16">
+Past versions of unnamed-chunk-2-16.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-16" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-16.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-17.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-17">
+Past versions of unnamed-chunk-2-17.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-17" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-17.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-18.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-18">
+Past versions of unnamed-chunk-2-18.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-18" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-18.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-19.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-19">
+Past versions of unnamed-chunk-2-19.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-19" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-19.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-20.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-20">
+Past versions of unnamed-chunk-2-20.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-20" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-20.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-21.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-21">
+Past versions of unnamed-chunk-2-21.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-21" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-21.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-22.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-22">
+Past versions of unnamed-chunk-2-22.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-22" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-22.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-23.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-23">
+Past versions of unnamed-chunk-2-23.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-23" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-23.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-24.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-24">
+Past versions of unnamed-chunk-2-24.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-24" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-24.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-25.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-25">
+Past versions of unnamed-chunk-2-25.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-25" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-25.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-26.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-26">
+Past versions of unnamed-chunk-2-26.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-26" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-26.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-27.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-27">
+Past versions of unnamed-chunk-2-27.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-27" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-27.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-28.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-28">
+Past versions of unnamed-chunk-2-28.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-28" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-28.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-29.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-29">
+Past versions of unnamed-chunk-2-29.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-29" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-29.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-30.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-30">
+Past versions of unnamed-chunk-2-30.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-30" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-30.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-31.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-31">
+Past versions of unnamed-chunk-2-31.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-31" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-31.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-32.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-32">
+Past versions of unnamed-chunk-2-32.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-32" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-32.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-33.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-33">
+Past versions of unnamed-chunk-2-33.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-33" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-33.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-34.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-34">
+Past versions of unnamed-chunk-2-34.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-34" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-34.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-35.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-35">
+Past versions of unnamed-chunk-2-35.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-35" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-35.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-36.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-36">
+Past versions of unnamed-chunk-2-36.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-36" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-36.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-37.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-37">
+Past versions of unnamed-chunk-2-37.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-37" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-37.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-38.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-38">
+Past versions of unnamed-chunk-2-38.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-38" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-38.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-39.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-39">
+Past versions of unnamed-chunk-2-39.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-39" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-39.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-40.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-40">
+Past versions of unnamed-chunk-2-40.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-40" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-40.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-41.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-41">
+Past versions of unnamed-chunk-2-41.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-41" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/docs/figure/Simulation-Results.Rmd/unnamed-chunk-2-41.png" target="_blank">139ac16</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-29
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="section" class="section level1">
 <h1>3.</h1>
