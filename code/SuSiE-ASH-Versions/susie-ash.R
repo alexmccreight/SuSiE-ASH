@@ -423,8 +423,9 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   elbo = rep(as.numeric(NA),max_iter - warm_start + 1)
   tracking = list()
 
-  # Initialize y_residuals1 to y
+  # Initialize residuals
   y_residuals = y
+  #y_residuals_mrash = NA
 
   for (i in 1:max_iter) {
     # SuSiE "warm start" phase
@@ -445,15 +446,15 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     }
   } else{
     # Set up Mr. ASH Residuals
-    if (i == warm_start + 1) {
-      y_residuals_mrash = y_residuals
-    }
+    # if (i == warm_start + 1) {
+    #   y_residuals_mrash <- y_residuals
+    # }
 
     # Run Mr. ASH on Residuals
-    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals_mrash, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
+    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
     theta = mrash_output$beta
     elbo[i - warm_start + 1] = -(mrash_output$varobj)[length(mrash_output$varobj)]
-    y_residuals_mrash = y_residuals_mrash - X %*% theta
+    y_residuals = y_residuals - X %*% theta
     #y_residuals_mrash = y_residuals_mrash - mrash_output$data$X %*% theta
 
 
@@ -462,24 +463,28 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
         s$converged = TRUE
         break
       }
-    }
+  }
+
 
     # Common objective and convergence check (adjust as needed for the transition)
 
     # Compute objective before updating residual variance because part
     # of the objective s$kl has already been computed under the
     # residual variance before the update.
-
     # Update residual variance after mr ash
+
     if (estimate_residual_variance) {
       s$sigma2 = pmax(residual_variance_lowerbound,
-                      estimate_residual_variance(X,y_residuals_mrash,s))
+                      estimate_residual_variance(X,y_residuals,s))
       if (s$sigma2 > residual_variance_upperbound)
         s$sigma2 = residual_variance_upperbound
       if (verbose)
-        print(paste0("objective:",get_objective(X,y_residuals_mrash,s)))
+        print(paste0("objective:",get_objective(X,y_residuals,s)))
     }
   }
+
+
+
 
 
   # Remove first (infinite) entry, and trailing NAs. Combine SuSiE and mr. ash ELBO.
