@@ -29,35 +29,28 @@ susie_inf <- function(X, y, L,
     Dsq <- pmax(n * eigvals, 0)}
   else{Dsq <- pmax(Dsq, 0)}
 
-  Xty <- sqrt(n) * z
-  VtXty <- t(V) %*% Xty
-  yty <- n * meansq
+  Xty <- sqrt(n) * z # p x 1 matrix
+  VtXty <- t(V) %*% Xty # p x 1 matrix
+  yty <- n * meansq # singular value
 
   # Initialize diagonal variances, diag(X', Omega X, X' Omega y)
-  var <- tausq*Dsq+sigmasq
-  diagXtOmegaX <- rowSums(V^2 * (Dsq / var))
-  XtOmegay <- V %*% (VtXty / var)
-
-  # DEBUG
-  print(diagXtOmegaX)
-  try(dim(X), silent = T)
-  try(length(X), silent = T)
-
+  var <- tausq*Dsq+sigmasq # vector of length p
+  diagXtOmegaX <- rowSums(V^2 * (Dsq / var)) # vector of length p
+  XtOmegay <- V %*% (VtXty / var) # p x 1 matrix
 
   # Initialize s_l^2, PIP_j, mu_j
-  if (is.null(ssq)) {ssq <- rep(0.2, L)}
-  if (is.null(PIP)) {PIP <- matrix(1 / p, nrow = p, ncol = L)}
-  if (is.null(mu)) {mu <- matrix(0, nrow = p, ncol = L)}
+  if (is.null(ssq)) {ssq <- rep(0.2, L)} # vector of length l
+  if (is.null(PIP)) {PIP <- matrix(1 / p, nrow = p, ncol = L)} # p x L matrix
+  if (is.null(mu)) {mu <- matrix(0, nrow = p, ncol = L)} # p x L matrix
 
   # Initialize omega_j
-  lbf_variable <- matrix(0, nrow = p, ncol = L)
-  lbf <- rep(0, L)
-  omega <- matrix(diagXtOmegaX, nrow = p, ncol = L) + 1 / ssq
-
+  lbf_variable <- matrix(0, nrow = p, ncol = L) # p x L matrix
+  lbf <- rep(0, L) # l vector
+  omega <- matrix(diagXtOmegaX, nrow = p, ncol = L) + 1 / ssq # p x L matrix
 
   # Initialize Prior Causal Probabilities
   if (is.null(pi0)) {
-    logpi0 <- rep(log(1 / p), p)
+    logpi0 <- rep(log(1 / p), p) # vector of length p
   } else {
     logpi0 <- rep(-Inf, p)
     inds <- which(pi0 > 0)
@@ -74,15 +67,18 @@ susie_inf <- function(X, y, L,
     # Single Effect Regression for each effect l = 1, ... , L
     for(l in seq_len(L)){
       # Compute X', Omega r_l for residual r_l
-      b <- rowSums(mu * PIP) - mu[, l] * PIP[, l]
-      XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var)
+      b <- rowSums(mu * PIP) - mu[, l] * PIP[, l] # vector of length p
+      XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var) # p x 1 matrix
+
+      # Essentially just residual = y - Xb
       XtOmegar <- XtOmegay - XtOmegaXb
 
       # Update Prior Variance ssq[l]
       if (est_ssq) {
         f <- function(x) {
           -matrixStats::logSumExp(-0.5 * log(1 + x * diagXtOmegaX) +
-                       x * XtOmegar^2 / (2 * (1 + x * diagXtOmegaX)) + logpi0)
+                                    x * XtOmegar^2 / (2 * (1 + x * diagXtOmegaX)) +
+                                    logpi0)
         }
         res <- optimize(f, lower = ssq_range[1], upper = ssq_range[2], maximum = FALSE)
         if (res$objective < Inf) {
@@ -145,6 +141,8 @@ susie_inf <- function(X, y, L,
   XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var)
   XtOmegar <- XtOmegay - XtOmegaXb
   alpha <- tausq * XtOmegar
+
+  # Compute PIPs
   PIP <- 1 - apply(1-PIP, 1, prod)
 
   return(list(
