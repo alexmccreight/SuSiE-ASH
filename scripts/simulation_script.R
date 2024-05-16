@@ -1,8 +1,6 @@
 # Annotation Matrix (from S3 Bucket)
-s3_path <- "s3://your-bucket/path/to/X20"
-local_path <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/X20"
-aws.s3::s3download(s3_path, local_path)
-X <- readRDS(local_path)
+data_path <- "/path/to/mounted/directory/X20" # FIXME: fix path after uploaded to s3 bucket
+X <- readRDS(data_path)
 
 # Generating Data
 generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, theta_beta_ratio) {
@@ -47,7 +45,7 @@ generate_data <- function(X, total_heritability, sparse_effects, nonsparse_cover
 method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 10, threshold = 0.95) {
   # Run various methods
   susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
-  susie_ash_output <- susie_ash_warmstart(X = X, y = y, L = L, warm_start = 5, tol = 0.03, intercept = F, standardize = F)
+  susie_ash_output <- susie_ash(X = X, y = y, L = L, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
 
   calc_metrics <- function(mod, beta = beta, theta = theta, threshold = threshold) {
     all_causal <-  c(which(beta != 0), which(theta != 0))
@@ -121,7 +119,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     cat("Running simulation", i, "out of", num_simulations, "\n")
 
     # Set random seed for each simulation
-    seed <- abs(round(rnorm(1, mean = 0, sd = 1000)))
+    seed <- abs(round(rnorm(1, mean = 0, sd = 10000)))
     set.seed(seed)
 
     # Generate data
@@ -149,7 +147,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   )
 
   # Save simulation results as RData file
-  output_dir <- "/home/output"
+  output_dir <- "/path/to/mounted/output/directory" #FIXME: fix path after I know exactly how to set the right folder
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
@@ -160,7 +158,10 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_seeds = all_seeds
   )
 
-  file_name <- paste0("simulation_nonsparse", nonsparse_coverage,"_ratio", theta_beta_ratio,"_L", L)
+  file_name <- paste0("heritability", total_heritability,
+                      "_nonsparse", nonsparse_coverage,
+                      "_ratio", theta_beta_ratio,
+                      "_L", L)
 
   saveRDS(simulation_results, file.path(output_dir, file_name))
 
