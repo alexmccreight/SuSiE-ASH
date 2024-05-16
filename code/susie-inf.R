@@ -9,8 +9,10 @@ susie_inf <- function(X, y, L,
   # Compute n, p, z, meansq, XtX, LD, V
   n <- nrow(X)
   p <- ncol(X)
+  #z <- crossprod(X, y) / sqrt(n) # Vector of z-scores
   z <- (t(X) %*% y) * (1/sqrt(n)) # Vector of z-scores
   meansq <- mean(y^2) # Mean-squared magnitude of y
+  #XtX <- crossprod(X)
   XtX <- t(X) %*% X
   LD <- (XtX) * (1/n) # LD Matrix
 
@@ -36,6 +38,12 @@ susie_inf <- function(X, y, L,
   diagXtOmegaX <- rowSums(V^2 * (Dsq / var))
   XtOmegay <- V %*% (VtXty / var)
 
+  # DEBUG
+  print(diagXtOmegaX)
+  try(dim(X), silent = T)
+  try(length(X), silent = T)
+
+
   # Initialize s_l^2, PIP_j, mu_j
   if (is.null(ssq)) {ssq <- rep(0.2, L)}
   if (is.null(PIP)) {PIP <- matrix(1 / p, nrow = p, ncol = L)}
@@ -44,7 +52,6 @@ susie_inf <- function(X, y, L,
   # Initialize omega_j
   lbf_variable <- matrix(0, nrow = p, ncol = L)
   lbf <- rep(0, L)
-  #omega <- diagXtOmegaX + 1 / ssq
   omega <- matrix(diagXtOmegaX, nrow = p, ncol = L) + 1 / ssq
 
 
@@ -95,6 +102,7 @@ susie_inf <- function(X, y, L,
       logPIP <- lbf_variable[, l] + logpi0
       lbf[l] <- matrixStats::logSumExp(logPIP)
       PIP[, l] <- exp(logPIP - lbf[l])
+
     } # Single Effect Regression Loop
 
     # Update variance components
@@ -137,6 +145,7 @@ susie_inf <- function(X, y, L,
   XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var)
   XtOmegar <- XtOmegay - XtOmegaXb
   alpha <- tausq * XtOmegar
+  PIP <- 1 - apply(1-PIP, 1, prod)
 
   return(list(
     PIP = PIP,
