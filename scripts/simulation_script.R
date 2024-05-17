@@ -1,3 +1,8 @@
+library(susieR)
+library(mr.ash.alpha)
+library(dplyr)
+library(magrittr)
+
 # Annotation Matrix (from S3 Bucket)
 data_path <- "/home/apm2217/data/X20"
 X <- readRDS(data_path)
