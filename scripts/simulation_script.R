@@ -1,5 +1,5 @@
 # Annotation Matrix (from S3 Bucket)
-data_path <- "/path/to/mounted/directory/X20" # FIXME: fix path after uploaded to s3 bucket
+data_path <- "/home/apm2217/data/X20"
 X <- readRDS(data_path)
 
 # Generating Data
@@ -146,8 +146,8 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
   )
 
-  # Save simulation results as RData file
-  output_dir <- "/path/to/mounted/output/directory" #FIXME: fix path after I know exactly how to set the right folder
+  # Save simulation results as Rds file
+  output_dir <- "/home/apm2217/output"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
@@ -158,7 +158,9 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_seeds = all_seeds
   )
 
-  file_name <- paste0("heritability", total_heritability,
+  file_name <- paste0("numIter", num_simulations,
+                      "_totHeritability", total_heritability,
+                      "_sparseEffect", sparse_effects,
                       "_nonsparse", nonsparse_coverage,
                       "_ratio", theta_beta_ratio,
                       "_L", L)
@@ -170,4 +172,10 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
 }
 
 # Run the simulation
-simulation_results <- simulation(num_simulations = NULL, total_heritability = NULL, sparse_effects = NULL, nonsparse_coverage = NULL, theta_beta_ratio = NULL, L = NULL, threshold = NULL)
+simulation_results <- simulation(num_simulations = NULL,
+                                 total_heritability = NULL,
+                                 sparse_effects = NULL,
+                                 nonsparse_coverage = NULL,
+                                 theta_beta_ratio = NULL,
+                                 L = NULL,
+                                 threshold = NULL)
