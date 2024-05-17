@@ -1,4 +1,4 @@
-Rscript simulation_script.R 5 0.5 2 0.01 1.4 10 0.9
-Rscript simulation_script.R 5 0.5 2 0.05 1.4 10 0.9
-Rscript simulation_script.R 5 0.5 2 0.01 3 10 0.9
-Rscript simulation_script.R 5 0.5 2 0.05 3 10 0.9
+Rscript /home/apm2217/data/simulation_script.R 5 0.5 2 0.01 1.4 10 0.9
+Rscript /home/apm2217/data/simulation_script.R 5 0.5 2 0.05 1.4 10 0.9
+Rscript /home/apm2217/data/simulation_script.R 5 0.5 2 0.01 3 10 0.9
+Rscript /home/apm2217/data/simulation_script.R 5 0.5 2 0.05 3 10 0.9
