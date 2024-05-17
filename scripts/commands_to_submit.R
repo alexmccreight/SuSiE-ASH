@@ -40,7 +40,7 @@ for (i in 1:nrow(parameter_grid)) {
   threshold <- params["threshold"]
 
   # Create the command
-  command <- paste("Rscript simulation_script.R", num_simulations, total_heritability, sparse_effects,
+  command <- paste("Rscript /home/apm2217/data/simulation_script.R", num_simulations, total_heritability, sparse_effects,
                    nonsparse_coverage, theta_beta_ratio, L, threshold)
 
   # Write the command to the file
