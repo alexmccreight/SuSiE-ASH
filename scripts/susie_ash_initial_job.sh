@@ -1,6 +1,6 @@
 #!/bin/bash
 username=apm2217
-./mm_jobman.sh \
+./src/mm_jobman.sh \
  ./commands_to_submit.txt \
  -c 2 -m 16 \
  --job-size 4 \
