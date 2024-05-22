@@ -1,11 +1,16 @@
+# Set Path to S3 Bucket
+data_path <- "/home/apm2217/data/"
+
+# Libraries
 library(susieR)
 library(mr.ash.alpha)
 library(dplyr)
 library(magrittr)
+source("susie-ash.R") #ADD SUSIE-ASH SOURCE
+#source("") #ADD SUSIE-INF SOURCE
 
 # Annotation Matrix (from S3 Bucket)
-data_path <- "/home/apm2217/data/X20"
-X <- readRDS(data_path)
+X <- readRDS("X20")
 
 # Generating Data
 generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, theta_beta_ratio) {
