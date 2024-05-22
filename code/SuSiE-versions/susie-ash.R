@@ -390,7 +390,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   attr(X,"d") = out$d
 
   # Initialize susie fit.
-  s = init_setup(n,p,L,scaled_prior_variance,residual_variance,prior_weights,
+  s = susieR:::init_setup(n,p,L,scaled_prior_variance,residual_variance,prior_weights,
                  null_weight,as.numeric(var(y)),standardize)
   if (!missing(s_init) && !is.null(s_init)) {
     if (!inherits(s_init,"susie"))
@@ -435,7 +435,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     s = susieR:::update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
                            check_null_threshold)
     if (verbose)
-      print(paste0("objective:",get_objective(X,y,s)))
+      print(paste0("objective:",susieR:::get_objective(X,y,s)))
 
     # Check which credible sets have < 0.1% heritability
     ls <- which(s$V < 0.001)
@@ -546,7 +546,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
               "to skip this step set compute_univariate_zscore = FALSE")
     if (!is.null(null_weight) && null_weight != 0)
       X = X[,1:(ncol(X) - 1)]
-    s$z = calc_z(X,y,center = intercept,scale = standardize)
+    s$z = susieR:::calc_z(X,y,center = intercept,scale = standardize)
   }
 
   # For prediction.
