@@ -6,28 +6,29 @@ susie_inf <- function(X, y, L,
                       method = "moments", sigmasq_range = NULL, tausq_range = NULL,
                       PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, verbose = TRUE) {
 
-  # Compute n, p, z, meansq, XtX, LD, V
+  # Compute n, p, z,
   n <- nrow(X)
-  p <- ncol(X)
-  #z <- crossprod(X, y) / sqrt(n) # Vector of z-scores
-  z <- (t(X) %*% y) * (1/sqrt(n)) # Vector of z-scores
-  meansq <- mean(y^2) # Mean-squared magnitude of y
-  #XtX <- crossprod(X)
+  z <- (t(X) %*% y)/sqrt(n) # Vector of z-scores
+  p <- length(z)
+
+  # Compute meansq, XtX, LD, V
+  meansq <- sum(y^2)/n # Mean-squared magnitude of y
   XtX <- t(X) %*% X
-  LD <- (XtX) * (1/n) # LD Matrix
+  LD <- (XtX)/n # LD Matrix
 
   eig <- eigen(LD, symmetric = T)
-  V <- eig$vectors # pxp matrix of eigenvectors of XtX
-  Dsq <- pmax(n * eig$values, 0) # Precomputed length-p vector of eigen values of XtX
+  V <- (eig$vectors[, ncol(eig$vectors):1]) # pxp matrix of eigenvectors of XtX; use this [,ncol..] to match the python scheme. However, we still have differing signs
+  Dsq <- pmax(n * sort(eig$values), 0) # Precomputed length-p vector of eigen values of XtX; use sort() to go from min to max (same as Python)
 
   # Precompute V,D^2 in the SVD X=UDV', and V'X'y and y'y
 
   if ((is.null(V) || is.null(Dsq)) && is.null(LD)) {stop("Missing LD")}
   else if (is.null(V) || is.null(Dsq)) {
-    eigvals <- eigen(LD, symmetric = TRUE, only.values = TRUE)$values
+    eigvals <- eigen(LD, symmetric = TRUE, only.values = TRUE)$values # this can be fixed to match above later
     V <- eigen(LD, symmetric = TRUE, only.vectors = TRUE)$vectors
     Dsq <- pmax(n * eigvals, 0)}
   else{Dsq <- pmax(Dsq, 0)}
+
 
   Xty <- sqrt(n) * z # p x 1 matrix
   VtXty <- t(V) %*% Xty # p x 1 matrix
@@ -35,7 +36,7 @@ susie_inf <- function(X, y, L,
 
   # Initialize diagonal variances, diag(X', Omega X, X' Omega y)
   var <- tausq*Dsq+sigmasq # vector of length p
-  diagXtOmegaX <- rowSums(V^2 * (Dsq / var)) # vector of length p
+  diagXtOmegaX <- rowSums(sweep(V^2, 2, (Dsq / var), `*`)) # vector of length p (initialized each value at n)
   XtOmegay <- V %*% (VtXty / var) # p x 1 matrix
 
   # Initialize s_l^2, PIP_j, mu_j
@@ -157,7 +158,7 @@ susie_inf <- function(X, y, L,
     alpha = alpha
   ))
 
-} # Main Function
+}
 
 ######### Method of Moments #########
 
@@ -187,7 +188,7 @@ MoM <- function(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
     tmpD <- tmpD + PIP[, l] * (mu[, l]^2 + 1 / omega[, l])
   }
 
-  diagVtMV <- diagVtMV + rowSums((t(V)^2) * tmpD)
+  diagVtMV <- diagVtMV + rowSums(sweep(t(V)^2, 2, tmpD, `*`))
 
   # Compute x
   x <- rep(0, 2)
@@ -213,4 +214,4 @@ MoM <- function(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
     }
   }
   return(list(sigmasq = sigmasq, tausq = tausq))
-} # Main Method of Moments
+}
