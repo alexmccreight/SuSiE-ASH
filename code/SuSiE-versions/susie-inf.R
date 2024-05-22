@@ -4,7 +4,7 @@ susie_inf <- function(X, y, L,
                       est_ssq = TRUE, ssq = NULL, ssq_range = c(0, 1), pi0 = NULL,
                       est_sigmasq = TRUE, est_tausq = TRUE, sigmasq = 1, tausq = 0,
                       method = "moments", sigmasq_range = NULL, tausq_range = NULL,
-                      PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, verbose = TRUE) {
+                      PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE) {
 
   # Compute n, p, z,
   n <- nrow(X)
@@ -144,10 +144,14 @@ susie_inf <- function(X, y, L,
   alpha <- tausq * XtOmegar
 
   # Compute PIPs
-  PIP <- 1 - apply(1-PIP, 1, prod)
+  PIP2 <- 1 - apply(1-PIP, 1, prod)
+
+  # Compute Credible Sets
+  cred = susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
 
   return(list(
     PIP = PIP,
+    PIP2 = PIP2,
     mu = mu,
     omega = omega,
     lbf = lbf,
@@ -155,7 +159,8 @@ susie_inf <- function(X, y, L,
     ssq = ssq,
     sigmasq = sigmasq,
     tausq = tausq,
-    alpha = alpha
+    alpha = alpha,
+    sets = cred
   ))
 
 }
@@ -214,4 +219,53 @@ MoM <- function(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
     }
   }
   return(list(sigmasq = sigmasq, tausq = tausq))
+}
+
+######### Credible Set Generation #########
+
+susie_inf_get_cs = function(PIP, coverage = coverage, purity = 0.5, LD = NULL, V = NULL, Dsq = NULL, n = NULL, dedup = TRUE) {
+  if (is.null(V) || is.null(Dsq) || is.null(n) && is.null(LD)) {
+    stop("Missing inputs for purity filtering")
+  }
+
+  # Compute credible sets
+  cred <- list()
+  p <- nrow(PIP)
+  L <- ncol(PIP)
+
+  for (l in 1:L) {
+    sortinds <- order(PIP[, l], decreasing = TRUE)
+    cumsums <- cumsum(PIP[sortinds, l])
+    ind <- which(cumsums >= coverage)[1]
+    credset <- sortinds[1:ind]
+
+    # Filter by purity
+    if (length(credset) == 1) {
+      cred[[length(cred) + 1]] <- credset
+      next
+    }
+
+    if (length(credset) < 100) {
+      rows <- credset
+    } else {
+      set.seed(123)
+      rows <- sample(credset, 100)
+    }
+
+    if (!is.null(LD)) {
+      LDloc <- LD[rows, rows]
+    } else {
+      LDloc <- (V[rows, ] %*% diag(Dsq)) %*% t(V[rows, ]) / n
+    }
+
+    if (min(abs(LDloc)) > purity) {
+      cred[[length(cred) + 1]] <- sort(credset)
+    }
+  }
+
+  if (dedup) {
+    cred <- unique(cred)
+  }
+
+  return(cred)
 }
