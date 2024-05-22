@@ -384,7 +384,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   # otherwise; 'attr(X,'d') is a p-vector of column sums of
   # X.standardized^2,' where X.standardized is the matrix X centered
   # by attr(X,'scaled:center') and scaled by attr(X,'scaled:scale').
-  out = compute_colstats(X,center = intercept,scale = standardize)
+  out = susieR:::compute_colstats(X,center = intercept,scale = standardize)
   attr(X,"scaled:center") = out$cm
   attr(X,"scaled:scale") = out$csd
   attr(X,"d") = out$d
@@ -400,7 +400,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
            "check your input")
 
     # First, remove effects with s_init$V = 0
-    s_init = susie_prune_single_effects(s_init)
+    s_init = susieR:::susie_prune_single_effects(s_init)
     num_effects = nrow(s_init$alpha)
     if(missing(L)){
       L = num_effects
@@ -412,11 +412,11 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       L = num_effects
     }
     # expand s_init if L > num_effects.
-    s_init = susie_prune_single_effects(s_init, min(p, L), s$V)
-    s = modifyList(s,s_init)
-    s = init_finalize(s,X = X)
+    s_init = susieR:::susie_prune_single_effects(s_init, min(p, L), s$V)
+    s = susieR:::modifyList(s,s_init)
+    s = susieR:::init_finalize(s,X = X)
   } else {
-    s = init_finalize(s)
+    s = susieR:::init_finalize(s)
   }
 
   # Initialize elbo to NA.
@@ -431,8 +431,8 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     # SuSiE "warm start" phase
   if(i <= warm_start){
     if (track_fit)
-      tracking[[i]] = susie_slim(s)
-    s = update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
+      tracking[[i]] = susieR:::susie_slim(s)
+    s = susieR:::update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
                            check_null_threshold)
     if (verbose)
       print(paste0("objective:",get_objective(X,y,s)))
@@ -475,11 +475,11 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
 
     if (estimate_residual_variance) {
       s$sigma2 = pmax(residual_variance_lowerbound,
-                      estimate_residual_variance(X,y_residuals,s))
+                      susieR:::estimate_residual_variance(X,y_residuals,s))
       if (s$sigma2 > residual_variance_upperbound)
         s$sigma2 = residual_variance_upperbound
       if (verbose)
-        print(paste0("objective:",get_objective(X,y_residuals,s)))
+        print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
     }
   }
 
