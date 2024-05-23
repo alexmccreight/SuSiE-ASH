@@ -4,8 +4,9 @@ username=apm2217
  ./commands_to_submit.txt \
  -c 2 -m 16 \
  --job-size 4 \
+ --parallel-commands 4 \
  --mount statfungen/ftp_fgc_xqtl/interactive_analysis/$username/susie-ash-data:/home/$username/data \
--  statfungen/ftp_fgc_xqtl/analysis_result/interactive_analysis/$username/susie-ash-output:/home/$username/output \
+ --mount statfungen/ftp_fgc_xqtl/analysis_result/interactive_analysis/$username/susie-ash-output:/home/$username/output \
  --mountOpt "mode=r" "mode=rw" \
  --cwd "/home/$username/data" \
  --image ghcr.io/cumc/pecotmr_docker:latest \
