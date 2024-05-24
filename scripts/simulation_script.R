@@ -168,7 +168,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     data <- generate_data(X = X, total_heritability = total_heritability, sparse_effects = sparse_effects, nonsparse_coverage = nonsparse_coverage, theta_beta_ratio)
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
 
     # Store results + betas/thetas
     all_metrics[[i]] <- results$metrics

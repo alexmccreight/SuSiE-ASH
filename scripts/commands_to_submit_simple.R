@@ -1,10 +1,10 @@
-# Define the parameter grid (SUBSET: 2 settings (w/ 2 iterations))
+# Define the parameter grid (SUBSET: 4 settings (w/ 25 iterations))
 parameter_grid <- expand.grid(
-  num_simulations = c(2),
+  num_simulations = c(25),
   n = c(5000),
   p = c(500),
   MAF = c(0.1),
-  Ltrue = c(5),
+  Ltrue = c(5, 10),
   ssq = c(0.01),
   tausq = c(1e-3,1e-4),
   threshold = c(0.90),

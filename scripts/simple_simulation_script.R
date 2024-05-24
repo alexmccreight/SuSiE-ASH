@@ -149,7 +149,7 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
     data <- generate_data(n = n, p = p, MAF = MAF, Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
 
     # Store results + betas/thetas
     all_metrics[[i]] <- results$metrics
