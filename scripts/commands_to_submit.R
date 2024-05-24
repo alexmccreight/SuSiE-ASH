@@ -15,8 +15,8 @@ parameter_grid <- expand.grid(
   num_simulations = c(5),
   total_heritability = c(0.50),
   sparse_effects = c(2),
-  nonsparse_coverage = c(0.01, 0.05),
-  theta_beta_ratio = c(1.4, 3),
+  nonsparse_coverage = c(0.01),
+  theta_beta_ratio = c(1.4),
   L = c(10),
   threshold = c(0.90),
   stringsAsFactors = FALSE
@@ -40,8 +40,14 @@ for (i in 1:nrow(parameter_grid)) {
   threshold <- params["threshold"]
 
   # Create the command
-  command <- paste("Rscript /home/apm2217/data/simulation_script.R", num_simulations, total_heritability, sparse_effects,
-                   nonsparse_coverage, theta_beta_ratio, L, threshold)
+  command <- paste0("Rscript /home/apm2217/data/simulation_script.R",
+                    " num_simulations=",num_simulations,
+                    " total_heritability=", total_heritability,
+                    " sparse_effects=", sparse_effects,
+                    " nonsparse_coverage=", nonsparse_coverage,
+                    " theta_beta_ratio=", theta_beta_ratio,
+                    " L=", L,
+                    " threshold=", threshold)
 
   # Write the command to the file
   writeLines(command, file_conn)

@@ -1,4 +1,4 @@
-# Set Path to S3 Bucket
+# Set Path to Mounted S3 Bucket
 data_path <- "/home/apm2217/data/"
 
 # Libraries
@@ -52,10 +52,11 @@ generate_data <- function(X, total_heritability, sparse_effects, nonsparse_cover
 }
 
 # Method and Scoring
-method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 10, threshold = 0.95) {
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 10, threshold = 0.90) {
   # Run various methods
   susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
   susie_ash_output <- susie_ash(X = X, y = y, L = L, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
+  susie_inf_output <- susie_inf(X = X, y = y, L = L, coverage = 0.9)
 
   calc_metrics <- function(mod, beta = beta, theta = theta, threshold = threshold) {
     all_causal <-  c(which(beta != 0), which(theta != 0))
@@ -83,23 +84,50 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
   }
 
+  calc_metrics_infinitesimal <- function(mod, beta = beta, theta = theta, threshold = threshold){
+    all_causal <- c(which(beta != 0), which(theta != 0))
+
+    # Calculate Average CS Size
+    cs_size <- length(unlist(mod$sets)) / length(mod$sets)
+
+    # Calculate Coverage (proportion of credible sets with a causal effect)
+    test.cs <- susie_inf_output$sets
+    coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / length(mod$sets)
+
+    # CS Based FDR
+    TP = sum(all_causal %in% unlist(test.cs))
+    FN = length(all_causal) - TP
+    FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
+    cs_fdr = FP/(TP+FP)
+
+    # CS Based Recall
+    TP = sum(all_causal %in% unlist(test.cs))
+    FN = length(all_causal) - TP
+    cs_recall = TP/(TP+FN)
+
+    return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
+
+  }
+
   # Calculate Metrics for each method
   susie_metrics <- calc_metrics(susie_output, beta, theta, threshold)
   susie_ash_metrics <- calc_metrics(susie_ash_output, beta, theta, threshold)
+  susie_inf_metrics <- calc_metrics_infinitesimal(susie_inf_output, beta, theta, threshold)
 
   #Create a data frame with the results
   metrics_table  <- data.frame(
-    Model = c("SuSiE","SuSiE-ASH"),
-    CS_FDR = c(susie_metrics$cs_fdr, susie_ash_metrics$cs_fdr),
-    CS_Recall = c(susie_metrics$cs_recall, susie_ash_metrics$cs_recall),
-    CS_Size = c(susie_metrics$cs_size, susie_ash_metrics$cs_size),
-    Coverage = c(susie_metrics$coverage, susie_ash_metrics$coverage)
+    Model = c("SuSiE","SuSiE-ASH", "SuSiE-Inf"),
+    CS_FDR = c(susie_metrics$cs_fdr, susie_ash_metrics$cs_fdr, susie_inf_metrics$cs_fdr),
+    CS_Recall = c(susie_metrics$cs_recall, susie_ash_metrics$cs_recall, susie_inf_metrics$cs_recall),
+    CS_Size = c(susie_metrics$cs_size, susie_ash_metrics$cs_size, susie_inf_metrics$cs_size),
+    Coverage = c(susie_metrics$coverage, susie_ash_metrics$coverage, susie_inf_metrics$coverage)
   )
   # Return the results table
   return(list(
     metrics = metrics_table,
     susie_output = susie_output,
     susie_ash_output = susie_ash_output,
+    susie_inf_output = susie_inf_output,
     betas = beta,
     thetas = theta)
   )
@@ -108,14 +136,17 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 # Simulate
 simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse_effects = NULL, nonsparse_coverage = NULL, theta_beta_ratio = NULL, L = NULL, threshold = NULL) {
   # Parse command-line arguments
-  args <- commandArgs(trailingOnly = TRUE)
-  num_simulations <- as.integer(args[1])
-  total_heritability <- as.numeric(args[2])
-  sparse_effects <- as.integer(args[3])
-  nonsparse_coverage <- as.numeric(args[4])
-  theta_beta_ratio <- as.numeric(args[5])
-  L <- as.integer(args[6])
-  threshold <- as.numeric(args[7])
+  num_simulations = 2
+  total_heritability = 0.5
+  sparse_effects = 3
+  nonsparse_coverage = 0.01
+  theta_beta_ratio = 1.4
+  L = 10
+  threshold = 0.95
+
+  for (arg in commandArgs(trailingOnly = TRUE)) {
+    eval(parse(text=arg))
+  }
 
   # Initialize lists to store results
   all_metrics <- list()
@@ -123,6 +154,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   all_thetas <- list()
   all_susie_outputs <- list()
   all_susie_ash_outputs <- list()
+  all_susie_inf_outputs <- list()
   all_seeds <- numeric(num_simulations)
 
   for (i in 1:num_simulations) {
@@ -144,6 +176,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_thetas[[i]] <- data$theta
     all_susie_outputs[[i]] <- results$susie_output
     all_susie_ash_outputs[[i]] <- results$susie_ash_output
+    all_susie_inf_outputs[[i]] <- results$susie_inf_output
     all_seeds[i] <- seed
   }
 
@@ -165,6 +198,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_thetas = all_thetas,
     all_susie_outputs = all_susie_outputs,
     all_susie_ash_outputs = all_susie_ash_outputs,
+    all_susie_inf_outputs = all_susie_inf_outputs,
     all_seeds = all_seeds
   )
 

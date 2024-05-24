@@ -4,7 +4,7 @@ username=apm2217
  ./commands_to_submit.txt \
  -c 2 -m 16 \
  --job-size 4 \
- --parallel-commands 4 \
+ --parallel-commands 1 \
  --mount statfungen/ftp_fgc_xqtl/interactive_analysis/$username/susie-ash-data:/home/$username/data \
  --mount statfungen/ftp_fgc_xqtl/analysis_result/interactive_analysis/$username/susie-ash-output:/home/$username/output \
  --mountOpt "mode=r" "mode=rw" \
@@ -14,4 +14,4 @@ username=apm2217
  --env ENV_NAME=pecotmr \
  --imageVolSize 10 \
  --opcenter 23.22.157.8 \
- --no-fail-fast  
+ --no-fail-fast
