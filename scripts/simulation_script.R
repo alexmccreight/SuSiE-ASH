@@ -6,8 +6,8 @@ library(susieR)
 library(mr.ash.alpha)
 library(dplyr)
 library(magrittr)
-source("susie-ash.R") #ADD SUSIE-ASH SOURCE
-#source("") #ADD SUSIE-INF SOURCE
+source("susie-ash.R")
+source("susie-inf.R")
 
 # Annotation Matrix (from S3 Bucket)
 X <- readRDS("X20")
