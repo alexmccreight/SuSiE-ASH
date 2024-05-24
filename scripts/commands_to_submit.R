@@ -12,7 +12,7 @@
 
 # Define the parameter grid (SUBSET: 8 settings (w/ 5 iterations))
 parameter_grid <- expand.grid(
-  num_simulations = c(5),
+  num_simulations = c(2),
   total_heritability = c(0.50),
   sparse_effects = c(2),
   nonsparse_coverage = c(0.01),
