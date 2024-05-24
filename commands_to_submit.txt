@@ -1,1 +1,2 @@
-Rscript /home/apm2217/data/simulation_script.R num_simulations=2 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=1.4 L=10 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=2 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=0.001 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=2 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=0.0001 threshold=0.9

@@ -9,57 +9,36 @@ library(magrittr)
 source("susie-ash.R")
 source("susie-inf.R")
 
-# Annotation Matrix (from S3 Bucket)
-X <- readRDS("X20")
+generate_data <- function(n, p, MAF, Ltrue, ssq, sigmasq, tausq){
 
-# Generating Data
-generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, theta_beta_ratio) {
-  n <- nrow(X)
-  p <- ncol(X)
-
-  # Generate sparse effects (beta.true)
-  beta.true <- rep(0, p)
-  beta.true[sample(p, sparse_effects)] <- rnorm(sparse_effects, mean = 0, sd = .5)
-
-  # Generate nonsparse effects (theta.true)
-  num_nonsparse <- round(p * nonsparse_coverage)
-  theta.true <- rep(0, p)
-  theta.true[sample(p, num_nonsparse)] <- rnorm(num_nonsparse, mean = 0 ,sd = 0.0005)
-
-  # Scale Annotation Matrix
+  # Generate genotype matrix X
+  X <- matrix(rbinom(n * p, size = 2, prob = MAF), nrow = n, ncol = p)
   X <- scale(X, center = TRUE, scale = TRUE)
 
-  # Calculate the variance of the sparse and nonsparse effects
-  var_beta <- var(X %*% beta.true)
-  var_theta <- var(X %*% theta.true)
+  # Sparse Causal Effects
+  beta <- rep(0, p)
+  inds <- sample(p, Ltrue, replace = FALSE)
+  beta[inds] <- rnorm(Ltrue) * sqrt(ssq)
+  order <- order(inds)
 
-  # Adjust the effect sizes based on the theta_beta_ratio
-  ratio_factor <- as.numeric((theta_beta_ratio * var_beta) / var_theta)
-  theta.true <- theta.true * sqrt(ratio_factor)
-
-  # Recalculate the variance of the adjusted nonsparse effects
-  var_theta_adjusted <- var(X %*% theta.true)
-
-  # Calculate the residual variance based on the total heritability
-  sigmasq_error <- (var_beta + var_theta_adjusted) * (1 - total_heritability) / total_heritability
-
-  # Create Outcomes
-  y <- X %*% matrix(beta.true, ncol = 1) + X %*% matrix(theta.true, ncol = 1) + rnorm(n, 0, sqrt(sigmasq_error))
-  y <- scale(y, center = TRUE, scale = FALSE)
+  # Generate data with strong infinitesimal effects, tau^2 = 1e-3
+  theta <- rnorm(p) * sqrt(tausq)
+  effects <- X %*% beta + X %*% theta
+  y <- effects + rnorm(n) * sqrt(sigmasq)
+  total_variance_explained <- var(effects) / var(y)
 
   # Store Information
-  return(list(X = X, y = y, error = sigmasq_error, beta = beta.true, theta = theta.true))
+  return(list(X = X, y = y, heritability = total_variance_explained, beta = beta, theta = theta))
 }
 
-# Method and Scoring
-method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 10, threshold = 0.90) {
-  # Run various methods
+# Run Methods and Metrics
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 5, threshold = 0.90) {
   susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
   susie_ash_output <- susie_ash(X = X, y = y, L = L, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
   susie_inf_output <- susie_inf(X = X, y = y, L = L, coverage = 0.9, verbose = F)
 
   calc_metrics <- function(mod, beta = beta, theta = theta, threshold = threshold) {
-    all_causal <-  c(which(beta != 0), which(theta != 0))
+    all_causal <-  c(which(beta != 0))
 
     # Calculate Average CS Size
     cs_size <- length(unlist(susie_get_cs(mod, X = X, coverage = threshold)$cs)) / length(susie_get_cs(mod, X = X, coverage = threshold)$cs)
@@ -80,12 +59,11 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
     cs_recall = TP/(TP+FN)
 
-
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
   }
 
   calc_metrics_infinitesimal <- function(mod, beta = beta, theta = theta, threshold = threshold){
-    all_causal <- c(which(beta != 0), which(theta != 0))
+    all_causal <- c(which(beta != 0))
 
     # Calculate Average CS Size
     cs_size <- length(unlist(mod$sets)) / length(mod$sets)
@@ -106,7 +84,6 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     cs_recall = TP/(TP+FN)
 
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
-
   }
 
   # Calculate Metrics for each method
@@ -122,6 +99,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     CS_Size = c(susie_metrics$cs_size, susie_ash_metrics$cs_size, susie_inf_metrics$cs_size),
     Coverage = c(susie_metrics$coverage, susie_ash_metrics$coverage, susie_inf_metrics$coverage)
   )
+
   # Return the results table
   return(list(
     metrics = metrics_table,
@@ -131,18 +109,21 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     betas = beta,
     thetas = theta)
   )
+
 }
 
-# Simulate
-simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse_effects = NULL, nonsparse_coverage = NULL, theta_beta_ratio = NULL, L = NULL, threshold = NULL) {
+# Main Simulation Command
+simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
   # Parse command-line arguments
   num_simulations = 2
-  total_heritability = 0.5
-  sparse_effects = 3
-  nonsparse_coverage = 0.01
-  theta_beta_ratio = 1.4
-  L = 10
-  threshold = 0.95
+  n = 5000
+  p = 500
+  MAF = 0.1
+  Ltrue = 5
+  ssq = 0.01
+  sigmasq = 1
+  tausq = 1e-3
+  threshold = 0.90
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
     eval(parse(text=arg))
@@ -165,7 +146,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     set.seed(seed)
 
     # Generate data
-    data <- generate_data(X = X, total_heritability = total_heritability, sparse_effects = sparse_effects, nonsparse_coverage = nonsparse_coverage, theta_beta_ratio)
+    data <- generate_data(n = n, p = p, MAF = MAF, Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
 
     # Run methods and calculate metrics
     results <- method_and_score(X = X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
@@ -203,11 +184,13 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   )
 
   file_name <- paste0("numIter", num_simulations,
-                      "_totHeritability", total_heritability,
-                      "_sparseEffect", sparse_effects,
-                      "_nonsparse", nonsparse_coverage,
-                      "_ratio", theta_beta_ratio,
-                      "_L", L)
+                      "_n", n,
+                      "_p", p,
+                      "_MAF", MAF,
+                      "_Ltrue", Ltrue,
+                      "_ssq", ssq,
+                      "_sigmasq", sigmasq,
+                      "_tausq", tausq)
 
   saveRDS(simulation_results, file.path(output_dir, file_name))
 
@@ -217,9 +200,11 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
 
 # Run the simulation
 simulation_results <- simulation(num_simulations = NULL,
-                                 total_heritability = NULL,
-                                 sparse_effects = NULL,
-                                 nonsparse_coverage = NULL,
-                                 theta_beta_ratio = NULL,
-                                 L = NULL,
+                                 n = NULL,
+                                 p = NULL,
+                                 MAF = NULL,
+                                 Ltrue = NULL,
+                                 ssq = NULL,
+                                 sigmasq = NULL,
+                                 tausq = NULL,
                                  threshold = NULL)
