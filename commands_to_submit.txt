@@ -1,4 +1,10 @@
 Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=0.001 threshold=0.9
 Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=10 ssq=0.01 tausq=0.001 threshold=0.9
-Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=0.0001 threshold=0.9
-Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=10 ssq=0.01 tausq=0.0001 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=0.00075 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=10 ssq=0.01 tausq=0.00075 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=5e-04 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=10 ssq=0.01 tausq=5e-04 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=0.0025 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=10 ssq=0.01 tausq=0.0025 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=5 ssq=0.01 tausq=1e-04 threshold=0.9
+Rscript /home/apm2217/data/simple_simulation_script.R num_simulations=25 n=5000 p=500 MAF=0.1 Ltrue=10 ssq=0.01 tausq=1e-04 threshold=0.9

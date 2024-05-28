@@ -6,7 +6,7 @@ parameter_grid <- expand.grid(
   MAF = c(0.1),
   Ltrue = c(5, 10),
   ssq = c(0.01),
-  tausq = c(1e-3,1e-4),
+  tausq = c(0.001, 0.00075, 0.0005, 0.0025, 0.0001),
   threshold = c(0.90),
   stringsAsFactors = FALSE
 )

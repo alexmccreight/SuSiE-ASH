@@ -442,14 +442,9 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     if (length(ls) > 0) {
       notls <- setdiff(1:L, ls)
       # Update y_residuals
-      y_residuals <- y - X %*% colSums(s$alpha[notls,] * s$mu[notls,])
+      y_residuals <- y - X %*% colSums(s$alpha[notls,,drop=F] * s$mu[notls,,drop=F])
     }
   } else{
-    # Set up Mr. ASH Residuals
-    # if (i == warm_start + 1) {
-    #   y_residuals_mrash <- y_residuals
-    # }
-
     # Run Mr. ASH on Residuals
     mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
     theta = mrash_output$beta

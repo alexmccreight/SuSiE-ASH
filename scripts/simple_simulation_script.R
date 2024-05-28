@@ -39,11 +39,17 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 
   calc_metrics <- function(mod, beta = beta, theta = theta, threshold = threshold) {
     all_causal <-  c(which(beta != 0))
+    test.cs <- susie_get_cs(mod, X = X, coverage = threshold)$cs
+    coverage <- 0
+    cs_fdr <- 0
+    cs_recall <- 0
+    cs_size <- 0
+
+    if(length(test.cs) > 0){
 
     # Calculate Average CS Size
     cs_size <- length(unlist(susie_get_cs(mod, X = X, coverage = threshold)$cs)) / length(susie_get_cs(mod, X = X, coverage = threshold)$cs)
 
-    test.cs <- susie_get_cs(mod, X = X, coverage = threshold)$cs
     # Calculate Coverage (proportion of credible sets with a causal effect)
     coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(susie_get_cs(mod, X = X, coverage = threshold)$cs))
 
@@ -58,18 +64,23 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     FN = length(all_causal) - TP
     FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
     cs_recall = TP/(TP+FN)
-
+}
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
   }
 
   calc_metrics_infinitesimal <- function(mod, beta = beta, theta = theta, threshold = threshold){
     all_causal <- c(which(beta != 0))
+    test.cs <- mod$sets
+    coverage <- 0
+    cs_fdr <- 0
+    cs_recall <- 0
+    cs_size <- 0
 
+    if(length(test.cs) > 0){
     # Calculate Average CS Size
     cs_size <- length(unlist(mod$sets)) / length(mod$sets)
 
     # Calculate Coverage (proportion of credible sets with a causal effect)
-    test.cs <- susie_inf_output$sets
     coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / length(mod$sets)
 
     # CS Based FDR
@@ -82,7 +93,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     TP = sum(all_causal %in% unlist(test.cs))
     FN = length(all_causal) - TP
     cs_recall = TP/(TP+FN)
-
+}else{print("SuSiE-INF Fails to Capture Any Signals")}
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
   }
 
@@ -115,14 +126,14 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 # Main Simulation Command
 simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
   # Parse command-line arguments
-  num_simulations = 2
+  num_simulations = 5
   n = 5000
   p = 500
   MAF = 0.1
   Ltrue = 5
   ssq = 0.01
   sigmasq = 1
-  tausq = 1e-3
+  tausq = .0005
   threshold = 0.90
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
@@ -171,7 +182,8 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
   )
 
   # Save simulation results as Rds file
-  output_dir <- "/home/apm2217/output"
+  #output_dir <- "/home/apm2217/output"
+  output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
