@@ -32,7 +32,7 @@ generate_data <- function(n, p, MAF, Ltrue, ssq, sigmasq, tausq){
 }
 
 # Run Methods and Metrics
-method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = 5, threshold = 0.90) {
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = Ltrue, threshold = 0.90) {
   susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
   susie_ash_output <- susie_ash(X = X, y = y, L = L, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
   susie_inf_output <- susie_inf(X = X, y = y, L = L, coverage = 0.9, verbose = F)
@@ -149,7 +149,7 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
     data <- generate_data(n = n, p = p, MAF = MAF, Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = L, threshold = threshold)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = Ltrue, threshold = threshold)
 
     # Store results + betas/thetas
     all_metrics[[i]] <- results$metrics
