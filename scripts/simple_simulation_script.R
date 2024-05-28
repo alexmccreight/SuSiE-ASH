@@ -9,11 +9,18 @@ library(magrittr)
 source("susie-ash.R")
 source("susie-inf.R")
 
-generate_data <- function(n, p, MAF, Ltrue, ssq, sigmasq, tausq){
+# Annotation Matrix (from S3 Bucket)
+X <- readRDS("X4")
+
+generate_data <- function(X, Ltrue, ssq, sigmasq, tausq){
 
   # Generate genotype matrix X
-  X <- matrix(rbinom(n * p, size = 2, prob = MAF), nrow = n, ncol = p)
+  # X <- matrix(rbinom(n * p, size = 2, prob = MAF), nrow = n, ncol = p)
+
+  # Real X matrix input
   X <- scale(X, center = TRUE, scale = TRUE)
+  n <- nrow(X)
+  p <- ncol(X)
 
   # Sparse Causal Effects
   beta <- rep(0, p)
@@ -93,7 +100,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     TP = sum(all_causal %in% unlist(test.cs))
     FN = length(all_causal) - TP
     cs_recall = TP/(TP+FN)
-}else{print("SuSiE-INF Fails to Capture Any Signals")}
+}
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
   }
 
@@ -124,16 +131,13 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 }
 
 # Main Simulation Command
-simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
+simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
   # Parse command-line arguments
   num_simulations = 5
-  n = 5000
-  p = 500
-  MAF = 0.1
   Ltrue = 5
   ssq = 0.01
   sigmasq = 1
-  tausq = .0005
+  tausq = .0001
   threshold = 0.90
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
@@ -144,6 +148,7 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
   all_metrics <- list()
   all_betas <- list()
   all_thetas <- list()
+  all_heritabilities <- list()
   all_susie_outputs <- list()
   all_susie_ash_outputs <- list()
   all_susie_inf_outputs <- list()
@@ -157,7 +162,7 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
     set.seed(seed)
 
     # Generate data
-    data <- generate_data(n = n, p = p, MAF = MAF, Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
+    data <- generate_data(X = X, Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
 
     # Run methods and calculate metrics
     results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = Ltrue, threshold = threshold)
@@ -166,6 +171,7 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
     all_metrics[[i]] <- results$metrics
     all_betas[[i]] <- data$beta
     all_thetas[[i]] <- data$theta
+    all_heritabilities[[i]] <- data$heritability
     all_susie_outputs[[i]] <- results$susie_output
     all_susie_ash_outputs[[i]] <- results$susie_ash_output
     all_susie_inf_outputs[[i]] <- results$susie_inf_output
@@ -182,12 +188,14 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
   )
 
   # Save simulation results as Rds file
-  output_dir <- "/home/apm2217/output"
+  #output_dir <- "/home/apm2217/output"
+  output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
     all_betas = all_betas,
     all_thetas = all_thetas,
+    all_heritabilities = all_heritabilities,
     all_susie_outputs = all_susie_outputs,
     all_susie_ash_outputs = all_susie_ash_outputs,
     all_susie_inf_outputs = all_susie_inf_outputs,
@@ -195,9 +203,6 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
   )
 
   file_name <- paste0("numIter", num_simulations,
-                      "_n", n,
-                      "_p", p,
-                      "_MAF", MAF,
                       "_Ltrue", Ltrue,
                       "_ssq", ssq,
                       "_sigmasq", sigmasq,
@@ -211,9 +216,6 @@ simulation <- function(num_simulations = NULL, n = NULL, p = NULL, MAF = NULL, L
 
 # Run the simulation
 simulation_results <- simulation(num_simulations = NULL,
-                                 n = NULL,
-                                 p = NULL,
-                                 MAF = NULL,
                                  Ltrue = NULL,
                                  ssq = NULL,
                                  sigmasq = NULL,

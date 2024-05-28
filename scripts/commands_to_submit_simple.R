@@ -1,12 +1,9 @@
 # Define the parameter grid (SUBSET: 4 settings (w/ 25 iterations))
 parameter_grid <- expand.grid(
   num_simulations = c(25),
-  n = c(5000),
-  p = c(500),
-  MAF = c(0.1),
   Ltrue = c(5, 10),
-  ssq = c(0.01),
-  tausq = c(0.001, 0.00075, 0.0005, 0.0025, 0.0001),
+  ssq = c(0.01, 0.05, 0.1, 0.125),
+  tausq = c(0.0001, 0.00025, 0.00033, 0.0005),
   threshold = c(0.90),
   stringsAsFactors = FALSE
 )
@@ -21,9 +18,6 @@ for (i in 1:nrow(parameter_grid)) {
 
   # Extract parameter values
   num_simulations <- params["num_simulations"]
-  n <- params["n"]
-  p <- params["p"]
-  MAF <- params["MAF"]
   Ltrue <- params["Ltrue"]
   ssq <- params["ssq"]
   tausq <- params["tausq"]
@@ -32,9 +26,6 @@ for (i in 1:nrow(parameter_grid)) {
   # Create the command
   command <- paste0("Rscript /home/apm2217/data/simple_simulation_script.R",
                     " num_simulations=",num_simulations,
-                    " n=", n,
-                    " p=", p,
-                    " MAF=", MAF,
                     " Ltrue=", Ltrue,
                     " ssq=", ssq,
                     " tausq=", tausq,

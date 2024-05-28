@@ -442,7 +442,8 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     if (length(ls) > 0) {
       notls <- setdiff(1:L, ls)
       # Update y_residuals
-      y_residuals <- y - X %*% colSums(s$alpha[notls,,drop=F] * s$mu[notls,,drop=F])
+      #y_residuals <- y - X %*% colSums(s$alpha[notls,,drop=F] * s$mu[notls,,drop=F])
+      y_residuals <- y - X %*% colSums(s$alpha[notls,] * s$mu[notls,])
     }
   } else{
     # Run Mr. ASH on Residuals
