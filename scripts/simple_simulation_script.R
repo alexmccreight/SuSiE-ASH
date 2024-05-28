@@ -188,8 +188,8 @@ simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq
   )
 
   # Save simulation results as Rds file
-  #output_dir <- "/home/apm2217/output"
-  output_dir <- "analysis"
+  output_dir <- "/home/apm2217/output"
+  #output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
