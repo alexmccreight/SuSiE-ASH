@@ -134,7 +134,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
   # Parse command-line arguments
   num_simulations = 5
-  Ltrue = 5
+  Ltrue = 3
   ssq = 0.01
   sigmasq = 1
   tausq = .0001

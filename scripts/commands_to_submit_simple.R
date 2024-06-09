@@ -1,9 +1,9 @@
 # Define the parameter grid (SUBSET: 4 settings (w/ 25 iterations))
 parameter_grid <- expand.grid(
   num_simulations = c(25),
-  Ltrue = c(5, 10),
+  Ltrue = c(2,3,5),
   ssq = c(0.01, 0.05, 0.1, 0.125),
-  tausq = c(0.0001, 0.00025, 0.00033, 0.0005),
+  tausq = c(1e-4, 2.5e-4, 3.3e-4, 5e-4),
   threshold = c(0.90),
   stringsAsFactors = FALSE
 )
@@ -39,3 +39,4 @@ for (i in 1:nrow(parameter_grid)) {
 close(file_conn)
 
 cat("Commands file 'commands_to_submit.txt' created successfully.\n")
+
