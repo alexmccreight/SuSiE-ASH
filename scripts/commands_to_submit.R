@@ -1,22 +1,10 @@
-# Define the parameter grid (FULL: 90 settings (w/ 50 iterations))
-# parameter_grid <- expand.grid(
-#   num_simulations = c(50),
-#   total_heritability = c(0.25, 0.50),
-#   sparse_effects = c(2),
-#   nonsparse_coverage = c(0.01, 0.025, 0.05),
-#   theta_beta_ratio = c(1.4, 3, 5),
-#   L = c(10, 15, 20, 25, 30),
-#   threshold = c(0.90),
-#   stringsAsFactors = FALSE
-# )
-
 # Define the parameter grid (SUBSET: 8 settings (w/ 5 iterations))
 parameter_grid <- expand.grid(
-  num_simulations = c(2),
-  total_heritability = c(0.50),
+  num_simulations = c(30),
+  total_heritability = c(0.25, 0.33, 0.50),
   sparse_effects = c(2),
-  nonsparse_coverage = c(0.01),
-  theta_beta_ratio = c(1.4),
+  nonsparse_coverage = c(0.005, 0.01, 0.025, 0.05),
+  theta_beta_ratio = c(0.5, 0.75, 1.4, 2.25, 3, 5),
   L = c(10),
   threshold = c(0.90),
   stringsAsFactors = FALSE

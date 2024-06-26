@@ -1,7 +1,7 @@
 # Define the parameter grid (SUBSET: 4 settings (w/ 25 iterations))
 parameter_grid <- expand.grid(
   num_simulations = c(25),
-  Ltrue = c(2,3,5),
+  Ltrue = c(15,20,25,30),
   ssq = c(0.01, 0.05, 0.1, 0.125),
   tausq = c(1e-4, 2.5e-4, 3.3e-4, 5e-4),
   threshold = c(0.90),

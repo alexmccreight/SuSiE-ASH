@@ -10,7 +10,7 @@ source("susie-ash.R")
 source("susie-inf.R")
 
 # Annotation Matrix (from S3 Bucket)
-X <- readRDS("X20")
+X <- readRDS("X4")
 
 # Generating Data
 generate_data <- function(X, total_heritability, sparse_effects, nonsparse_coverage, theta_beta_ratio) {
@@ -191,6 +191,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
 
   # Save simulation results as Rds file
   output_dir <- "/home/apm2217/output"
+  #output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
