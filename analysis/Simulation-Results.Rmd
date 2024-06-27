@@ -11,7 +11,48 @@ library(ROCR)
 
 
 ```{r data, include = F}
-files <- list.files("code", pattern = "\\.rds$", full.names = TRUE)
+# files <- list.files("simulation/simulation_2", pattern = "", full.names = TRUE)
+# results_list <- list()
+# 
+# # Loop through each file
+# for (file_path in files) {
+#   # Extract the file name from the path
+#   file_name <- basename(file_path)
+#   
+#   # Use regular expressions to parse out the parameters
+#   parts <- regmatches(file_name, regexec("nonsparse(.*)_ratio(.*?)_L(.*?_total_heritability.*)\\.rds", file_name))
+#   
+#   # Extract parameters
+#   nonsparse_coverage <- as.numeric(parts[[1]][2])
+#   theta_beta_ratio <- as.numeric(parts[[1]][3])
+#   L <- as.numeric(sub("_total_heritability.*", "", parts[[1]][4]))
+#   total_heritability <- as.numeric(sub(".*_total_heritability", "", parts[[1]][4]))
+#   
+#   # Read the .rds file
+#   sim_results <- readRDS(file_path)
+#   
+#   # Assign the extracted values to the avg_metrics portion of your results
+#   sim_results$avg_metrics$nonsparse_coverage <- nonsparse_coverage
+#   sim_results$avg_metrics$theta_beta_ratio <- theta_beta_ratio
+#   sim_results$avg_metrics$L <- L
+#   sim_results$avg_metrics$total_heritability <- total_heritability
+#   
+#   # Construct a dynamic variable name
+#   var_name <- paste("simulation_nonsparse", nonsparse_coverage,
+#                     "_ratio", theta_beta_ratio,
+#                     "_L", L,
+#                     "_total_heritability", total_heritability, sep = "")
+#   
+#   # Assign the data frame to the dynamically named variable in the list
+#   results_list[[var_name]] <- sim_results
+# }
+```
+
+```{r, include = F}
+# List all files in the specified directory
+files <- list.files("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/simulation_2", 
+                    pattern = "", full.names = TRUE)
+
 results_list <- list()
 
 # Loop through each file
@@ -20,34 +61,49 @@ for (file_path in files) {
   file_name <- basename(file_path)
   
   # Use regular expressions to parse out the parameters
-  parts <- regmatches(file_name, regexec("nonsparse(.*)_ratio(.*?)_L(.*?_total_heritability.*)\\.rds", file_name))
+  parts <- regmatches(file_name, regexec("numIter(\\d+)_totHeritability([0-9.]+)_sparseEffect(\\d+)_nonsparse([0-9.]+)_ratio([0-9.]+)_L(\\d+)", file_name))
   
   # Extract parameters
-  nonsparse_coverage <- as.numeric(parts[[1]][2])
-  theta_beta_ratio <- as.numeric(parts[[1]][3])
-  L <- as.numeric(sub("_total_heritability.*", "", parts[[1]][4]))
-  total_heritability <- as.numeric(sub(".*_total_heritability", "", parts[[1]][4]))
+  num_iter <- as.numeric(parts[[1]][2])
+  total_heritability <- as.numeric(parts[[1]][3])
+  sparse_effect <- as.numeric(parts[[1]][4])
+  nonsparse_coverage <- as.numeric(parts[[1]][5])
+  theta_beta_ratio <- as.numeric(parts[[1]][6])
+  L <- as.numeric(parts[[1]][7])
   
-  # Read the .rds file
+  # Read the .rds file (assuming the file is an .rds file)
   sim_results <- readRDS(file_path)
   
   # Assign the extracted values to the avg_metrics portion of your results
+  sim_results$avg_metrics$num_iter <- num_iter
+  sim_results$avg_metrics$total_heritability <- total_heritability
+  sim_results$avg_metrics$sparse_effect <- sparse_effect
   sim_results$avg_metrics$nonsparse_coverage <- nonsparse_coverage
   sim_results$avg_metrics$theta_beta_ratio <- theta_beta_ratio
   sim_results$avg_metrics$L <- L
-  sim_results$avg_metrics$total_heritability <- total_heritability
   
   # Construct a dynamic variable name
-  var_name <- paste("simulation_nonsparse", nonsparse_coverage,
+  var_name <- paste("simulation",
+                    "_numIter", num_iter,
+                    "_totHeritability", total_heritability,
+                    "_sparseEffect", sparse_effect,
+                    "_nonsparse", nonsparse_coverage,
                     "_ratio", theta_beta_ratio,
-                    "_L", L,
-                    "_total_heritability", total_heritability, sep = "")
+                    "_L", L, sep = "")
   
   # Assign the data frame to the dynamically named variable in the list
   results_list[[var_name]] <- sim_results
 }
-
 ```
+
+
+
+```{r, include = F}
+# results_list$simulation_nonsparse0.01_ratio3_L10_total_heritability0.25$avg_metrics[c(1,3),]
+# results_list$simulation_nonsparse0.01_ratio3_L10_total_heritability0.5$avg_metrics[c(1,3),]
+# results_list$simulation_numIter30_totHeritability0.25_sparseEffect2_nonsparse0.005_ratio0.5_L10$all_susie_inf_outputs[[1]]$PIP2
+```
+
 
 # 1. ROC Curves
 
@@ -68,6 +124,8 @@ generate_roc_plots <- function(results_list) {
     susie_labels <- c()
     susie_ash_predictions <- c()
     susie_ash_labels <- c()
+    susie_inf_predictions <- c()
+    susie_inf_labels <- c()
     
     # Loop through each simulation iteration (assuming 25 iterations as in your original script)
     for (i in 1:25) {
@@ -90,15 +148,27 @@ generate_roc_plots <- function(results_list) {
       susie_ash_causal_beta <- (susie_ash_betas != 0) | (susie_ash_thetas != 0)
       susie_ash_predictions <- c(susie_ash_predictions, susie_ash_pip)
       susie_ash_labels <- c(susie_ash_labels, susie_ash_causal_beta)
+      
+      # SuSiE-Inf outputs
+      susie_inf_pip <- simulation$all_susie_inf_outputs[[i]]$PIP2
+      susie_inf_betas <- simulation$all_betas[[i]]
+      susie_inf_thetas <- simulation$all_thetas[[i]]
+      
+      # Create true causal effect labels 
+      susie_inf_causal_beta <- (susie_inf_betas != 0) | (susie_inf_thetas != 0)
+      susie_inf_predictions <- c(susie_inf_predictions, susie_inf_pip)
+      susie_inf_labels <- c(susie_inf_labels, susie_inf_causal_beta)
     }
     
     # Create prediction objects 
     pred_susie <- prediction(susie_predictions, susie_labels)
     pred_susie_ash <- prediction(susie_ash_predictions, susie_ash_labels)
+    pred_susie_inf <- prediction(susie_inf_predictions, susie_inf_labels)
     
     # Create performance objects
     perf_susie <- performance(pred_susie, "tpr", "fpr")
     perf_susie_ash <- performance(pred_susie_ash, "tpr", "fpr")
+    perf_susie_inf <- performance(pred_susie_inf, "tpr", "fpr")
     
     # Create plot title with simulation parameters
     plot_title <- paste0("ROC Curve (L = ", L, ", ", nonsparse_coverage * 100, 
@@ -109,8 +179,9 @@ generate_roc_plots <- function(results_list) {
     plot(perf_susie, col = "blue", lwd = 2)
     lines(x = c(0, 1), y = c(0, 1), col = "gray", lty = 2)  # No information line
     plot(perf_susie_ash, col = "red", add = TRUE, lwd = 2)
+    plot(perf_susie_inf, col = "green", add = TRUE, lwd = 2)
     title(main = plot_title[1], cex.main = 1)
-    legend("bottomright", legend = c("SuSiE", "SuSiE-ASH"), col = c("blue", "red"), lwd = 2, cex = 1)
+    legend("bottomright", legend = c("SuSiE", "SuSiE-ASH", "SuSiE-Inf"), col = c("blue", "red", "green"), lwd = 2, cex = 1)
   }
 }
 
@@ -148,6 +219,10 @@ generate_causal_plots <- function(results_list) {
       # For SuSiE-ASH
       susie_ash_pips <- simulation$all_susie_ash_outputs[[i]]$pip
       all_pips <- rbind(all_pips, data.frame(pip = susie_ash_pips, causal = as.integer(causal), method = "SuSiE-ASH"))
+      
+      # For SuSiE-Inf
+      susie_inf_pips <- simulation$all_susie_inf_outputs[[i]]$PIP2
+      all_pips <- rbind(all_pips, data.frame(pip = susie_inf_pips, causal = as.integer(causal), method = "SuSiE-Inf"))
     }
 
     # Define PIP bins
@@ -162,7 +237,7 @@ generate_causal_plots <- function(results_list) {
 
     # Create plot title with simulation parameters
     plot_title <- paste0("PIP Bins vs. Proportion Causal by Method\n",
-                         " (L = ", L, ", ",
+                         "(L = ", L, ", ",
                          nonsparse_coverage * 100, "% Nonsparse Coverage, Theta to Beta Ratio = ",
                          theta_beta_ratio, ":1, Heritability = ", total_heritability, ")")
 
@@ -170,7 +245,9 @@ generate_causal_plots <- function(results_list) {
     ggplot(proportion_causal, aes(x = bin, y = proportion, color = method)) +
       geom_point(size = 2, position = position_dodge(width = 0.25), na.rm = TRUE) +
       labs(x = "PIP Bins", y = "Proportion Causal", title = plot_title, color = "Method") +
-      scale_fill_manual(values = c("SuSiE" = "blue", "SuSiE-ASH" = "red")) +
+      scale_color_manual(values = c("SuSiE" = "blue", 
+                                   "SuSiE-ASH" = "red", 
+                                   "SuSiE-Inf" = "green")) +
       theme_minimal() +
       ylim(0, 1) +
       theme(plot.title = element_text(size = 10))
@@ -184,67 +261,6 @@ generate_causal_plots(results_list)
 
 ```
 
-# 3.
-
-```{r, include = F}
-# calculate_recall <- function(pips, betas, thetas, top_n) {
-#   causals <- (betas != 0) | (thetas != 0)
-#   ranked_indices <- order(pips, decreasing = TRUE)
-#   top_indices <- head(ranked_indices, top_n)
-#   true_positives <- sum(causals[top_indices])
-#   total_causal <- sum(causals)
-#   recall <- true_positives / total_causal
-#   return(recall)
-# }
-# 
-# generate_recall_plots <- function(results_list) {
-#   # Define cutoffs for top N variants
-#   top_n_values <- c(50, 100, 500, 1000, 5000)
-#   
-#   recall_results <- list()  # Store recall results
-#   
-#   # Iterate through each simulation in the list
-#   for (simulation_name in names(results_list_tmp)) {
-#     simulation <- results_list[[simulation_name]]
-#     
-#     # Initialize matrices to store recalls for each method and each top N value
-#     recalls_susie <- matrix(0, length(top_n_values), 25)
-#     recalls_susie_ash <- matrix(0, length(top_n_values), 25)
-#     
-#     # Loop through each iteration to calculate recall
-#     for (i in 1:25) {
-#       recalls_susie[, i] <- sapply(top_n_values, calculate_recall, pips = simulation$all_susie_outputs[[i]]$pip, betas = simulation$all_betas[[i]], thetas = simulation$all_thetas[[i]])
-#       recalls_susie_ash[, i] <- sapply(top_n_values, calculate_recall, pips = simulation$all_susie_ash_outputs[[i]]$pip, betas = simulation$all_betas[[i]], thetas = simulation$all_thetas[[i]])
-#     }
-#     
-#     # Average recalls across iterations
-#     avg_recalls_susie <- colMeans(t(recalls_susie))
-#     avg_recalls_susie_ash <- colMeans(recalls_susie_ash)
-#     
-#     # Store results
-#     recall_results[[paste(simulation_name, "SuSiE")]] <- avg_recalls_susie
-#     recall_results[[paste(simulation_name, "SuSiE-ASH")]] <- avg_recalls_susie_ash
-#   }
-#   
-#   # Create a dataframe for plotting
-#   recall_df <- do.call(rbind, lapply(recall_results, function(x) as.data.frame(t(x))))
-#   #names(recall_df) <- c(top_n_values)
-#   names(recall_df) <- c("50", "100", "500", "1000", "5000", "simulation")
-#   recall_df$simulation <- rownames(recall_df)
-#   recall_df <- pivot_longer(recall_df, cols = c('50', '100', '500', '1000', '5000'), names_to = "top_n", values_to = "recall")
-#   
-#   # Plotting
-#   ggplot(recall_df, aes(x = as.factor(top_n), y = recall, color = simulation)) +
-#     geom_line() + geom_point() +
-#     labs(x = "Top N Variants", y = "Recall", title = "Top N Variants vs. Recall for SuSiE and SuSiE-ASH") +
-#     theme_minimal() +
-#     scale_color_manual(values = c("blue", "red"))  # Assign colors if needed
-# }
-# 
-# # Call function to generate plots
-# generate_recall_plots(results_list)
-
-```
 
 
 
