@@ -1,73 +1,7 @@
-#' @description Performs a sparse Bayesian multiple linear regression
-#'   of y on X, using the "Sum of Single Effects" model from Wang et al
-#'   (2020). In brief, this function fits the regression model \eqn{y =
-#'   \mu + X b + e}, where elements of \eqn{e} are \emph{i.i.d.} normal
-#'   with zero mean and variance \code{residual_variance}, \eqn{\mu} is
-#'   an intercept term and \eqn{b} is a vector of length p representing
-#'   the effects to be estimated. The \dQuote{susie assumption} is that
-#'   \eqn{b = \sum_{l=1}^L b_l} where each \eqn{b_l} is a vector of
-#'   length p with exactly one non-zero element. The prior on the
-#'   non-zero element is normal with zero mean and variance \code{var(y)
-#'   * scaled_prior_variance}. The value of \code{L} is fixed, and
-#'   should be chosen to provide a reasonable upper bound on the number
-#'   of non-zero effects to be detected. Typically, the hyperparameters
-#'   \code{residual_variance} and \code{scaled_prior_variance} will be
-#'   estimated during model fitting, although they can also be fixed as
-#'   specified by the user. See functions \code{\link{susie_get_cs}} and
-#'   other functions of form \code{susie_get_*} to extract the most
-#'   commonly-used results from a susie fit.
+#' SuSiE ASH: Sum of Single Effects with Adaptive Shrinkage
 #'
-#' @details The function \code{susie} implements the IBSS algorithm
-#' from Wang et al (2020). The option \code{refine = TRUE} implements
-#' an additional step to help reduce problems caused by convergence of
-#' the IBSS algorithm to poor local optima (which is rare in our
-#' experience, but can provide misleading results when it occurs). The
-#' refinement step incurs additional computational expense that
-#' increases with the number of CSs found in the initial run.
-#'
-#' The function \code{susie_suff_stat} implements essentially the same
-#' algorithms, but using sufficient statistics. (The statistics are
-#' sufficient for the regression coefficients \eqn{b}, but not for the
-#' intercept \eqn{\mu}; see below for how the intercept is treated.)
-#' If the sufficient statistics are computed correctly then the
-#' results from \code{susie_suff_stat} should be the same as (or very
-#' similar to) \code{susie}, although runtimes will differ as
-#' discussed below. The sufficient statistics are the sample
-#' size \code{n}, and then the p by p matrix \eqn{X'X}, the p-vector
-#' \eqn{X'y}, and the sum of squared y values \eqn{y'y}, all computed
-#' after centering the columns of \eqn{X} and the vector \eqn{y} to
-#' have mean 0; these can be computed using \code{compute_suff_stat}.
-#'
-#' The handling of the intercept term in \code{susie_suff_stat} needs
-#' some additional explanation. Computing the summary data after
-#' centering \code{X} and \code{y} effectively ensures that the
-#' resulting posterior quantities for \eqn{b} allow for an intercept
-#' in the model; however, the actual value of the intercept cannot be
-#' estimated from these centered data. To estimate the intercept term
-#' the user must also provide the column means of \eqn{X} and the mean
-#' of \eqn{y} (\code{X_colmeans} and \code{y_mean}). If these are not
-#' provided, they are treated as \code{NA}, which results in the
-#' intercept being \code{NA}. If for some reason you prefer to have
-#' the intercept be 0 instead of \code{NA} then set
-#' \code{X_colmeans = 0,y_mean = 0}.
-#'
-#' For completeness, we note that if \code{susie_suff_stat} is run on
-#' \eqn{X'X, X'y, y'y} computed \emph{without} centering \eqn{X} and
-#' \eqn{y}, and with \code{X_colmeans = 0,y_mean = 0}, this is
-#' equivalent to \code{susie} applied to \eqn{X, y} with
-#' \code{intercept = FALSE} (although results may differ due to
-#' different initializations of \code{residual_variance} and
-#' \code{scaled_prior_variance}). However, this usage is not
-#' recommended for for most situations.
-#'
-#' The computational complexity of \code{susie} is \eqn{O(npL)} per
-#' iteration, whereas \code{susie_suff_stat} is \eqn{O(p^2L)} per
-#' iteration (not including the cost of computing the sufficient
-#' statistics, which is dominated by the \eqn{O(np^2)} cost of
-#' computing \eqn{X'X}). Because of the cost of computing \eqn{X'X},
-#' \code{susie} will usually be faster. However, if \eqn{n >> p},
-#' and/or if \eqn{X'X} is already computed, then
-#' \code{susie_suff_stat} may be faster.
+#' @description This function is a combination of the "Sum of Single Effects" (SuSiE)
+#' and the Adaptive Shrinkage (ASH) models.
 #'
 #' @param X An n by p matrix of covariates.
 #'
@@ -76,7 +10,8 @@
 #' @param L Maximum number of non-zero effects in the susie
 #'   regression model. If L is larger than the number of covariates, p,
 #'   L is set to p.
-#' @param warmstart The number of warmstart start iterations.
+#'
+#' @param warm_start The number of warmstart start iterations.
 #'
 #' @param scaled_prior_variance The prior variance, divided by
 #'   \code{var(y)} (or by \code{(1/(n-1))yty} for
@@ -254,82 +189,42 @@
 #' \item{XtXr}{A p-vector of \code{t(X)} times the fitted values,
 #'   \code{X \%*\% colSums(alpha*mu)}.}
 #'
-#' @references
-#' G. Wang, A. Sarkar, P. Carbonetto and M. Stephens (2020). A simple
-#' new approach to variable selection in regression, with application
-#' to genetic fine-mapping. \emph{Journal of the Royal Statistical
-#' Society, Series B} \bold{82}, 1273-1300 \doi{10.1101/501114}.
-#'
-#' Y. Zou, P. Carbonetto, G. Wang, G and M. Stephens
-#' (2022). Fine-mapping from summary data with the \dQuote{Sum of
-#' Single Effects} model. \emph{PLoS Genetics} \bold{18},
-#' e1010299. \doi{10.1371/journal.pgen.1010299}.
-#'
-#' @seealso \code{\link{susie_get_cs}} and other \code{susie_get_*}
-#' functions for extracting results; \code{\link{susie_trendfilter}} for
-#' applying the SuSiE model to non-parametric regression, particularly
-#' changepoint problems, and \code{\link{susie_rss}} for applying the
-#' SuSiE model when one only has access to limited summary statistics
-#' related to \eqn{X} and \eqn{y} (typically in genetic applications).
-#'
-#' @examples
-#' # susie example
-#' set.seed(1)
-#' n = 1000
-#' p = 1000
-#' beta = rep(0,p)
-#' beta[1:4] = 1
-#' X = matrix(rnorm(n*p),nrow = n,ncol = p)
-#' X = scale(X,center = TRUE,scale = TRUE)
-#' y = drop(X %*% beta + rnorm(n))
-#' res1 = susie(X,y,L = 10)
-#' susie_get_cs(res1) # extract credible sets from fit
-#' plot(beta,coef(res1)[-1])
-#' abline(a = 0,b = 1,col = "skyblue",lty = "dashed")
-#' plot(y,predict(res1))
-#' abline(a = 0,b = 1,col = "skyblue",lty = "dashed")
-#'
-#' # susie_suff_stat example
-#' input_ss = compute_suff_stat(X,y)
-#' res2 = with(input_ss,
-#'             susie_suff_stat(XtX = XtX,Xty = Xty,yty = yty,n = n,
-#'                             X_colmeans = X_colmeans,y_mean = y_mean,L = 10))
-#' plot(coef(res1),coef(res2))
-#' abline(a = 0,b = 1,col = "skyblue",lty = "dashed")
-#'
 #' @importFrom stats var
 #' @importFrom utils modifyList
+#' @importFrom mr.ash.alpha mr.ash coef.mr.ash
+#' @importFrom susieR susie_get_cs susie_get_pip susie_get_objective
 #'
 #' @export
 #'
 
+
 susie_ash = function (X,y,L = min(10,ncol(X)),
-                  scaled_prior_variance = 0.2,
-                  residual_variance = NULL,
-                  prior_weights = NULL,
-                  null_weight = 0,
-                  standardize = TRUE,
-                  intercept = TRUE,
-                  estimate_residual_variance = TRUE,
-                  estimate_prior_variance = TRUE,
-                  estimate_prior_method = c("optim", "EM", "simple"),
-                  check_null_threshold = 0,
-                  prior_tol = 1e-9,
-                  residual_variance_upperbound = Inf,
-                  s_init = NULL,
-                  coverage = 0.95,
-                  min_abs_corr = 0.5,
-                  median_abs_corr = NULL,
-                  compute_univariate_zscore = FALSE,
-                  na.rm = FALSE,
-                  max_iter = 100,
-                  tol = 1e-3,
-                  verbose = FALSE,
-                  track_fit = FALSE,
-                  residual_variance_lowerbound = var(drop(y))/1e4,
-                  refine = FALSE,
-                  n_purity = 100,
-                  warm_start = 3) {
+                      scaled_prior_variance = 0.2,
+                      residual_variance = NULL,
+                      prior_weights = NULL,
+                      null_weight = 0,
+                      standardize = TRUE,
+                      intercept = TRUE,
+                      estimate_residual_variance = TRUE,
+                      estimate_prior_variance = TRUE,
+                      estimate_prior_method = c("optim", "EM", "simple"),
+                      check_null_threshold = 0,
+                      prior_tol = 1e-9,
+                      residual_variance_upperbound = Inf,
+                      s_init = NULL,
+                      coverage = 0.95,
+                      min_abs_corr = 0.5,
+                      median_abs_corr = NULL,
+                      compute_univariate_zscore = FALSE,
+                      na.rm = FALSE,
+                      max_iter = 100,
+                      tol = 1e-3,
+                      verbose = FALSE,
+                      track_fit = FALSE,
+                      residual_variance_lowerbound = var(drop(y))/1e4,
+                      refine = FALSE,
+                      n_purity = 100,
+                      warm_start = 3) {
 
   # Process input estimate_prior_method.
   estimate_prior_method = match.arg(estimate_prior_method)
@@ -365,9 +260,9 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   }
   p = ncol(X)
   if (p > 1000 & !requireNamespace("Rfast",quietly = TRUE))
-    warning_message("For an X with many columns, please consider installing",
-                    "the Rfast package for more efficient credible set (CS)",
-                    "calculations.", style='hint')
+    susieR:::warning_message("For an X with many columns, please consider installing",
+                             "the Rfast package for more efficient credible set (CS)",
+                             "calculations.", style='hint')
 
   # Check input y.
   n = nrow(X)
@@ -384,6 +279,8 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   # otherwise; 'attr(X,'d') is a p-vector of column sums of
   # X.standardized^2,' where X.standardized is the matrix X centered
   # by attr(X,'scaled:center') and scaled by attr(X,'scaled:scale').
+
+  #NOTE: We use the `:::` operator for any functions not exported to their original package's NAMESPACE.
   out = susieR:::compute_colstats(X,center = intercept,scale = standardize)
   attr(X,"scaled:center") = out$cm
   attr(X,"scaled:scale") = out$csd
@@ -391,7 +288,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
 
   # Initialize susie fit.
   s = susieR:::init_setup(n,p,L,scaled_prior_variance,residual_variance,prior_weights,
-                 null_weight,as.numeric(var(y)),standardize)
+                          null_weight,as.numeric(var(y)),standardize)
   if (!missing(s_init) && !is.null(s_init)) {
     if (!inherits(s_init,"susie"))
       stop("s_init should be a susie object")
@@ -405,10 +302,10 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     if(missing(L)){
       L = num_effects
     }else if(min(p,L) < num_effects){
-      warning_message(paste("Specified number of effects L =",min(p,L),
-                            "is smaller than the number of effects",num_effects,
-                            "in input SuSiE model. The SuSiE model will have",
-                            num_effects,"effects."))
+      susieR:::warning_message(paste("Specified number of effects L =",min(p,L),
+                                     "is smaller than the number of effects",num_effects,
+                                     "in input SuSiE model. The SuSiE model will have",
+                                     num_effects,"effects."))
       L = num_effects
     }
     # expand s_init if L > num_effects.
@@ -425,41 +322,45 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
 
   # Initialize residuals
   y_residuals = y
-  #y_residuals_mrash = NA
 
   for (i in 1:max_iter) {
     # SuSiE "warm start" phase
-  if(i <= warm_start){
-    if (track_fit)
-      tracking[[i]] = susieR:::susie_slim(s)
-    s = susieR:::update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
-                           check_null_threshold)
-    if (verbose)
-      print(paste0("objective:",susieR:::get_objective(X,y,s)))
+    if(i <= warm_start){
+      if (track_fit)
+        tracking[[i]] = susieR:::susie_slim(s)
+      s = susieR:::update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
+                                      check_null_threshold)
+      if (verbose)
+        print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
 
-    # Check which credible sets have < 0.1% heritability
-    ls <- which(s$V < 0.001)
-    if (length(ls) > 0) {
-      notls <- setdiff(1:L, ls)
-      # Update y_residuals
-      #y_residuals <- y - X %*% colSums(s$alpha[notls,,drop=F] * s$mu[notls,,drop=F])
-      y_residuals <- y - X %*% colSums(s$alpha[notls,] * s$mu[notls,])
-    }
-  } else{
-    # Run Mr. ASH on Residuals
-    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
-    theta = mrash_output$beta
-    elbo[i - warm_start + 1] = -(mrash_output$varobj)[length(mrash_output$varobj)]
-    y_residuals = y_residuals - X %*% theta
-    #y_residuals_mrash = y_residuals_mrash - mrash_output$data$X %*% theta
+      # Check which credible sets have >= 0.1% heritability
+      high_heritability_ls <- which(s$V >= 0.001)
+      print(high_heritability_ls)
 
+      if (length(high_heritability_ls) > 0) {
+        if(length(high_heritability_ls) == 1){
+          y_residuals <- y - X %*% (s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])
+        }else{
+        # Update y_residuals if there are high heritability credible sets. If none, y residuals remain unchanged.
+        y_residuals <- y - X %*% colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])}
+      }
+    } else{
+      # Run Mr. ASH on Residuals
+      mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
+
+      # Store theta and ELBO
+      theta = mrash_output$beta
+      elbo[i - warm_start] = -(mrash_output$varobj)[length(mrash_output$varobj)]
+
+      # Update residual vector
+      y_residuals = y_residuals - X %*% theta
 
       #Convergence Criterion
-      if (i > warm_start + 1 && (elbo[i - warm_start + 1] - elbo[i - warm_start]) < tol) {
+      if (i > warm_start + 1 && (elbo[i - warm_start] - elbo[i - warm_start - 1]) < tol) {
         s$converged = TRUE
         break
       }
-  }
+    }
 
 
     # Common objective and convergence check (adjust as needed for the transition)
@@ -479,11 +380,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     }
   }
 
-
-
-
-
-  # Remove first (infinite) entry, and trailing NAs. Combine SuSiE and mr. ash ELBO.
+  # Remove first (infinite) entry, and trailing NAs. ADD: Combine SuSiE and MR. ASH ELBO
   elbo = elbo[!is.na(elbo)]
   s$elbo = elbo
   s$niter = i
@@ -499,11 +396,9 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
                                  (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
     s$fitted = s$Xr + mean_y + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
-    #s$fitted = s$Xr + mean_y + mrash_output$data$X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
   } else {
     s$intercept = 0
     s$fitted = s$Xr + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
-    #s$fitted = s$Xr + mrash_output$data$X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
   }
   s$fitted = drop(s$fitted)
   names(s$fitted) = `if`(is.null(names(y)),rownames(X),names(y))
@@ -513,12 +408,11 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
 
   # SuSiE CS and PIP.
   if (!is.null(coverage) && !is.null(min_abs_corr)) {
-    s$sets = susie_get_cs(s,coverage = coverage,X = X,
-                          min_abs_corr = min_abs_corr,
-                          # median_abs_corr = median_abs_corr, ## muted
-                          n_purity = n_purity)
-    #s$sets = susie_get_cs_attainable(s, coverage = 0.95, ethres = 20)
-    s$pip = susie_get_pip(s,prune_by_cs = FALSE,prior_tol = prior_tol)
+    s$sets = susieR::susie_get_cs(s,coverage = coverage,X = X,
+                                  min_abs_corr = min_abs_corr,
+                                  # median_abs_corr = median_abs_corr, ## muted
+                                  n_purity = n_purity)
+    s$pip = susieR::susie_get_pip(s,prune_by_cs = FALSE,prior_tol = prior_tol)
   }
 
   if (!is.null(colnames(X))) {
@@ -571,47 +465,47 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
         if(all(pw_cs == 0)){
           break
         }
-        s2 = susie(X,y,L = L,scaled_prior_variance = scaled_prior_variance,
-                   residual_variance = residual_variance,
-                   prior_weights = pw_cs, s_init = NULL,null_weight = null_weight,
-                   standardize = standardize,intercept = intercept,
-                   estimate_residual_variance = estimate_residual_variance,
-                   estimate_prior_variance = estimate_prior_variance,
-                   estimate_prior_method = estimate_prior_method,
-                   check_null_threshold = check_null_threshold,
-                   prior_tol = prior_tol,coverage = coverage,
-                   residual_variance_upperbound = residual_variance_upperbound,
-                   min_abs_corr = min_abs_corr,
-                   median_abs_corr = median_abs_corr,
-                   compute_univariate_zscore = compute_univariate_zscore,
-                   na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
-                   track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
-                   refine = FALSE)
+        s2 = susieR::susie(X,y,L = L,scaled_prior_variance = scaled_prior_variance,
+                           residual_variance = residual_variance,
+                           prior_weights = pw_cs, s_init = NULL,null_weight = null_weight,
+                           standardize = standardize,intercept = intercept,
+                           estimate_residual_variance = estimate_residual_variance,
+                           estimate_prior_variance = estimate_prior_variance,
+                           estimate_prior_method = estimate_prior_method,
+                           check_null_threshold = check_null_threshold,
+                           prior_tol = prior_tol,coverage = coverage,
+                           residual_variance_upperbound = residual_variance_upperbound,
+                           min_abs_corr = min_abs_corr,
+                           median_abs_corr = median_abs_corr,
+                           compute_univariate_zscore = compute_univariate_zscore,
+                           na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
+                           track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
+                           refine = FALSE)
         sinit2 = s2[c("alpha","mu","mu2")]
         class(sinit2) = "susie"
-        s3 = susie(X,y,L = L,scaled_prior_variance = scaled_prior_variance,
-                   residual_variance = residual_variance,prior_weights = pw_s,
-                   s_init = sinit2,null_weight = null_weight,
-                   standardize = standardize,intercept = intercept,
-                   estimate_residual_variance = estimate_residual_variance,
-                   estimate_prior_variance = estimate_prior_variance,
-                   estimate_prior_method = estimate_prior_method,
-                   check_null_threshold = check_null_threshold,
-                   prior_tol = prior_tol,coverage = coverage,
-                   residual_variance_upperbound = residual_variance_upperbound,
-                   min_abs_corr = min_abs_corr,
-                   median_abs_corr = median_abs_corr,
-                   compute_univariate_zscore = compute_univariate_zscore,
-                   na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
-                   track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
-                   refine = FALSE)
+        s3 = susieR::susie(X,y,L = L,scaled_prior_variance = scaled_prior_variance,
+                           residual_variance = residual_variance,prior_weights = pw_s,
+                           s_init = sinit2,null_weight = null_weight,
+                           standardize = standardize,intercept = intercept,
+                           estimate_residual_variance = estimate_residual_variance,
+                           estimate_prior_variance = estimate_prior_variance,
+                           estimate_prior_method = estimate_prior_method,
+                           check_null_threshold = check_null_threshold,
+                           prior_tol = prior_tol,coverage = coverage,
+                           residual_variance_upperbound = residual_variance_upperbound,
+                           min_abs_corr = min_abs_corr,
+                           median_abs_corr = median_abs_corr,
+                           compute_univariate_zscore = compute_univariate_zscore,
+                           na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
+                           track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
+                           refine = FALSE)
         m = c(m,list(s3))
       }
       if(length(m) == 0){
         conti = FALSE
       }else{
-        elbo = sapply(m,function(x) susie_get_objective(x))
-        if ((max(elbo) - susie_get_objective(s)) <= 0)
+        elbo = sapply(m,function(x) susieR::susie_get_objective(x))
+        if ((max(elbo) - susieR::susie_get_objective(s)) <= 0)
           conti = FALSE
         else
           s = m[[which.max(elbo)]]
