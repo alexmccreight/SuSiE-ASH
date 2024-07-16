@@ -6,21 +6,18 @@ library(susieR)
 library(mr.ash.alpha)
 library(dplyr)
 library(magrittr)
-source("susie-ash.R")
-source("susie-inf.R")
+source("code/susie_versions/susie-ash.R")
+source("code/susie_versions/susie_inf.R")
 
 # Annotation Matrix (from S3 Bucket)
-X <- readRDS("X4")
-
-generate_data <- function(X, Ltrue, ssq, sigmasq, tausq){
+generate_data <- function(Ltrue, ssq, sigmasq, tausq){
 
   # Generate genotype matrix X
-  # X <- matrix(rbinom(n * p, size = 2, prob = MAF), nrow = n, ncol = p)
-
-  # Real X matrix input
+  n = 5000
+  p = 500
+  MAF = 0.1
+  X <- matrix(rbinom(n * p, size = 2, prob = MAF), nrow = n, ncol = p)
   X <- scale(X, center = TRUE, scale = TRUE)
-  n <- nrow(X)
-  p <- ncol(X)
 
   # Sparse Causal Effects
   beta <- rep(0, p)
@@ -29,23 +26,26 @@ generate_data <- function(X, Ltrue, ssq, sigmasq, tausq){
   order <- order(inds)
 
   # Generate data with strong infinitesimal effects, tau^2 = 1e-3
-  theta <- rnorm(p) * sqrt(tausq)
-  effects <- X %*% beta + X %*% theta
+  effects <- X %*% beta + X %*% (rnorm(p) * sqrt(tausq))
   y <- effects + rnorm(n) * sqrt(sigmasq)
   total_variance_explained <- var(effects) / var(y)
 
   # Store Information
-  return(list(X = X, y = y, heritability = total_variance_explained, beta = beta, theta = theta))
+  return(list(X = X, y = y, heritability = total_variance_explained, beta = beta))
 }
 
 # Run Methods and Metrics
-method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = Ltrue, threshold = 0.90) {
-  susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
-  susie_ash_output <- susie_ash(X = X, y = y, L = L, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
-  susie_inf_output <- susie_inf(X = X, y = y, L = L, coverage = 0.9, verbose = F)
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, Ltrue = Ltrue, threshold = 0.90) {
+  cat("Starting susie\n")
+  susie_output <- susie(X = X, y = y, L = Ltrue, intercept = F, standardize = F)
+  cat("Starting susie-ash\n")
+  susie_ash_output <- susie_ash(X = X, y = y, L = Ltrue, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
+  cat("Starting susie-inf\n")
+  susie_inf_output <- susie_inf(X = X, y = y, L = Ltrue, coverage = threshold, verbose = F)
 
-  calc_metrics <- function(mod, beta = beta, theta = theta, threshold = threshold) {
+  calc_metrics <- function(mod, beta = beta, threshold = threshold) {
     all_causal <-  c(which(beta != 0))
+    #all_causal <-  which(abs(beta) >= 0.075)
     test.cs <- susie_get_cs(mod, X = X, coverage = threshold)$cs
     coverage <- 0
     cs_fdr <- 0
@@ -75,8 +75,9 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
   }
 
-  calc_metrics_infinitesimal <- function(mod, beta = beta, theta = theta, threshold = threshold){
+  calc_metrics_infinitesimal <- function(mod, beta = beta, threshold = threshold){
     all_causal <- c(which(beta != 0))
+    #all_causal <-  which(abs(beta) >= 0.075)
     test.cs <- mod$sets
     coverage <- 0
     cs_fdr <- 0
@@ -105,9 +106,9 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
   }
 
   # Calculate Metrics for each method
-  susie_metrics <- calc_metrics(susie_output, beta, theta, threshold)
-  susie_ash_metrics <- calc_metrics(susie_ash_output, beta, theta, threshold)
-  susie_inf_metrics <- calc_metrics_infinitesimal(susie_inf_output, beta, theta, threshold)
+  susie_metrics <- calc_metrics(susie_output, beta, threshold)
+  susie_ash_metrics <- calc_metrics(susie_ash_output, beta, threshold)
+  susie_inf_metrics <- calc_metrics_infinitesimal(susie_inf_output, beta, threshold)
 
   #Create a data frame with the results
   metrics_table  <- data.frame(
@@ -124,8 +125,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     susie_output = susie_output,
     susie_ash_output = susie_ash_output,
     susie_inf_output = susie_inf_output,
-    betas = beta,
-    thetas = theta)
+    betas = beta)
   )
 
 }
@@ -133,8 +133,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 # Main Simulation Command
 simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
   # Parse command-line arguments
-  num_simulations = 5
-  Ltrue = 3
+  num_simulations = 50
+  Ltrue = 10
   ssq = 0.01
   sigmasq = 1
   tausq = .0001
@@ -147,7 +147,6 @@ simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq
   # Initialize lists to store results
   all_metrics <- list()
   all_betas <- list()
-  all_thetas <- list()
   all_heritabilities <- list()
   all_susie_outputs <- list()
   all_susie_ash_outputs <- list()
@@ -158,19 +157,18 @@ simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq
     cat("Running simulation", i, "out of", num_simulations, "\n")
 
     # Set random seed for each simulation
-    seed <- abs(round(rnorm(1, mean = 0, sd = 10000)))
+    seed <- as.integer(Sys.time()) + i
     set.seed(seed)
 
     # Generate data
-    data <- generate_data(X = X, Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
+    data <- generate_data(Ltrue = Ltrue, ssq = ssq, sigmasq = sigmasq, tausq = tausq)
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, theta = data$theta, L = Ltrue, threshold = threshold)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, L = Ltrue, threshold = threshold)
 
-    # Store results + betas/thetas
+    # Store results + betas
     all_metrics[[i]] <- results$metrics
     all_betas[[i]] <- data$beta
-    all_thetas[[i]] <- data$theta
     all_heritabilities[[i]] <- data$heritability
     all_susie_outputs[[i]] <- results$susie_output
     all_susie_ash_outputs[[i]] <- results$susie_ash_output
@@ -188,13 +186,12 @@ simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq
   )
 
   # Save simulation results as Rds file
-  output_dir <- "/home/apm2217/output"
-  #output_dir <- "analysis"
+  #output_dir <- "/home/apm2217/output"
+  output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
     all_betas = all_betas,
-    all_thetas = all_thetas,
     all_heritabilities = all_heritabilities,
     all_susie_outputs = all_susie_outputs,
     all_susie_ash_outputs = all_susie_ash_outputs,

@@ -1,0 +1,134 @@
+---
+title: "SuSiE-INF DEBUG"
+output: html_document
+date: "2024-05-20"
+---
+
+```{r}
+library(tidyverse)
+X <- read.csv("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/fine-mapping-inf/X_matrix.csv", header = F)
+y <- read.csv("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/fine-mapping-inf/y_vector.csv", header = F)
+X <- as.matrix(X)
+y <- as.matrix(y)
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash.R")
+```
+
+```{r}
+# Define constants
+# set.seed(1)
+# X <- readRDS("../data/X4")
+# X <- scale(X, center = T, scale = T)
+# n <- nrow(X)
+# p <- ncol(X)
+# MAF <- 0.1
+# Ltrue <- 5
+# ssq <- 0.01
+# sigmasq <- 1
+
+# Generate genotype matrix X
+set.seed(9)
+n = 5000
+p = 500
+MAF = 0.1
+Ltrue = 5
+ssq = 0.01
+sigmasq = 1
+X <- matrix(rbinom(n * p, size = 2, prob = MAF), nrow = n, ncol = p)
+X <- scale(X, center = TRUE, scale = TRUE)  # Center and scale
+
+
+# Compute linkage disequilibrium matrix LD
+#LD <- t(X) %*% X / n
+
+# Initialize effects vector b and select indices for true effects
+b <- rep(0, p)
+inds <- sample(p, Ltrue, replace = FALSE)
+b[inds] <- rnorm(Ltrue) * sqrt(ssq)
+order <- order(inds)
+
+cat(sprintf('True effects: %s', toString(inds[order])), "\n")
+cat(sprintf('Effect sizes: %s\n', toString(b[inds[order]])), "\n")
+
+# Generate data with strong infinitesimal effects, tau^2 = 1e-3
+cat('###### Simulating with strong infinitesimal effects, tau^2 = 1e-3 ######', "\n")
+tausq <- 5e-4
+#tausq <- 1e-3
+effects <- X %*% b + X %*% (rnorm(p) * sqrt(tausq))
+y <- effects + rnorm(n) * sqrt(sigmasq)
+total_variance_explained <- var(effects) / var(y)
+
+cat(sprintf('Total fraction of variance explained by SNPs: %f\n', total_variance_explained), "\n")
+
+
+# Assuming X and y are your data frames
+# write.csv(X, file = "X6_tmp.csv", row.names = FALSE)
+# write.csv(y, file = "y_testing.csv", row.names = FALSE)
+
+susie_inf_output <- susie_inf(X = X, y = y, L = 5, coverage = 0.9, verbose = F)
+susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 100, warm_start = 3)
+susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = F)
+
+cat(sprintf('True effects: %s', toString(inds[order])), "\n")
+cat(sprintf('Effect sizes: %s\n', toString(b[inds[order]])), "\n")
+susie_inf_output$sets %in% inds
+susie_get_cs(susie_output, X = X, coverage = 0.9)$cs %in% inds
+susie_get_cs(susie_ash_output, X = X, coverage = 0.9)$cs %in% inds
+```
+
+
+
+
+
+
+```{r}
+set.seed(1)
+  n = 1000
+  p = 1000
+  L = 10
+  
+  # Betas
+  beta = rep(0,p)
+  for(i in 101:104){
+    beta[i] = rnorm(1, mean = 0, sd = 0.1)
+  }
+  theta = rep(0,p)
+  for(i in 1:20){
+    theta[i] = rnorm(1, mean = 0, sd = 0.025)
+  }
+  X = matrix(rnorm(n*p),nrow = n,ncol = p)
+  X = scale(X,center = TRUE,scale = TRUE)
+  y = drop(X %*% beta + X %*% theta + rnorm(n))
+  y = scale(y, center = TRUE, scale = TRUE)
+  
+susie_inf_output <- susie_inf(X = X, y = y, L = 5, maxiter = 100)
+susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = F)
+
+
+beta[101:104]
+
+susie_inf_output$PIP2
+susie_output$sets$cs
+
+
+
+theta[1]
+#susie_inf_output$
+```
+
+
+```{r}
+#tmp <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/analysis/numIter50_Ltrue5_ssq0.01_sigmasq1_tausq1e-04")
+#tmp <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/analysis/numIter50_Ltrue5_ssq0.01_sigmasq1_tausq0.001")
+tmp <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/analysis/numIter50_Ltrue10_ssq0.01_sigmasq1_tausq1e-04")
+
+
+tmp$avg_metrics
+tmp$all_heritabilities
+
+sum(tmp$all_susie_inf_outputs[[1]]$PIP2 >= 0.90)
+tmp$all_susie_inf_outputs[[1]]$sets
+```
+
