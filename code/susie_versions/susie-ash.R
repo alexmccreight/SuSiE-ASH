@@ -356,7 +356,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       }
     } else{
       # Run mr.ash on residuals.
-      mrash_output <- mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = intercept)
+      mrash_output <- mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = intercept, standardize = standardize)
 
       if (intercept) {
         theta <- mr.ash.alpha::coef.mr.ash(mrash_output)
