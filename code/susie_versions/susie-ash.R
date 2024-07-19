@@ -1,7 +1,13 @@
 #' SuSiE ASH: Sum of Single Effects with Adaptive Shrinkage
 #'
-#' @description This function is a combination of the "Sum of Single Effects" (SuSiE)
-#' and the Adaptive Shrinkage (ASH) models.
+#' @description This function is a combination of the "Sum of Single Effects"
+#'  (SuSiE) and the "Multiple Regression with Adaptive Shrinkage Priors"
+#'  (mr.ash) models. Currently a prototype. This function fits the model
+#'  \eqn{y = X(\beta + \theta) + e} where elements of \eqn{e} are
+#'  \emph{i.i.d.} normal with zero mean and variance \code{residual_variance},
+#'  \eqn{\beta} is a vector of length p representing the sparse-effects to be
+#'  estimated, and \eqn{\theta} is a vector of length p representing
+#'  the infinitesimal effects to be estimated.
 #'
 #' @param X An n by p matrix of covariates.
 #'
@@ -11,7 +17,7 @@
 #'   regression model. If L is larger than the number of covariates, p,
 #'   L is set to p.
 #'
-#' @param warm_start The number of warmstart start iterations.
+#' @param warm_start The number of warm start start iterations.
 #'
 #' @param scaled_prior_variance The prior variance, divided by
 #'   \code{var(y)} (or by \code{(1/(n-1))yty} for
@@ -149,8 +155,13 @@
 #' \item{mu2}{An L by p matrix of posterior second moments,
 #'   conditional on inclusion.}
 #'
+#' \item{theta}{A vector of length p containing posterior mean estimates
+#'  of regression coefficients for all predictors from mr.ash model}
+#'
 #' \item{Xr}{A vector of length n, equal to \code{X \%*\% colSums(alpha
 #'   * mu)}.}
+#'
+#' \item{Xtheta}{A vector of length n, equal to equal to \code{X \%*\% theta}.}
 #'
 #' \item{lbf}{log-Bayes Factor for each single effect.}
 #'
@@ -320,11 +331,11 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   elbo = rep(as.numeric(NA),max_iter - warm_start + 1)
   tracking = list()
 
-  # Initialize residuals
+  # Initialize residuals.
   y_residuals = y
 
   for (i in 1:max_iter) {
-    # SuSiE "warm start" phase
+    # Begin "warm start" phase.
     if(i <= warm_start){
       if (track_fit)
         tracking[[i]] = susieR:::susie_slim(s)
@@ -333,27 +344,32 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       if (verbose)
         print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
 
-      # Check which credible sets have >= 0.1% heritability
+      # Check which credible sets have >= 0.1% heritability.
       high_heritability_ls <- which(s$V >= 0.001)
-      print(high_heritability_ls)
 
+      # Update y_residuals if there are "high heritability" credible sets.
       if (length(high_heritability_ls) > 0) {
         if(length(high_heritability_ls) == 1){
           y_residuals <- y - X %*% (s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])
         }else{
-        # Update y_residuals if there are high heritability credible sets. If none, y residuals remain unchanged.
         y_residuals <- y - X %*% colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])}
       }
     } else{
-      # Run Mr. ASH on Residuals
-      mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F)
+      # Run mr.ash on residuals.
+      mrash_output <- mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = intercept)
 
-      # Store theta and ELBO
-      theta = mrash_output$beta
-      elbo[i - warm_start] = -(mrash_output$varobj)[length(mrash_output$varobj)]
+      if (intercept) {
+        theta <- mr.ash.alpha::coef.mr.ash(mrash_output)
+        Xtheta <- cbind(1, X) %*% theta
+      } else {
+        theta <- mr.ash.alpha::coef.mr.ash(mrash_output)[-1]
+        Xtheta <- X %*% theta
+      }
+
+      elbo[i - warm_start] <- -(mrash_output$varobj)[length(mrash_output$varobj)]
 
       # Update residual vector
-      y_residuals = y_residuals - X %*% theta
+      y_residuals <- y_residuals - Xtheta
 
       #Convergence Criterion
       if (i > warm_start + 1 && (elbo[i - warm_start] - elbo[i - warm_start - 1]) < tol) {
@@ -380,7 +396,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     }
   }
 
-  # Remove first (infinite) entry, and trailing NAs. ADD: Combine SuSiE and MR. ASH ELBO
+  # Remove trailing NAs.
   elbo = elbo[!is.na(elbo)]
   s$elbo = elbo
   s$niter = i
@@ -391,14 +407,22 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   }
 
   if (intercept) {
+    # Save infinitesimal components.
+    s$theta = mr.ash.alpha::coef.mr.ash(mrash_output)
+    s$Xtheta = cbind(1,X) %*% s$theta
 
     # Estimate unshrunk intercept.
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
-                                 (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
-    s$fitted = s$Xr + mean_y + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
+                                 (colSums(s$alpha * s$mu)*s$theta[-1]/attr(X,"scaled:scale"))) # FIXME do we multiply by s$theta[-1] to add mr.ash to intercept?
+    s$fitted = s$Xr + mean_y + s$Xtheta
+
   } else {
+    # Save infinitesimal components.
+    s$theta = mr.ash.alpha::coef.mr.ash(mrash_output)[-1]
+    s$Xtheta = X %*% s$theta
+
     s$intercept = 0
-    s$fitted = s$Xr + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
+    s$fitted = s$Xr + s$Xtheta
   }
   s$fitted = drop(s$fitted)
   names(s$fitted) = `if`(is.null(names(y)),rownames(X),names(y))
