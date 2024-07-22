@@ -412,8 +412,10 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     s$Xtheta = cbind(1,X) %*% s$theta
 
     # Estimate unshrunk intercept.
+    # s$intercept = mean_y - sum(attr(X,"scaled:center") *
+    #                              ((colSums(s$alpha * s$mu)+s$theta[-1])/attr(X,"scaled:scale")))
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
-                                 (colSums(s$alpha * s$mu)*s$theta[-1]/attr(X,"scaled:scale"))) # FIXME do we multiply by s$theta[-1] to add mr.ash to intercept?
+                                 ((colSums(s$alpha * s$mu)+s$theta[-1])/attr(X,"scaled:scale")))
     s$fitted = s$Xr + mean_y + s$Xtheta
 
   } else {
@@ -426,7 +428,6 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   }
   s$fitted = drop(s$fitted)
   names(s$fitted) = `if`(is.null(names(y)),rownames(X),names(y))
-
   if (track_fit)
     s$trace = tracking
 
