@@ -235,7 +235,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
                       residual_variance_lowerbound = var(drop(y))/1e4,
                       refine = FALSE,
                       n_purity = 100,
-                      warm_start = 3) {
+                      warm_start = 2) {
 
   # Process input estimate_prior_method.
   estimate_prior_method = match.arg(estimate_prior_method)
@@ -356,7 +356,11 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       }
     } else{
       # Run mr.ash on residuals.
-      mrash_output <- mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = intercept, standardize = standardize)
+      mrash_output <- mr.ash.alpha::mr.ash(X = X,
+                                           y = y_residuals,
+                                           sa2 = nrow(X) * (2^((0:19)/20) - 1)^2,
+                                           intercept = intercept,
+                                           standardize = standardize)
 
       if (intercept) {
         theta <- mr.ash.alpha::coef.mr.ash(mrash_output)
@@ -412,8 +416,6 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     s$Xtheta = cbind(1,X) %*% s$theta
 
     # Estimate unshrunk intercept.
-    # s$intercept = mean_y - sum(attr(X,"scaled:center") *
-    #                              ((colSums(s$alpha * s$mu)+s$theta[-1])/attr(X,"scaled:scale")))
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
                                  ((colSums(s$alpha * s$mu)+s$theta[-1])/attr(X,"scaled:scale")))
     s$fitted = s$Xr + mean_y + s$Xtheta
