@@ -151,11 +151,15 @@ susie_inf <- function(X, y, L,
   XtOmegar <- XtOmegay - XtOmegaXb # X'Omega(y - Xb)
   alpha <- tausq * XtOmegar # Equation 27
 
-  # Compute PIPs
+  # Compute Combined PIPs
   PIP2 <- 1 - apply(1-PIP, 1, prod) # PIP for each snp
 
   # Compute Credible Sets
-  cred = susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
+  cred <- susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
+
+  # Compute fitted values. TODO: add scenarios with intercept
+  fitted <- X %*% rowSums(PIP2 * mu) + X %*% rowSums(PIP2 * alpha)
+
 
   return(list(
     PIP = PIP,
@@ -168,6 +172,7 @@ susie_inf <- function(X, y, L,
     sigmasq = sigmasq,
     tausq = tausq,
     alpha = alpha,
+    fitted = fitted,
     sets = cred
   ))
 
