@@ -12,10 +12,22 @@ library(tidyverse)
 # X <- as.matrix(X)
 # y <- as.matrix(y)
 
-devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/susieR')
-devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/mr.ash.alpha')
-source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie_inf.R")
-source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash.R")
+# devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/susieR')
+# devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/mr.ash.alpha')
+# source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie_inf.R")
+# source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash.R")
+
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v2.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v4.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v5.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v6.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v10.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v11.R")
+
 
 ```
 
@@ -53,8 +65,8 @@ cat(sprintf('Effect sizes: %s\n', toString(b[inds[order]])), "\n")
 
 # Generate data with strong infinitesimal effects, tau^2 = 1e-3
 cat('###### Simulating with strong infinitesimal effects, tau^2 = 1e-3 ######', "\n")
-tausq <- 1e-4
-#tausq <- 5e-4
+#tausq <- 1e-4
+tausq <- 5e-4
 #tausq <- 1e-3
 theta <- rnorm(p) * sqrt(tausq)
 effects <- X %*% b + X %*% theta
@@ -66,8 +78,10 @@ cat(sprintf('Total fraction of variance explained by SNPs: %f\n', total_variance
 
 
 ### METHODS ###
-susie_inf_output <- susie_inf(X = X, y = y, L = 5, coverage = 0.9, verbose = F)
-susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 3)
+susie_inf_output <- susie_inf(X = X, y = y, L = 5, coverage = 0.9, verbose = F, maxiter = 20)
+susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_v10_output <- susie_ash_v10(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_v11_output <- susie_ash_v11(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
 susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = F)
 mrash_output <- mr.ash(X = X, y = y, intercept = F)
 
@@ -104,6 +118,16 @@ susieash_y <- sqrt(mean((y - susie_ash_output$fitted)^2))
 susieash_xb <- sqrt(mean((Xbeta - susie_ash_output$Xr)^2))
 susieash_xtheta <- sqrt(mean((Xtheta - susie_ash_output$Xtheta)^2))
 
+# susie-ash v10 RMSE
+susieash_y_v10 <- sqrt(mean((y - susie_ash_v10_output$fitted)^2))
+susieash_xb_v10 <- sqrt(mean((Xbeta - susie_ash_v10_output$Xr)^2))
+susieash_xtheta_v10 <- sqrt(mean((Xtheta - susie_ash_v10_output$Xtheta)^2))
+
+# susie-ash v11 RMSE
+susieash_y_v11 <- sqrt(mean((y - susie_ash_v11_output$fitted)^2))
+susieash_xb_v11 <- sqrt(mean((Xbeta - susie_ash_v11_output$Xr)^2))
+susieash_xtheta_v11 <- sqrt(mean((Xtheta - susie_ash_v11_output$Xtheta)^2))
+
 # susie-inf RMSE
 susieinf_y <- sqrt(mean((y - susie_inf_output$fitted)^2))
 susieinf_xb <- sqrt(mean((Xbeta - X %*% rowSums(susie_inf_output$PIP2 * susie_inf_output$mu))^2))
@@ -121,6 +145,7 @@ susie_ash_testing <- mr.ash(X = X, y = resid, standardize = F, intercept = F)
 
 # susie ash testing RMSE
 susieashtesting_y <- sqrt(mean((y - predict(susie_ash_testing, X))^2))
+susie_ash_v2_Y <- sqrt(mean((y - susie_ash_v2_output$fitted)^2))
 
 #### SuSiE-ASH TESTING 2 ####
 tmp3 <- mr.ash(X = X, y = y, standardize = F, intercept = F)
@@ -130,10 +155,16 @@ susieashtesting2_y <- sqrt(mean((y - susie_ash_testing_2$fitted)^2))
 
 #### Combined Results ####
 
-data.frame(Model = c('susie', 'susie-ash', 'susie-inf', 'mr.ash', 'testing susie-ash'),
-           MSE_y = c(susie_y, susieash_y, susieinf_y, mrash_y, susieashtesting_y),
-           MSE_b = c(susie_xb, susieash_xb, susieinf_xb, NA, NA),
-           MSE_theta = c(NA, susieash_xtheta, susieinf_xtheta, NA, NA))
+data.frame(Model = c('susie', 'susie-ash', 'susie-inf', 'mr.ash', 'susie-ash v10', 'susie-ash v11'),
+           MSE_y = c(susie_y, susieash_y, susieinf_y, mrash_y, susieash_y_v10, susieash_y_v11),
+           MSE_b = c(susie_xb, susieash_xb, susieinf_xb, NA, susieash_xb_v10, susieash_xb_v11),
+           MSE_theta = c(NA, susieash_xtheta, susieinf_xtheta, NA, susieash_xtheta_v10, susieash_xtheta_v11))
+
+susie_inf_output$sets
+susie_output$sets$cs
+susie_ash_output$sets$cs
+susie_ash_v10_output$sets$cs
+susie_ash_v11_output$sets$cs
 ```
 
 ```{r}
@@ -151,6 +182,30 @@ susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = T)
 
 susie_output$intercept
 susie_ash_output$intercept
+
+```
+
+```{r}
+tmp<-readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/analysis/numIter2_Ltrue10_ssq0.01_sigmasq1_tausq0.0001")
+
+tmp$avg_metrics
+```
+
+```{r}
+mrash_output <- mr.ash(X = X, y = y, intercept = F)
+susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_output_10 <- susie_ash_v10(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+
+sqrt(mean((y - predict(mrash_output, X))^2))
+sqrt(mean((y - susie_ash_output$fitted)^2))
+sqrt(mean((y - susie_ash_output_10$fitted)^2))
+
+susie_output$sets
+susie_ash_output$sets$cs
+susie_ash_output_10$sets$cs
+```
+
+```{r}
 
 ```
 

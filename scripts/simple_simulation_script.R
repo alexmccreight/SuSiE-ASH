@@ -38,10 +38,25 @@ generate_data <- function(Ltrue, ssq, sigmasq, tausq){
 method_and_score <- function(X = data$X, y = data$y, beta = data$beta, Ltrue = Ltrue, threshold = 0.90) {
   cat("Starting susie\n")
   susie_output <- susie(X = X, y = y, L = Ltrue, intercept = F, standardize = F)
+
   cat("Starting susie-ash\n")
-  susie_ash_output <- susie_ash(X = X, y = y, L = Ltrue, warm_start = 5, tol = 0.001, intercept = F, standardize = F)
+  susie_ash_output <- susie_ash(X = X, y = y, L = Ltrue, warm_start = 2, tol = 0.001, intercept = F, standardize = F, max_iter = 20)
+
   cat("Starting susie-inf\n")
   susie_inf_output <- susie_inf(X = X, y = y, L = Ltrue, coverage = threshold, verbose = F)
+
+  cat("Starting susie-ash v4\n")
+  susie_ash_output_v4 <- susie_ash_v4(X = X, y = y, L = Ltrue, tol = 0.001, intercept = F, standardize = F, max_iter = 20)
+
+  cat("Starting susie-ash v5\n")
+  susie_ash_output_v5 <- susie_ash_v5(X = X, y = y, L = Ltrue, tol = 0.001, intercept = F, standardize = F, max_iter = 20)
+
+  #cat("Starting susie-ash v6\n")
+  #susie_ash_output <- susie_ash_v6(X = X, y = y, L = Ltrue, warm_start = 2, tol = 0.001, intercept = F, standardize = F, max_iter = 20)
+
+  #cat("Starting susie-ash v7\n")
+  #susie_ash_output <- susie_ash_v7(X = X, y = y, L = Ltrue, warm_start = 2, tol = 0.001, intercept = F, standardize = F, max_iter = 20)
+
 
   calc_metrics <- function(mod, beta = beta, threshold = threshold) {
     all_causal <-  c(which(beta != 0))
@@ -71,8 +86,12 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, Ltrue = L
     FN = length(all_causal) - TP
     FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
     cs_recall = TP/(TP+FN)
+
+    # RMSE for outcome
+    rmse = sqrt(mean((y - mod$fitted)^2))
+
 }
-    return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
+    return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage, rmse = rmse))
   }
 
   calc_metrics_infinitesimal <- function(mod, beta = beta, threshold = threshold){
@@ -101,8 +120,11 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, Ltrue = L
     TP = sum(all_causal %in% unlist(test.cs))
     FN = length(all_causal) - TP
     cs_recall = TP/(TP+FN)
+
+    # RMSE for outcome
+    rmse = sqrt(mean((y - mod$fitted)^2))
 }
-    return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage))
+    return(list(cs_fdr = cs_fdr, cs_recall = cs_recall, cs_size = cs_size, coverage = coverage, rmse = rmse))
   }
 
   # Calculate Metrics for each method
@@ -112,11 +134,24 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, Ltrue = L
 
   #Create a data frame with the results
   metrics_table  <- data.frame(
-    Model = c("SuSiE","SuSiE-ASH", "SuSiE-Inf"),
-    CS_FDR = c(susie_metrics$cs_fdr, susie_ash_metrics$cs_fdr, susie_inf_metrics$cs_fdr),
-    CS_Recall = c(susie_metrics$cs_recall, susie_ash_metrics$cs_recall, susie_inf_metrics$cs_recall),
-    CS_Size = c(susie_metrics$cs_size, susie_ash_metrics$cs_size, susie_inf_metrics$cs_size),
-    Coverage = c(susie_metrics$coverage, susie_ash_metrics$coverage, susie_inf_metrics$coverage)
+    Model = c("susie",
+              "susie-ash",
+              "susie-inf"),
+    CS_FDR = c(susie_metrics$cs_fdr,
+               susie_ash_metrics$cs_fdr,
+               susie_inf_metrics$cs_fdr),
+    CS_Recall = c(susie_metrics$cs_recall,
+                  susie_ash_metrics$cs_recall,
+                  susie_inf_metrics$cs_recall),
+    CS_Size = c(susie_metrics$cs_size,
+                susie_ash_metrics$cs_size,
+                susie_inf_metrics$cs_size),
+    Coverage = c(susie_metrics$coverage,
+                 susie_ash_metrics$coverage,
+                 susie_inf_metrics$coverage),
+    RMSE = c(susie_metrics$rmse,
+             susie_ash_metrics$rmse,
+             susie_inf_metrics$rmse)
   )
 
   # Return the results table
@@ -133,7 +168,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, Ltrue = L
 # Main Simulation Command
 simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq = NULL, tausq = NULL, threshold = NULL) {
   # Parse command-line arguments
-  num_simulations = 50
+  num_simulations = 2
   Ltrue = 10
   ssq = 0.01
   sigmasq = 1
@@ -182,7 +217,8 @@ simulation <- function(num_simulations = NULL, Ltrue = NULL, ssq = NULL, sigmasq
     CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
     CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations,
     CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
-    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
+    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations,
+    RMSE = Reduce("+", lapply(all_metrics, function(x) x$RMSE)) / num_simulations
   )
 
   # Save simulation results as Rds file
