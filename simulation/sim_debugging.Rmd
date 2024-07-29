@@ -12,21 +12,26 @@ library(tidyverse)
 # X <- as.matrix(X)
 # y <- as.matrix(y)
 
-# devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/susieR')
-# devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/mr.ash.alpha')
-# source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie_inf.R")
-# source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash.R")
+devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/susieR')
+devtools::load_all('/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/submodules/mr.ash.alpha')
+source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie_inf.R")
+source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash.R")
+source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash-v10.R")
+source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash-v11.R")
+source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash-v4.R")
+source("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/susie_versions/susie-ash-v5.R")
 
-devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
-devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v2.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v4.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v5.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v6.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v10.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v11.R")
+
+# devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
+# devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v2.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v4.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v5.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v6.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v10.R")
+# source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v11.R")
 
 
 ```
@@ -81,7 +86,7 @@ cat(sprintf('Total fraction of variance explained by SNPs: %f\n', total_variance
 susie_inf_output <- susie_inf(X = X, y = y, L = 5, coverage = 0.9, verbose = F, maxiter = 20)
 susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
 susie_ash_v10_output <- susie_ash_v10(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
-susie_ash_v11_output <- susie_ash_v11(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_v11_output <- susie_ash_v10(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 1)
 susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = F)
 mrash_output <- mr.ash(X = X, y = y, intercept = F)
 
@@ -96,6 +101,8 @@ cat(sprintf('Effect sizes: %s\n', toString(b[inds[order]])), "\n")
 susie_inf_output$sets %in% inds
 susie_get_cs(susie_output, X = X, coverage = 0.9)$cs %in% inds
 susie_get_cs(susie_ash_output, X = X, coverage = 0.9)$cs %in% inds
+susie_get_cs(susie_ash_v10_output, X = X, coverage = 0.9)$cs %in% inds
+susie_get_cs(susie_ash_v11_output, X = X, coverage = 0.9)$cs %in% inds
 
 
 ### PREDICTION RESULTS ###
@@ -155,10 +162,15 @@ susieashtesting2_y <- sqrt(mean((y - susie_ash_testing_2$fitted)^2))
 
 #### Combined Results ####
 
-data.frame(Model = c('susie', 'susie-ash', 'susie-inf', 'mr.ash', 'susie-ash v10', 'susie-ash v11'),
-           MSE_y = c(susie_y, susieash_y, susieinf_y, mrash_y, susieash_y_v10, susieash_y_v11),
-           MSE_b = c(susie_xb, susieash_xb, susieinf_xb, NA, susieash_xb_v10, susieash_xb_v11),
-           MSE_theta = c(NA, susieash_xtheta, susieinf_xtheta, NA, susieash_xtheta_v10, susieash_xtheta_v11))
+# data.frame(Model = c('susie', 'susie-ash', 'susie-inf', 'mr.ash', 'susie-ash v10', 'susie-ash v11'),
+#            MSE_y = c(susie_y, susieash_y, susieinf_y, mrash_y, susieash_y_v10, susieash_y_v11),
+#            MSE_b = c(susie_xb, susieash_xb, susieinf_xb, NA, susieash_xb_v10, susieash_xb_v11),
+#            MSE_theta = c(NA, susieash_xtheta, susieinf_xtheta, NA, susieash_xtheta_v10, susieash_xtheta_v11))
+
+data.frame(Model = c('susie', 'susie-ash', 'mr.ash', 'susie-ash v10', 'susie-ash v11'),
+           RMSE_y = c(susie_y, susieash_y, mrash_y, susieash_y_v10, susieash_y_v11),
+           RMSE_b = c(susie_xb, susieash_xb, NA, susieash_xb_v10, susieash_xb_v11),
+           RMSE_theta = c(NA, susieash_xtheta, NA, susieash_xtheta_v10, susieash_xtheta_v11))
 
 susie_inf_output$sets
 susie_output$sets$cs
@@ -167,45 +179,76 @@ susie_ash_v10_output$sets$cs
 susie_ash_v11_output$sets$cs
 ```
 
+
 ```{r}
-set.seed(1)
-n = 1000
-p = 1000
-beta = rep(0,p)
-beta[1:4] = 1
-X = matrix(rnorm(n*p),nrow = n,ncol = p)
-X = scale(X,center = TRUE,scale = TRUE)
-y = 3 + drop(X %*% beta + rnorm(n))
+#### Set up true values #### 
+Xbeta <- data$X %*% matrix(data$beta, ncol = 1)
+Xtheta <- data$X %*% matrix(data$theta, ncol = 1)
+y = data$y
+X = data$X
 
-susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = T, max_iter = 20, warm_start = 3)
-susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = T)
+#### Run algorithms #### 
+susie_inf_output <- susie_inf(X = X, y = y, L = 5, coverage = 0.9, verbose = F, maxiter = 20)
+susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_v10_output <- susie_ash_v10(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_v11_output <- susie_ash_v11(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
+susie_ash_v4_output <- susie_ash_v4(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20)
+susie_output <- susie(X = X, y = y, L = 5, standardize = F, intercept = F)
+mrash_output <- mr.ash(X = X, y = y, intercept = F)
 
-susie_output$intercept
-susie_ash_output$intercept
+#### Calculate Metrics #### 
+
+# susie RMSE
+susie_y <- sqrt(mean((y - susie_output$fitted)^2))
+susie_xb <- sqrt(mean((Xbeta - susie_output$Xr)^2))
+
+# susie-ash RMSE
+susieash_y <- sqrt(mean((y - susie_ash_output$fitted)^2))
+susieash_xb <- sqrt(mean((Xbeta - susie_ash_output$Xr)^2))
+susieash_xtheta <- sqrt(mean((Xtheta - susie_ash_output$Xtheta)^2))
+
+# susie-ash v10 RMSE
+susieash_y_v10 <- sqrt(mean((y - susie_ash_v10_output$fitted)^2))
+susieash_xb_v10 <- sqrt(mean((Xbeta - susie_ash_v10_output$Xr)^2))
+susieash_xtheta_v10 <- sqrt(mean((Xtheta - susie_ash_v10_output$Xtheta)^2))
+
+# susie-ash v11 RMSE
+susieash_y_v11 <- sqrt(mean((y - susie_ash_v11_output$fitted)^2))
+susieash_xb_v11 <- sqrt(mean((Xbeta - susie_ash_v11_output$Xr)^2))
+susieash_xtheta_v11 <- sqrt(mean((Xtheta - susie_ash_v11_output$Xtheta)^2))
+
+# susie-ash v4 RMSE
+susieash_y_v4 <- sqrt(mean((y - susie_ash_v4_output$fitted)^2))
+susieash_xb_v4 <- sqrt(mean((Xbeta - susie_ash_v4_output$Xr)^2))
+susieash_xtheta_v4 <- sqrt(mean((Xtheta - susie_ash_v4_output$Xtheta)^2))
+
+# susie-inf RMSE
+susieinf_y <- sqrt(mean((y - susie_inf_output$fitted)^2))
+susieinf_xb <- sqrt(mean((Xbeta - X %*% rowSums(susie_inf_output$PIP2 * susie_inf_output$mu))^2))
+susieinf_xtheta <- sqrt(mean((Xtheta - X %*% rowSums(susie_inf_output$PIP2 * susie_inf_output$alpha))^2))
+
+# mr. ash RMSE
+mrash_y <- sqrt(mean((y - predict(mrash_output, X))^2))
+
+#### Combine Metrics ####
+data.frame(Model = c('susie', 'susie-ash', 'mr.ash', 'susie-ash v10', 'susie-ash v11', 'susie-ash v4'),
+           RMSE_y = c(susie_y, susieash_y, mrash_y, susieash_y_v10, susieash_y_v11, susieash_y_v4),
+           RMSE_b = c(susie_xb, susieash_xb, NA, susieash_xb_v10, susieash_xb_v11, susieash_xb_v4),
+           RMSE_theta = c(NA, susieash_xtheta, NA, susieash_xtheta_v10, susieash_xtheta_v11, susieash_xtheta_v4))
+
+
+sqrt(mean((y - susie_ash_v11_output$fitted)^2))
 
 ```
 
 ```{r}
-tmp<-readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/analysis/numIter2_Ltrue10_ssq0.01_sigmasq1_tausq0.0001")
+tmp <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/analysis/numIter10_totHeritability0.5_sparseEffect3_nonsparse0.01_ratio1.4_L10")
+
+tmp2 <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/analysis/numIter2_totHeritability0.5_sparseEffect3_nonsparse0.01_ratio1.4_L10")
 
 tmp$avg_metrics
-```
+tmp2$avg_metrics
 
-```{r}
-mrash_output <- mr.ash(X = X, y = y, intercept = F)
-susie_ash_output <- susie_ash(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
-susie_ash_output_10 <- susie_ash_v10(X = X, y = y, L = 5, standardize = F, intercept = F, max_iter = 20, warm_start = 2)
-
-sqrt(mean((y - predict(mrash_output, X))^2))
-sqrt(mean((y - susie_ash_output$fitted)^2))
-sqrt(mean((y - susie_ash_output_10$fitted)^2))
-
-susie_output$sets
-susie_ash_output$sets$cs
-susie_ash_output_10$sets$cs
-```
-
-```{r}
-
+mrash_output$varobj
 ```
 
