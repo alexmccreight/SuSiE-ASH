@@ -49,14 +49,19 @@ susie_ash_v4 = function(X,y,L = min(10,ncol(X)),
                          sa2 = nrow(X) * (2^((0:19)/20) - 1)^2)
 
   Xtheta <- X %*% mr.ash.alpha::coef.mr.ash(mrash_output)[-1]
+  Xr <- susie_output$Xr
 
-  fitted <- susie_output$Xr + Xtheta
+  fitted <- Xr + Xtheta
+
+
 
   output <- list(
     susie_output = susie_output,
     mrash_output = mrash_output,
     y_residuals = y_residuals,
-    fitted = fitted
+    fitted = fitted,
+    Xr = Xr,
+    Xtheta = Xtheta
   )
 
   return(output)

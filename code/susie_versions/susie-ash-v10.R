@@ -370,16 +370,9 @@ susie_ash_v10 = function (X,y,L = min(10,ncol(X)),
         Xtheta <- X %*% theta
       }
 
-      #elbo[i - warm_start] <- -(mrash_output$varobj)[length(mrash_output$varobj)]
-
       # Update residual vector
       y_residuals <- y_residuals - Xtheta
 
-      #Convergence Criterion
-      # if (i > warm_start + 1 && (elbo[i - warm_start] - elbo[i - warm_start - 1]) < tol) {
-      #   s$converged = TRUE
-      #   break
-      # }
       break
     }
 
