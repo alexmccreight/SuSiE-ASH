@@ -7,8 +7,11 @@ library(mr.ash.alpha)
 library(dplyr)
 library(magrittr)
 source("susie-ash.R")
-source("susie-inf.R")
-#source(...) add all the various susie-ash variations
+source("susie_inf.R")
+source("susie-ash-v4.R")
+source("susie-ash-v5.R")
+source("susie-ash-v10.R")
+source("susie-ash-v11.R")
 
 # Annotation Matrix (from S3 Bucket)
 X <- readRDS("X4")
@@ -76,13 +79,16 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
   cat("Starting SuSiE-ash (v11)\n")
   susie_ash_output_v11 <- susie_ash_v11(X = X, y = y, L = L, tol = 0.001, intercept = F, standardize = F, warm_start = 2)
 
+  cat("Starting SuSiE-inf\n")
+  susie_inf_output <- susie_inf(X = X, y = y, L = L, verbose = F, coverage = 0.95)
+
 
 
   calc_metrics_predict_all <- function(mod, X = X, y = y, beta = beta, theta = theta){
     #### Set truth ####
     Xbeta <- X %*% matrix(beta, ncol = 1)
     Xtheta <- X %*% matrix(theta, ncol = 1)
-    all_causal <-  c(which(beta != 0))
+    all_causal <- c(which(beta != 0), which(theta != 0))
 
     #### Initialize values ####
     test.cs <- susie_get_cs(mod, X = X, coverage = 0.95)$cs
@@ -91,28 +97,19 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     cs_recall <- 0
     cs_size <- 0
 
-    cat("test.cs structure:\n")
-    print(str(test.cs))
-    cat("Length of test.cs:", length(test.cs), "\n")
-
-
     if(length(test.cs) > 0){
-      cat("Calculating CS Size\n")
       # Calculate Average CS Size
       cs_size <- length(unlist(test.cs)) / length(test.cs)
 
-      cat("Calculating Coverage\n")
       # Calculate Coverage (proportion of credible sets with a causal effect)
       coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(test.cs))
 
-      cat("Calculating CS FDR\n")
       # CS Based FDR
       TP = sum(all_causal %in% unlist(test.cs))
       FN = length(all_causal) - TP
       FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
       cs_fdr = FP/(TP+FP)
 
-      cat("Calculating CS Recall\n")
       # CS Based Recall
       TP = sum(all_causal %in% unlist(test.cs))
       FN = length(all_causal) - TP
@@ -141,7 +138,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     #### Set up truth ####
     Xbeta <- X %*% matrix(beta, ncol = 1)
     Xtheta <- X %*% matrix(theta, ncol = 1)
-    all_causal <-  c(which(beta != 0))
+    all_causal <-  c(which(beta != 0), which(theta != 0))
 
     #### Initialize values ####
     test.cs <- susie_get_cs(mod, X = X, coverage = 0.95)$cs
@@ -150,27 +147,19 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     cs_recall <- 0
     cs_size <- 0
 
-    cat("test.cs structure:\n")
-    print(str(test.cs))
-    cat("Length of test.cs:", length(test.cs), "\n")
-
-    cat("Calculating CS Size\n")
     if(length(test.cs) > 0){
       # Calculate Average CS Size
       cs_size <- length(unlist(test.cs)) / length(test.cs)
 
-      cat("Calculating Coverage\n")
       # Calculate Coverage (proportion of credible sets with a causal effect)
       coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(test.cs))
 
-      cat("Calculating CS FDR\n")
       # CS Based FDR
       TP = sum(all_causal %in% unlist(test.cs))
       FN = length(all_causal) - TP
       FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
       cs_fdr = FP/(TP+FP)
 
-      cat("Calculating CS Recall\n")
       # CS Based Recall
       TP = sum(all_causal %in% unlist(test.cs))
       FN = length(all_causal) - TP
@@ -214,31 +203,87 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     ))
   }
 
+  calc_metrics_predict_ash_variants <- function(mod, X = X, y = y, beta = beta, theta = theta){
+    #### Set truth ####
+    Xbeta <- X %*% matrix(beta, ncol = 1)
+    Xtheta <- X %*% matrix(theta, ncol = 1)
+
+    #### Calculate RMSE ####
+    RMSE_y <- sqrt(mean((y - mod$fitted)^2))
+    RMSE_beta <- sqrt(mean((Xbeta - mod$Xr)^2))
+    RMSE_theta <- sqrt(mean((Xtheta - mod$Xtheta)^2))
+
+    #### Store Results ####
+    return(list(
+      RMSE_y = RMSE_y,
+      RMSE_beta = RMSE_beta,
+      RMSE_theta = RMSE_theta,
+      cs_size = NA,
+      coverage = NA,
+      cs_fdr = NA,
+      cs_recall = NA
+    ))
+  }
+
+  calc_metrics_inf <- function(mod, X = X, y = y, beta = beta, theta = theta){
+    #### Set truth ####
+    Xbeta <- X %*% matrix(beta, ncol = 1)
+    Xtheta <- X %*% matrix(theta, ncol = 1)
+    all_causal <- c(which(beta != 0), which(theta != 0))
+
+    #### Initialize values ####
+    test.cs <- mod$sets
+    coverage <- 0
+    cs_fdr <- 0
+    cs_recall <- 0
+    cs_size <- 0
+
+    if(length(test.cs) > 0){
+      # Calculate Average CS Size
+      cs_size <- length(unlist(mod$sets)) / length(mod$sets)
+
+      # Calculate Coverage (proportion of credible sets with a causal effect)
+      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / length(mod$sets)
+
+      # CS Based FDR
+      TP = sum(all_causal %in% unlist(test.cs))
+      FN = length(all_causal) - TP
+      FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
+      cs_fdr = FP/(TP+FP)
+
+      # CS Based Recall
+      TP = sum(all_causal %in% unlist(test.cs))
+      FN = length(all_causal) - TP
+      cs_recall = TP/(TP+FN)
+    }
+
+    #### Calculate RMSE ####
+    RMSE_y <- sqrt(mean((y - mod$fitted)^2))
+    RMSE_beta <- sqrt(mean((Xbeta - X %*% rowSums(mod$PIP2 * mod$mu))^2))
+    RMSE_theta <- sqrt(mean((Xtheta - X %*% rowSums(susie_inf_output$PIP2 * susie_inf_output$alpha))^2))
+
+    #### Store Results ####
+    return(list(
+      RMSE_y = RMSE_y,
+      RMSE_beta = RMSE_beta,
+      RMSE_theta = RMSE_theta,
+      cs_size = cs_size,
+      coverage = coverage,
+      cs_fdr = cs_fdr,
+      cs_recall = cs_recall
+    ))
+  }
+
   #############
   # Calculate Metrics for each method
   susie_metrics <- calc_metrics_predict_sparse(susie_output, X, y, beta, theta)
   mrash_metrics <- calc_metrics_predict_outcome(mrash_output, X, y, beta, theta)
   susie_ash_metrics <- calc_metrics_predict_all(susie_ash_output, X, y, beta, theta)
-  susie_ash_v4_metrics <- calc_metrics_predict_all(susie_ash_output_v4, X, y, beta, theta)
-  susie_ash_v5_metrics <- calc_metrics_predict_all(susie_ash_output_v5, X, y, beta, theta)
+  susie_ash_v4_metrics <- calc_metrics_predict_ash_variants(susie_ash_output_v4, X, y, beta, theta)
+  susie_ash_v5_metrics <- calc_metrics_predict_ash_variants(susie_ash_output_v5, X, y, beta, theta)
   susie_ash_v10_metrics <- calc_metrics_predict_all(susie_ash_output_v10, X, y, beta, theta)
   susie_ash_v11_metrics <- calc_metrics_predict_all(susie_ash_output_v11, X, y, beta, theta)
-
-  ### TROUBLE SHOOTING ###
-  print(c(susie_metrics$cs_fdr,
-          susie_metrics$cs_recall,
-          susie_metrics$cs_size,
-          susie_metrics$coverage))
-
-  print(c(susie_ash_metrics$cs_fdr,
-          susie_ash_metrics$cs_recall,
-          susie_ash_metrics$cs_size,
-          susie_ash_metrics$coverage))
-
-  print(c(susie_ash_v4_metrics$cs_fdr,
-          susie_ash_v4_metrics$cs_recall,
-          susie_ash_v4_metrics$cs_size,
-          susie_ash_v4_metrics$coverage))
+  susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, beta, theta)
 
   #Create a data frame with the results
   metrics_table  <- data.frame(
@@ -248,56 +293,64 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
               "SuSiE-ash (v4)",
               "SuSiE-ash (v5)",
               "SuSiE-ash (v10)",
-              "SuSiE-ash (v11)"),
+              "SuSiE-ash (v11)",
+              "SuSiE-inf"),
     RMSE_y = c(susie_metrics$RMSE_y,
                mrash_metrics$RMSE_y,
                susie_ash_metrics$RMSE_y,
                susie_ash_v4_metrics$RMSE_y,
                susie_ash_v5_metrics$RMSE_y,
                susie_ash_v10_metrics$RMSE_y,
-               susie_ash_v11_metrics$RMSE_y),
+               susie_ash_v11_metrics$RMSE_y,
+               susie_inf_metrics$RMSE_y),
     RMSE_beta = c(susie_metrics$RMSE_beta,
                   mrash_metrics$RMSE_beta,
                   susie_ash_metrics$RMSE_beta,
                   susie_ash_v4_metrics$RMSE_beta,
                   susie_ash_v5_metrics$RMSE_beta,
                   susie_ash_v10_metrics$RMSE_beta,
-                  susie_ash_v11_metrics$RMSE_beta),
+                  susie_ash_v11_metrics$RMSE_beta,
+                  susie_inf_metrics$RMSE_beta),
     RMSE_theta = c(susie_metrics$RMSE_theta,
                    mrash_metrics$RMSE_theta,
                    susie_ash_metrics$RMSE_theta,
                    susie_ash_v4_metrics$RMSE_theta,
                    susie_ash_v5_metrics$RMSE_theta,
                    susie_ash_v10_metrics$RMSE_theta,
-                   susie_ash_v11_metrics$RMSE_theta),
+                   susie_ash_v11_metrics$RMSE_theta,
+                   susie_inf_metrics$RMSE_theta),
     CS_FDR = c(susie_metrics$cs_fdr,
                mrash_metrics$cs_fdr,
                susie_ash_metrics$cs_fdr,
                susie_ash_v4_metrics$cs_fdr,
                susie_ash_v5_metrics$cs_fdr,
                susie_ash_v10_metrics$cs_fdr,
-               susie_ash_v11_metrics$cs_fdr),
+               susie_ash_v11_metrics$cs_fdr,
+               susie_inf_metrics$cs_fdr),
     CS_Recall = c(susie_metrics$cs_recall,
                   mrash_metrics$cs_recall,
                   susie_ash_metrics$cs_recall,
                   susie_ash_v4_metrics$cs_recall,
                   susie_ash_v5_metrics$cs_recall,
                   susie_ash_v10_metrics$cs_recall,
-                  susie_ash_v11_metrics$cs_recall),
+                  susie_ash_v11_metrics$cs_recall,
+                  susie_inf_metrics$cs_recall),
     CS_Size = c(susie_metrics$cs_size,
                 mrash_metrics$cs_size,
                 susie_ash_metrics$cs_size,
                 susie_ash_v4_metrics$cs_size,
                 susie_ash_v5_metrics$cs_size,
                 susie_ash_v10_metrics$cs_size,
-                susie_ash_v11_metrics$cs_size),
+                susie_ash_v11_metrics$cs_size,
+                susie_inf_metrics$cs_size),
     Coverage = c(susie_metrics$coverage,
                  mrash_metrics$coverage,
                  susie_ash_metrics$coverage,
                  susie_ash_v4_metrics$coverage,
                  susie_ash_v5_metrics$coverage,
                  susie_ash_v10_metrics$coverage,
-                 susie_ash_v11_metrics$coverage)
+                 susie_ash_v11_metrics$coverage,
+                 susie_inf_metrics$coverage)
   )
   # Return the results table
   return(list(
@@ -309,6 +362,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     susie_ash_output_v5 = susie_ash_output_v5,
     susie_ash_output_v10 = susie_ash_output_v10,
     susie_ash_output_v11 = susie_ash_output_v11,
+    susie_inf_output = susie_inf_output,
     betas = beta,
     thetas = theta)
   )
@@ -321,7 +375,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   total_heritability = 0.5
   sparse_effects = 3
   nonsparse_coverage = 0.01
-  theta_beta_ratio = 1.4
+  theta_beta_ratio = 5
   L = 10
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
@@ -339,6 +393,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   all_susie_ash_outputs_v5 <- list()
   all_susie_ash_outputs_v10 <- list()
   all_susie_ash_outputs_v11 <- list()
+  all_susie_inf_outputs <- list()
   all_seeds <- numeric(num_simulations)
 
   for (i in 1:num_simulations) {
@@ -365,6 +420,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_susie_ash_outputs_v5[[i]] <- results$susie_ash_output_v5
     all_susie_ash_outputs_v10[[i]] <- results$susie_ash_output_v10
     all_susie_ash_outputs_v11[[i]] <- results$susie_ash_output_v11
+    all_susie_inf_outputs[[i]] <- results$susie_inf_output
     all_seeds[i] <- seed
   }
 
@@ -381,8 +437,8 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   )
 
   # Save simulation results as Rds file
-  #output_dir <- "/home/apm2217/output"
-  output_dir <- "analysis"
+  output_dir <- "/home/apm2217/output"
+  #output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
@@ -395,6 +451,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_susie_ash_outputs_v5 = all_susie_ash_outputs_v5,
     all_susie_ash_outputs_v10 = all_susie_ash_outputs_v10,
     all_susie_ash_outputs_v11 = all_susie_ash_outputs_v11,
+    all_susie_inf_outputs = all_susie_inf_outputs,
     all_seeds = all_seeds
   )
 
