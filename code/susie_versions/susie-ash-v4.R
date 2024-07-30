@@ -50,6 +50,7 @@ susie_ash_v4 = function(X,y,L = min(10,ncol(X)),
 
   Xtheta <- X %*% mr.ash.alpha::coef.mr.ash(mrash_output)[-1]
   Xr <- susie_output$Xr
+  sets <- susie_output$sets
 
   fitted <- Xr + Xtheta
 
@@ -61,7 +62,8 @@ susie_ash_v4 = function(X,y,L = min(10,ncol(X)),
     y_residuals = y_residuals,
     fitted = fitted,
     Xr = Xr,
-    Xtheta = Xtheta
+    Xtheta = Xtheta,
+    sets = sets
   )
 
   return(output)

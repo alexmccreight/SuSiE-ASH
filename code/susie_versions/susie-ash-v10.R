@@ -373,6 +373,7 @@ susie_ash_v10 = function (X,y,L = min(10,ncol(X)),
       # Update residual vector
       y_residuals <- y_residuals - Xtheta
 
+      s$converged = TRUE
       break
     }
 

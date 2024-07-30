@@ -372,6 +372,7 @@ susie_ash_v11 = function (X,y,L = min(10,ncol(X)),
       #   s$converged = TRUE
       #   break
       # }
+      s$converged = TRUE
       break
     }
 
