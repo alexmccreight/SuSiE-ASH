@@ -2,7 +2,7 @@
 username=apm2217
 ./src/mm_jobman.sh \
  ./commands_to_submit.txt \
- -c 8 -m 8 \
+ -c 12 -m 8 \
  --job-size 72 \
  --parallel-commands 12 \
  --mount statfungen/ftp_fgc_xqtl/interactive_analysis/$username/susie-ash-data:/home/$username/data \

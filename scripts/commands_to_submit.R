@@ -26,7 +26,7 @@ for (i in 1:nrow(parameter_grid)) {
   L <- params["L"]
 
   # Create the command
-  command <- paste0("Rscript /home/apm2217/data/simulation_script.R",
+  command <- paste0("Rscript /home/apm2217/data/simulation_prediction_script.R",
                     " num_simulations=",num_simulations,
                     " total_heritability=", total_heritability,
                     " sparse_effects=", sparse_effects,
