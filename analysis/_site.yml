@@ -11,6 +11,8 @@ navbar:
     href: license.html
   - text: "Simulation Results"
     href: Simulation-Results.html
+  - text: "Simulation Tables"
+    href: simulation-tables.html
   right:
   - icon: fab fa-github
     text: Source code
