@@ -13,6 +13,8 @@ navbar:
     href: Simulation-Results.html
   - text: "Simulation Tables"
     href: simulation-tables.html
+  - text: "List of SuSiE Improvements"
+    href: improvements.html
   right:
   - icon: fab fa-github
     text: Source code
