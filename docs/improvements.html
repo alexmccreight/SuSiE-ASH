@@ -11,7 +11,7 @@
 
 
 
-<title>Simulation Results</title>
+<title>SuSiE Improvements</title>
 
 <script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -345,6 +345,9 @@ div.tocify {
 <li>
   <a href="simulation-tables.html">Simulation Tables</a>
 </li>
+<li>
+  <a href="improvements.html">SuSiE Improvements</a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -363,7 +366,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Simulation Results</h1>
+<h1 class="title toc-ignore">SuSiE Improvements</h1>
 
 </div>
 
@@ -371,7 +374,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -382,8 +385,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -392,13 +395,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-07-31
+<strong>Last updated:</strong> 2024-08-02
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
@@ -439,133 +442,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
-</p>
-</div>
-<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
-<div class="panel-body">
-<p>Great job! The global environment was empty. Objects defined in the
-global environment can affect the analysis in your R Markdown file in
-unknown ways. For reproduciblity it’s best to always run the code in an
-empty environment.</p>
-</div>
-</div>
-</div>
-<div class="panel panel-default">
-<div class="panel-heading">
-<p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20240328code">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>Seed:</strong>
-<code>set.seed(20240328)</code> </a>
-</p>
-</div>
-<div id="strongSeedstrongcodesetseed20240328code"
-class="panel-collapse collapse">
-<div class="panel-body">
-<p>The command <code>set.seed(20240328)</code> was run prior to running
-the code in the R Markdown file. Setting a seed ensures that any results
-that rely on randomness, e.g. subsampling or permutations, are
-reproducible.</p>
-</div>
-</div>
-</div>
-<div class="panel panel-default">
-<div class="panel-heading">
-<p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>Session information:</strong>
-recorded </a>
-</p>
-</div>
-<div id="strongSessioninformationstrongrecorded"
-class="panel-collapse collapse">
-<div class="panel-body">
-<p>Great job! Recording the operating system, R version, and package
-versions is critical for reproducibility.</p>
-</div>
-</div>
-</div>
-<div class="panel panel-default">
-<div class="panel-heading">
-<p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>Cache:</strong> none </a>
-</p>
-</div>
-<div id="strongCachestrongnone" class="panel-collapse collapse">
-<div class="panel-body">
-<p>Nice! There were no cached chunks for this analysis, so you can be
-confident that you successfully produced the results during this
-run.</p>
-</div>
-</div>
-</div>
-<div class="panel panel-default">
-<div class="panel-heading">
-<p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
-</p>
-</div>
-<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
-<div class="panel-body">
-<p>
-Using absolute paths to the files within your workflowr project makes it
-difficult for you and others to run your code on a different machine.
-Change the absolute path(s) below to the suggested relative path(s) to
-make your code more reproducible.
-</p>
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th style="text-align:left;">
-absolute
-</th>
-<th style="text-align:left;">
-relative
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH
-</td>
-<td style="text-align:left;">
-.
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/simulation_2
-</td>
-<td style="text-align:left;">
-simulation/simulation_2
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div class="panel panel-default">
-<div class="panel-heading">
-<p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree5a624258a4d29c647b970027bd5f84bad58c9497targetblank5a62425a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree495c3efd211cbb9ea60b0170b69359b5eea94263targetblank495c3efa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/5a624258a4d29c647b970027bd5f84bad58c9497" target="_blank">5a62425</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/495c3efd211cbb9ea60b0170b69359b5eea94263" target="_blank">495c3ef</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree5a624258a4d29c647b970027bd5f84bad58c9497targetblank5a62425a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree495c3efd211cbb9ea60b0170b69359b5eea94263targetblank495c3efa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -575,7 +460,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/5a624258a4d29c647b970027bd5f84bad58c9497" target="_blank">5a62425</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/495c3efd211cbb9ea60b0170b69359b5eea94263" target="_blank">495c3ef</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -602,8 +487,7 @@ Ignored files:
     Ignored:    submodules/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/numIter2_Ltrue10_ssq0.01_sigmasq1_tausq0.0001
-    Untracked:  sim_analysis.Rmd
+    Untracked:  simulation/sim_analysis.Rmd
     Untracked:  simulation/sim_download.Rmd
     Untracked:  simulation/simulation avg metrics/
     Untracked:  simulation/simulation results/
@@ -629,11 +513,11 @@ have uncommitted changes.
 
 <p>
 These are the previous versions of the repository in which changes were
-made to the R Markdown (<code>analysis/Simulation-Results.Rmd</code>)
-and HTML (<code>docs/Simulation-Results.html</code>) files. If you’ve
-configured a remote Git repository (see <code>?wflow_git_remote</code>),
-click on the hyperlinks in the table below to view the files as they
-were in that past version.
+made to the R Markdown (<code>analysis/improvements.Rmd</code>) and HTML
+(<code>docs/improvements.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -659,19 +543,53 @@ Message
 <tbody>
 <tr>
 <td>
-html
+Rmd
 </td>
 <td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/f7da2be5b729f37a5ee24032f9a58f195ad326ad/docs/Simulation-Results.html" target="_blank">f7da2be</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/495c3efd211cbb9ea60b0170b69359b5eea94263/analysis/improvements.Rmd" target="_blank">495c3ef</a>
 </td>
 <td>
 alexmccreight
 </td>
 <td>
-2024-06-26
+2024-08-02
 </td>
 <td>
-website update
+add refine for improvements
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/495c3efd211cbb9ea60b0170b69359b5eea94263/docs/improvements.html" target="_blank">495c3ef</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-08-02
+</td>
+<td>
+add refine for improvements
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/b501f370011cba67edfccdff2209d3b82d745d89/docs/improvements.html" target="_blank">b501f37</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-08-02
+</td>
+<td>
+title
 </td>
 </tr>
 <tr>
@@ -679,16 +597,16 @@ website update
 Rmd
 </td>
 <td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/69477375b6d511ef59bfa2af6e7a9b3d4589e5a5/analysis/Simulation-Results.Rmd" target="_blank">6947737</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/5e165e6d1706bf24a6ce06239fec85a2b9b77416/analysis/improvements.Rmd" target="_blank">5e165e6</a>
 </td>
 <td>
 alexmccreight
 </td>
 <td>
-2024-06-26
+2024-08-02
 </td>
 <td>
-new simulation settings
+title
 </td>
 </tr>
 <tr>
@@ -696,16 +614,16 @@ new simulation settings
 Rmd
 </td>
 <td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/172eed633e2a59655092cc44a4a8df94e239a5cb/analysis/Simulation-Results.Rmd" target="_blank">172eed6</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/b30b7e2e92fa0f0c1f1df294e00eee373d881d68/analysis/improvements.Rmd" target="_blank">b30b7e2</a>
 </td>
 <td>
 alexmccreight
 </td>
 <td>
-2024-04-29
+2024-08-02
 </td>
 <td>
-code chunk fix
+list of improvements
 </td>
 </tr>
 <tr>
@@ -713,154 +631,16 @@ code chunk fix
 html
 </td>
 <td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/172eed633e2a59655092cc44a4a8df94e239a5cb/docs/Simulation-Results.html" target="_blank">172eed6</a>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/b30b7e2e92fa0f0c1f1df294e00eee373d881d68/docs/improvements.html" target="_blank">b30b7e2</a>
 </td>
 <td>
 alexmccreight
 </td>
 <td>
-2024-04-29
+2024-08-02
 </td>
 <td>
-code chunk fix
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/139ac16f3abc814f7807eca42617a34c21384945/analysis/Simulation-Results.Rmd" target="_blank">139ac16</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-29
-</td>
-<td>
-updated simulation results. added new nonsparse coverage 2.5% setting.
-25 iterations each setting.
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/139ac16f3abc814f7807eca42617a34c21384945/docs/Simulation-Results.html" target="_blank">139ac16</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-29
-</td>
-<td>
-updated simulation results. added new nonsparse coverage 2.5% setting.
-25 iterations each setting.
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/830c08bbad47a1532d0785fa9147c0c3ba443fe8/docs/Simulation-Results.html" target="_blank">830c08b</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-21
-</td>
-<td>
-Build site.
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/afdb4ab0d64eddc28cdc20ecb89e4e9990425a8c/analysis/Simulation-Results.Rmd" target="_blank">afdb4ab</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-21
-</td>
-<td>
-sim results
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/afdb4ab0d64eddc28cdc20ecb89e4e9990425a8c/docs/Simulation-Results.html" target="_blank">afdb4ab</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-21
-</td>
-<td>
-sim results
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/fb54390f9dd932c98dae09530a0fc277c7a7a6f7/docs/Simulation-Results.html" target="_blank">fb54390</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-16
-</td>
-<td>
-fix
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/6133535108cc6c3b5a83145c75e6f906aa88a33a/docs/Simulation-Results.html" target="_blank">6133535</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-16
-</td>
-<td>
-update
-</td>
-</tr>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/9f857456d489c8167baa18ed12e2aae7ff125e9e/analysis/Simulation-Results.Rmd" target="_blank">9f85745</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2024-04-16
-</td>
-<td>
-move folder
+list of improvements
 </td>
 </tr>
 </tbody>
@@ -870,59 +650,24 @@ move folder
 </div>
 </div>
 </div>
-<div id="roc-curves" class="section level1">
-<h1>1. ROC Curves</h1>
-</div>
-<div id="pip-bins-vs-proportion-causal" class="section level1">
-<h1>2. PIP Bins vs Proportion Causal</h1>
-<br>
-<p>
-<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
-<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
-Session information
-</button>
-</p>
-<div id="workflowr-sessioninfo" class="collapse">
-<pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 4.4.0 (2024-04-24)
-Platform: aarch64-apple-darwin20
-Running under: macOS Sonoma 14.1
-
-Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
-
-locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-
-time zone: America/New_York
-tzcode source: internal
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-other attached packages:
- [1] ROCR_1.0-11     lubridate_1.9.3 forcats_1.0.0   stringr_1.5.1  
- [5] dplyr_1.1.4     purrr_1.0.2     readr_2.1.5     tidyr_1.3.1    
- [9] tibble_3.2.1    ggplot2_3.5.1   tidyverse_2.0.0 workflowr_1.7.1
-
-loaded via a namespace (and not attached):
- [1] sass_0.4.9        utf8_1.2.4        generics_0.1.3    stringi_1.8.3    
- [5] hms_1.1.3         digest_0.6.35     magrittr_2.0.3    timechange_0.3.0 
- [9] evaluate_0.23     grid_4.4.0        fastmap_1.1.1     rprojroot_2.0.4  
-[13] jsonlite_1.8.8    processx_3.8.4    whisker_0.4.1     ps_1.7.6         
-[17] promises_1.3.0    httr_1.4.7        fansi_1.0.6       scales_1.3.0     
-[21] jquerylib_0.1.4   cli_3.6.2         rlang_1.1.3       munsell_0.5.1    
-[25] withr_3.0.0       cachem_1.0.8      yaml_2.3.8        tools_4.4.0      
-[29] tzdb_0.4.0        colorspace_2.1-0  httpuv_1.6.15     vctrs_0.6.5      
-[33] R6_2.5.1          lifecycle_1.0.4   git2r_0.33.0      fs_1.6.4         
-[37] pkgconfig_2.0.3   callr_3.7.6       pillar_1.9.0      bslib_0.7.0      
-[41] later_1.3.2       gtable_0.3.5      glue_1.7.0        Rcpp_1.0.12      
-[45] xfun_0.43         tidyselect_1.2.1  highr_0.10        rstudioapi_0.16.0
-[49] knitr_1.46        htmltools_0.5.8.1 rmarkdown_2.26    compiler_4.4.0   
-[53] getPass_0.2-4    </code></pre>
-</div>
-</div>
+<ol style="list-style-type: decimal">
+<li>MoM instead of MLE for updating residual variance (used in <a
+href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-023-01597-3/MediaObjects/41588_2023_1597_MOESM1_ESM.pdf">susie-inf</a>
+claims to be “more robust and stable” than MLE)</li>
+<li>BLUP (used in <a
+href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-023-01597-3/MediaObjects/41588_2023_1597_MOESM1_ESM.pdf">susie-inf</a>
+eq. 27 for posterior mean of infinitesimal effects)</li>
+<li>Convergence using PIP versus ELBO (used in <a
+href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-023-01597-3/MediaObjects/41588_2023_1597_MOESM1_ESM.pdf">susie-inf</a>)</li>
+<li>Attainable Coverage (used in <a
+href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011104">SparsePro</a>)</li>
+<li>BLiP (used in <a href="https://arxiv.org/pdf/2203.17208">BLiP</a> to
+further refine credible sets)</li>
+<li>Utilize t distribution instead of normal for improved coverage (from
+William)</li>
+<li>Make <code>refine = TRUE</code> by default (needs further
+testing)</li>
+</ol>
 
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
