@@ -1,5 +1,5 @@
 ---
-title: "List of SuSiE Improvements"
+title: "SuSiE Improvements"
 output: html_document
 ---
 
