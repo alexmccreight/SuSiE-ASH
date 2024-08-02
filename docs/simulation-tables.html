@@ -392,13 +392,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-07-31
+<strong>Last updated:</strong> 2024-08-02
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 2
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
@@ -421,21 +421,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R
-Markdown file created these results, you’ll want to first commit it to
-the Git repo. If you’re still working on the analysis, you can ignore
-this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -552,15 +549,15 @@ relative
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree5a624258a4d29c647b970027bd5f84bad58c9497targetblank5a62425a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreeec3735989f4cc076d456a67ba9d7961cd7dbe035targetblankec37359a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/5a624258a4d29c647b970027bd5f84bad58c9497" target="_blank">5a62425</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/ec3735989f4cc076d456a67ba9d7961cd7dbe035" target="_blank">ec37359</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree5a624258a4d29c647b970027bd5f84bad58c9497targetblank5a62425a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreeec3735989f4cc076d456a67ba9d7961cd7dbe035targetblankec37359a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -570,7 +567,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/5a624258a4d29c647b970027bd5f84bad58c9497" target="_blank">5a62425</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/ec3735989f4cc076d456a67ba9d7961cd7dbe035" target="_blank">ec37359</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -589,7 +586,6 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/.DS_Store
-    Ignored:    analysis/simulation-tables.html
     Ignored:    code/.DS_Store
     Ignored:    code/susie_versions/.DS_Store
     Ignored:    data/.DS_Store
@@ -599,7 +595,6 @@ Ignored files:
 
 Untracked files:
     Untracked:  analysis/numIter2_Ltrue10_ssq0.01_sigmasq1_tausq0.0001
-    Untracked:  analysis/simulation-tables.Rmd
     Untracked:  simulation/sim_analysis.Rmd
     Untracked:  simulation/sim_download.Rmd
     Untracked:  simulation/simulation avg metrics/
@@ -607,8 +602,6 @@ Untracked files:
 
 Unstaged changes:
     Modified:   code/susie_versions/susie_inf.R
-    Deleted:    simulation-tables.Rmd
-    Deleted:    simulation-tables.html
     Modified:   simulation/sim_debugging.Rmd
     Modified:   submodules/susieR
 
@@ -625,10 +618,74 @@ have uncommitted changes.
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with
-<code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/simulation-tables.Rmd</code>) and
+HTML (<code>docs/simulation-tables.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/ec3735989f4cc076d456a67ba9d7961cd7dbe035/analysis/simulation-tables.Rmd" target="_blank">ec37359</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-07-31
+</td>
+<td>
+website fix
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/ec3735989f4cc076d456a67ba9d7961cd7dbe035/docs/simulation-tables.html" target="_blank">ec37359</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-07-31
+</td>
+<td>
+website fix
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -1709,23 +1766,24 @@ attached base packages:
 other attached packages:
  [1] lubridate_1.9.3 forcats_1.0.0   stringr_1.5.1   dplyr_1.1.4    
  [5] purrr_1.0.2     readr_2.1.5     tidyr_1.3.1     tibble_3.2.1   
- [9] ggplot2_3.5.1   tidyverse_2.0.0
+ [9] ggplot2_3.5.1   tidyverse_2.0.0 workflowr_1.7.1
 
 loaded via a namespace (and not attached):
  [1] sass_0.4.9        utf8_1.2.4        generics_0.1.3    stringi_1.8.3    
  [5] hms_1.1.3         digest_0.6.35     magrittr_2.0.3    timechange_0.3.0 
  [9] evaluate_0.23     grid_4.4.0        fastmap_1.1.1     rprojroot_2.0.4  
-[13] workflowr_1.7.1   jsonlite_1.8.8    promises_1.3.0    fansi_1.0.6      
-[17] scales_1.3.0      jquerylib_0.1.4   cli_3.6.2         crayon_1.5.2     
-[21] rlang_1.1.3       bit64_4.0.5       munsell_0.5.1     withr_3.0.0      
-[25] cachem_1.0.8      yaml_2.3.8        parallel_4.4.0    tools_4.4.0      
-[29] tzdb_0.4.0        colorspace_2.1-0  httpuv_1.6.15     vctrs_0.6.5      
-[33] R6_2.5.1          lifecycle_1.0.4   git2r_0.33.0      bit_4.0.5        
-[37] fs_1.6.4          vroom_1.6.5       pkgconfig_2.0.3   pillar_1.9.0     
-[41] bslib_0.7.0       later_1.3.2       gtable_0.3.5      glue_1.7.0       
-[45] Rcpp_1.0.12       xfun_0.43         tidyselect_1.2.1  highr_0.10       
-[49] rstudioapi_0.16.0 knitr_1.46        htmltools_0.5.8.1 rmarkdown_2.26   
-[53] compiler_4.4.0   </code></pre>
+[13] jsonlite_1.8.8    processx_3.8.4    whisker_0.4.1     ps_1.7.6         
+[17] promises_1.3.0    httr_1.4.7        fansi_1.0.6       scales_1.3.0     
+[21] jquerylib_0.1.4   cli_3.6.2         crayon_1.5.2      rlang_1.1.3      
+[25] bit64_4.0.5       munsell_0.5.1     withr_3.0.0       cachem_1.0.8     
+[29] yaml_2.3.8        parallel_4.4.0    tools_4.4.0       tzdb_0.4.0       
+[33] colorspace_2.1-0  httpuv_1.6.15     vctrs_0.6.5       R6_2.5.1         
+[37] lifecycle_1.0.4   git2r_0.33.0      bit_4.0.5         fs_1.6.4         
+[41] vroom_1.6.5       pkgconfig_2.0.3   callr_3.7.6       pillar_1.9.0     
+[45] bslib_0.7.0       later_1.3.2       gtable_0.3.5      glue_1.7.0       
+[49] Rcpp_1.0.12       xfun_0.43         tidyselect_1.2.1  highr_0.10       
+[53] rstudioapi_0.16.0 knitr_1.46        htmltools_0.5.8.1 rmarkdown_2.26   
+[57] compiler_4.4.0    getPass_0.2-4    </code></pre>
 </div>
 </div>
 
