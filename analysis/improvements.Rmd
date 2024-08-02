@@ -9,4 +9,5 @@ output: html_document
 4. Attainable Coverage (used in [SparsePro](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011104))
 5. BLiP (used in [BLiP](https://arxiv.org/pdf/2203.17208) to further refine credible sets)
 6. Utilize t distribution instead of normal for improved coverage (from William)
+7. Make `refine = TRUE` by default (needs further testing)
 
