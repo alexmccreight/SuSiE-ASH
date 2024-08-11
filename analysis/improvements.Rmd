@@ -10,4 +10,5 @@ output: html_document
 5. BLiP (used in [BLiP](https://arxiv.org/pdf/2203.17208) to further refine credible sets)
 6. Utilize t distribution instead of normal for improved coverage (from William)
 7. Make `refine = TRUE` by default (needs further testing)
+8. Precompute eigen-decomposition (used in [susie-inf](https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-023-01597-3/MediaObjects/41588_2023_1597_MOESM1_ESM.pdf) pg. 14)
 

@@ -374,7 +374,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-ok text-success"
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -385,8 +385,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-</a>
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -395,13 +395,13 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-08-02
+<strong>Last updated:</strong> 2024-08-11
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 1
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 0
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
@@ -424,33 +424,36 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree495c3efd211cbb9ea60b0170b69359b5eea94263targetblank495c3efa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreecd87c75d35245e688c87ebfd9b56e23b9b37f2c5targetblankcd87c75a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/495c3efd211cbb9ea60b0170b69359b5eea94263" target="_blank">495c3ef</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/cd87c75d35245e688c87ebfd9b56e23b9b37f2c5" target="_blank">cd87c75</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree495c3efd211cbb9ea60b0170b69359b5eea94263targetblank495c3efa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreecd87c75d35245e688c87ebfd9b56e23b9b37f2c5targetblankcd87c75a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -460,7 +463,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/495c3efd211cbb9ea60b0170b69359b5eea94263" target="_blank">495c3ef</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/cd87c75d35245e688c87ebfd9b56e23b9b37f2c5" target="_blank">cd87c75</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -487,13 +490,16 @@ Ignored files:
     Ignored:    submodules/.DS_Store
 
 Untracked files:
+    Untracked:  analysis/numIter10_totHeritability0.5_sparseEffect3_nonsparse0.01_ratio5_L10
     Untracked:  simulation/sim_analysis.Rmd
     Untracked:  simulation/sim_download.Rmd
     Untracked:  simulation/simulation avg metrics/
     Untracked:  simulation/simulation results/
 
 Unstaged changes:
+    Modified:   analysis/improvements.Rmd
     Modified:   code/susie_versions/susie_inf.R
+    Modified:   scripts/simulation_prediction_script.R
     Modified:   simulation/sim_debugging.Rmd
     Modified:   submodules/susieR
 
@@ -541,6 +547,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/d5c1a9298466ed0f6b0c163ad5a75115dad59b0e/docs/improvements.html" target="_blank">d5c1a92</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-08-02
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -667,6 +690,9 @@ further refine credible sets)</li>
 William)</li>
 <li>Make <code>refine = TRUE</code> by default (needs further
 testing)</li>
+<li>Precompute eigen-decomposition (used in <a
+href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-023-01597-3/MediaObjects/41588_2023_1597_MOESM1_ESM.pdf">susie-inf</a>
+pg. 14)</li>
 </ol>
 
 
