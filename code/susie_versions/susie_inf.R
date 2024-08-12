@@ -128,7 +128,7 @@ susie_inf <- function(X, y, L,
 
       # Update X'OmegaX, X'Omegay
       var <- tausq * Dsq + sigmasq
-      diagXtOmegaX <- rowSums(V^2 * (Dsq / var)) # equation 19
+      diagXtOmegaX <- rowSums(sweep(V^2, 2, Dsq / var, `*`)) # equation 19
       XtOmegay <- V %*% (VtXty / var) # equation 21 but multiply both sides by y
     }
 
@@ -158,7 +158,7 @@ susie_inf <- function(X, y, L,
   cred <- susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
 
   # Compute fitted values. TODO: add scenarios with intercept
-  fitted <- X %*% rowSums(PIP2 * mu) + X %*% rowSums(PIP2 * alpha)
+  fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
 
 
   return(list(
