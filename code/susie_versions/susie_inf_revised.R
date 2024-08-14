@@ -1,4 +1,4 @@
-susie_inf_revised_no_omega <- function(X, y, L,
+susie_inf_revised <- function(X, y, L,
                                        est_ssq = TRUE, ssq = NULL, ssq_range = c(0, 1), pi0 = NULL,
                                        est_sigmasq = TRUE, est_tausq = TRUE, sigmasq = 1, tausq = 0,
                                        method = "moments", sigmasq_range = NULL, tausq_range = NULL,
@@ -95,8 +95,7 @@ susie_inf_revised_no_omega <- function(X, y, L,
   PIP2 <- 1 - apply(1 - PIP, 1, prod)
 
   # Compute fitted values directly
-  #fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
-  fitted <- X %*% rowSums(PIP2 * mu) + X %*% alpha
+  fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
 
   # Credible sets calculation remains the same
   cred <- susie_inf_get_cs_no_omega(PIP = PIP, coverage = coverage, XtX = XtX/n)
@@ -132,6 +131,10 @@ MoM_no_omega <- function(PIP, mu, XtX, Xty, y, est_sigmasq, est_tausq, verbose) 
   x <- rep(0, 2)
   x[1] <- sum(residuals^2)  # y'y - 2*y'Xb + b'X'Xb (simplifies to just sum of squared residuals)
   x[2] <- sum(X_residuals^2)  # (X'y)^2 - 2*X'y*Xb + (Xb)'(XtX)(Xb)
+
+  # Xb <- XtX %*% b
+  # x[1] <- sum(y^2) - 2 * sum(y * (X %*% b)) + sum(b * Xb)
+  # x[2] <- sum(Xty^2) - 2 * sum(Xty * Xb) + sum(Xb * (XtX %*% b))
 
   # Solves the linear system A * [sigmasq, tausq] = x
   if (est_tausq) {
@@ -169,15 +172,12 @@ susie_inf_get_cs_no_omega <- function(PIP, coverage = 0.9, purity = 0.5, XtX = N
   L <- ncol(PIP)
 
   for (l in seq_len(L)) {
-    # Step 1: Sort SNPs by PIP in descending order
     sortinds <- order(PIP[, l], decreasing = TRUE)
     cumsums <- cumsum(PIP[sortinds, l])
-
-    # Step 2: Identify the smallest set that reaches the desired coverage level
-    ind <- which(cumsums >= coverage)[1]
+    ind <- min(which(cumsums >= coverage))
     credset <- sortinds[1:ind]
 
-    # Step 3: Filter the credible set based on purity
+    # Filter by purity
     if (length(credset) == 1) {
       cred[[length(cred) + 1]] <- credset
       next
@@ -205,3 +205,51 @@ susie_inf_get_cs_no_omega <- function(PIP, coverage = 0.9, purity = 0.5, XtX = N
 
   return(cred)
 }
+
+
+# susie_inf_get_cs_no_omega <- function(PIP, coverage = 0.9, purity = 0.5, XtX = NULL, dedup = TRUE) {
+#   if (is.null(XtX)) {
+#     stop("Missing XtX matrix for purity filtering")
+#   }
+#
+#   cred <- list()  # Initialize list to store credible sets
+#   p <- nrow(PIP)
+#   L <- ncol(PIP)
+#
+#   for (l in seq_len(L)) {
+#     # Step 1: Sort SNPs by PIP in descending order
+#     sortinds <- order(PIP[, l], decreasing = TRUE)
+#     cumsums <- cumsum(PIP[sortinds, l])
+#
+#     # Step 2: Identify the smallest set that reaches the desired coverage level
+#     ind <- which(cumsums >= coverage)[1]
+#     credset <- sortinds[1:ind]
+#
+#     # Step 3: Filter the credible set based on purity
+#     if (length(credset) == 1) {
+#       cred[[length(cred) + 1]] <- credset
+#       next
+#     }
+#
+#     if (length(credset) < 100) {
+#       rows <- credset
+#     } else {
+#       set.seed(123)
+#       rows <- sample(credset, 100, replace = FALSE)
+#     }
+#
+#     # Calculate the LD matrix for the selected SNPs using XtX
+#     LDloc <- XtX[rows, rows] / diag(XtX)[rows]
+#
+#     # Check if the minimum absolute correlation is greater than the purity threshold
+#     if (min(abs(LDloc)) > purity) {
+#       cred[[length(cred) + 1]] <- sort(credset)
+#     }
+#   }
+#
+#   if (dedup) {
+#     cred <- unique(cred)
+#   }
+#
+#   return(cred)
+# }
