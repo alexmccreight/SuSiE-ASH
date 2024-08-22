@@ -200,7 +200,7 @@ extract_simulation_settings <- function(file_name) {
 }
 
 # Loop through each file
-for (file_path in file_list[1:2]) {
+for (file_path in file_list) {
   # Extract simulation settings
   settings <- extract_simulation_settings(basename(file_path))
   
@@ -225,7 +225,7 @@ for (file_path in file_list[1:2]) {
   # Plot 1: RMSE_y
   plot_rmse <- ggplot(filtered_data, aes(x = Model, y = RMSE_y, fill = Model)) +
     geom_bar(stat = "identity", position = "dodge") +
-    labs(title = paste(plot_title_base, "\nRMSE y"), x = "Model", y = "RMSEy") +
+    labs(title = paste(plot_title_base, "\nRMSE y"), x = "Model", y = "RMSE y") +
     theme_minimal()
   
   # Plot 2: CS_Size
