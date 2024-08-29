@@ -1,8 +1,9 @@
 ######### Packages #########
 library(Rcpp)
 library(RcppArmadillo)
-source("precomputations.cpp")
+#sourceCpp("precomputations.cpp")
 #sourceCpp("/Users/alexmccreight/ALEX-TEMP-FOLDER/SuSiE-ASH/code/precomputations.cpp")
+sourceCpp("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/precomputations.cpp")
 
 
 ######### SuSiE-Infinitesimal #########
@@ -14,45 +15,86 @@ susie_inf_rcpp <- function(X, y, L,
 
   beginning <- Sys.time()
 
-  precomp <- precomputations(X, y)
-
+  # Compute n, z, p
   n <- nrow(X)
-  p <- ncol(X)
-  z <- precomp$z
-  meansq <- precomp$meansq
-  XtX <- precomp$XtX
-  LD <- precomp$LD
-  V <- precomp$V
-  Dsq <- precomp$Dsq
-  Xty <- precomp$Xty
-  VtXty <- precomp$VtXty
-  yty <- precomp$yty
-  Dsq <- pmax(Dsq, 0)
+  z <- (t(X) %*% y)/sqrt(n)
+  p <- length(z)
 
+  # Compute meansq, XtX, LD, V
+  meansq <- sum(y^2)/n # Mean-squared magnitude of y
+  XtX <- t(X) %*% X
+  LD <- (XtX)/n # LD Matrix
+
+  # Pre-compute eigen value decomposition X'X
+  eig <- eigen(LD, symmetric = T)
+  V <- (eig$vectors[, ncol(eig$vectors):1]) # pxp matrix of eigenvectors of XtX; use this [,ncol..] to match the python scheme. However, we still have differing signs
+  Dsq <- pmax(n * sort(eig$values), 0) # length-p vector of eigen values of XtX; use sort() to go from min to max (same as Python)
+
+  # Pre-compute V,D^2 in the SVD X=UDV'
+  if ((is.null(V) || is.null(Dsq)) && is.null(LD)) {stop("Missing LD")}
+  else if (is.null(V) || is.null(Dsq)) {
+    eigvals <- eigen(LD, symmetric = TRUE, only.values = TRUE)$values # this can be fixed to match above later
+    V <- eigen(LD, symmetric = TRUE, only.vectors = TRUE)$vectors
+    Dsq <- pmax(n * eigvals, 0)}
+  else{Dsq <- pmax(Dsq, 0)}
+
+  # Pre-compute X'y, V'X'y, y'y
+  Xty <- sqrt(n) * z # p x 1 matrix
+  VtXty <- t(V) %*% Xty # p x 1 matrix
+  yty <- n * meansq # singular value
+
+  # precomp <- precomputations(X, y)
+  #
+  # n <- nrow(X)
+  # p <- ncol(X)
+  # z <- precomp$z
+  # meansq <- precomp$meansq
+  # XtX <- precomp$XtX
+  # LD <- precomp$LD
+  # V <- precomp$V
+  # Dsq <- precomp$Dsq
+  # Xty <- precomp$Xty
+  # VtXty <- precomp$VtXty
+  # yty <- precomp$yty
+  # Dsq <- pmax(Dsq, 0)
+
+
+  init_result <- initialize_susie(V, Dsq, VtXty, tausq, sigmasq, L, ssq, PIP, mu, pi0)
+
+  var <- init_result$var
+  diagXtOmegaX <- init_result$diagXtOmegaX
+  XtOmegay <- init_result$XtOmegay
+  ssq <- init_result$ssq
+  PIP <- init_result$PIP
+  mu <- init_result$mu
+  lbf_variable <- init_result$lbf_variable
+  lbf <- init_result$lbf
+  omega <- init_result$omega
+  logpi0 <- init_result$logpi0
 
   # Initialize diagonal variances, diag(X' Omega X), X' Omega y
-  var <- tausq*Dsq+sigmasq # vector of length p
-  diagXtOmegaX <- rowSums(sweep(V^2, 2, (Dsq / var), `*`)) # vector of length p (initialized each value at n)
-  XtOmegay <- V %*% (VtXty / var) # p x 1 matrix
-
-  # Initialize s_l^2, PIP_j, mu_j
-  if (is.null(ssq)) {ssq <- rep(0.2, L)} # vector of length l
-  if (is.null(PIP)) {PIP <- matrix(1 / p, nrow = p, ncol = L)} # p x L matrix
-  if (is.null(mu)) {mu <- matrix(0, nrow = p, ncol = L)} # p x L matrix
-
-  # Initialize omega_j
-  lbf_variable <- matrix(0, nrow = p, ncol = L) # p x L matrix
-  lbf <- rep(0, L) # l vector
-  omega <- matrix(diagXtOmegaX, nrow = p, ncol = L) + 1 / ssq # Equation 42b omega_j(s_j^2)
-
-  # Initialize Prior Causal Probabilities
-  if (is.null(pi0)) {
-    logpi0 <- rep(log(1 / p), p) # vector of length p
-  } else {
-    logpi0 <- rep(-Inf, p)
-    inds <- which(pi0 > 0)
-    logpi0[inds] <- log(pi0[inds])
-  }
+  # var <- tausq*Dsq+sigmasq # vector of length p
+  # diagXtOmegaX <- rowSums(sweep(V^2, 2, (Dsq / var), `*`)) # vector of length p (initialized each value at n)
+  # XtOmegay <- V %*% (VtXty / var) # p x 1 matrix
+  #
+  # # Initialize s_l^2, PIP_j, mu_j
+  # if (is.null(ssq)) {ssq <- rep(0.2, L)} # vector of length l
+  # if (is.null(PIP)) {PIP <- matrix(1 / p, nrow = p, ncol = L)} # p x L matrix
+  # if (is.null(mu)) {mu <- matrix(0, nrow = p, ncol = L)} # p x L matrix
+  #
+  # # Initialize omega_j
+  # lbf_variable <- matrix(0, nrow = p, ncol = L) # p x L matrix
+  # lbf <- rep(0, L) # l vector
+  # omega <- matrix(diagXtOmegaX, nrow = p, ncol = L) + 1 / ssq # Equation 42b omega_j(s_j^2)
+  #
+  # # Initialize Prior Causal Probabilities
+  # if (is.null(pi0)) {
+  #   logpi0 <- rep(log(1 / p), p) # vector of length p
+  # } else {
+  #   logpi0 <- rep(-Inf, p)
+  #   inds <- which(pi0 > 0)
+  #   logpi0[inds] <- log(pi0[inds])
+  # }
 
   ##### Main SuSiE iteration loop #####
   ### Alternate between updating prior effect size variances, ssq,
@@ -67,12 +109,23 @@ susie_inf_rcpp <- function(X, y, L,
 
     # Single Effect Regression for each effect l = 1, ... , L
     for(l in seq_len(L)){
+      # ser_result <- single_effect_regression(V, Dsq, var, diagXtOmegaX, XtOmegay,
+      #                                        PIP, mu, ssq, omega, lbf_variable, lbf,
+      #                                        logpi0, est_ssq, ssq_range[1], ssq_range[2], verbose)
+      #
+      # PIP <- ser_result$PIP
+      # mu <- ser_result$mu
+      # ssq <- ser_result$ssq
+      # omega <- ser_result$omega
+      # lbf_variable <- ser_result$lbf_variable
+      # lbf <- ser_result$lbf
       # Compute X', Omega r_l for residual r_l
       b <- rowSums(mu * PIP) - mu[, l] * PIP[, l] # sum_{k: k \neq l} E[\Beta^{(k)}]; vector of length p
-      XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var) # p x 1 matrix
+      XtOmegaXb <- calculate_XtOmegaXb(V, b, Dsq, var)
+      #XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var) # p x 1 matrix
       XtOmegar <- XtOmegay - XtOmegaXb # Equation 42a
 
-      # Update Prior Variance ssq[l]. Equation 43. Requires time O(p) for each l.
+      # Update Prior Variance ssq[l]. Equation 43
       if (est_ssq) {
         f <- function(x) {
           -matrixStats::logSumExp(-0.5 * log(1 + x * diagXtOmegaX) +
@@ -96,7 +149,7 @@ susie_inf_rcpp <- function(X, y, L,
         }
       }
 
-      # Update omega, mu, and PIP. Requires time O(p)
+      # Update omega, mu, and PIP
       omega[, l] <- diagXtOmegaX + 1 / ssq[l] # omega_j(s_l^2)
       mu[, l] <- XtOmegar / omega[, l] # Posterior Mean = z_j^l / omega_j(s_l^2)
       lbf_variable[, l] <- XtOmegar^2 / (2 * omega[, l]) - 0.5 * log(omega[, l] * ssq[l]) # logged numerator equation 44
@@ -104,13 +157,14 @@ susie_inf_rcpp <- function(X, y, L,
       lbf[l] <- matrixStats::logSumExp(logPIP) # denominator for equation 44
       PIP[, l] <- exp(logPIP - lbf[l]) # combines everything and computes equation 44
 
+
     } # Single Effect Regression Loop
 
     # Update variance components
     if (est_sigmasq || est_tausq) {
       if (method == "moments") {
-        moments_result <- MoM(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
-                              est_sigmasq, est_tausq, verbose)
+        moments_result <- MoM_rcpp(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
+                                  est_sigmasq, est_tausq, verbose)
         sigmasq <- moments_result$sigmasq
         tausq <- moments_result$tausq
       } else if (method == "MLE") {
@@ -124,8 +178,10 @@ susie_inf_rcpp <- function(X, y, L,
 
       # Update X'OmegaX, X'Omegay
       var <- tausq * Dsq + sigmasq
-      diagXtOmegaX <- rowSums(sweep(V^2, 2, Dsq / var, `*`)) # equation 19
-      XtOmegay <- V %*% (VtXty / var) # equation 21 but multiply both sides by y
+      #diagXtOmegaX <- rowSums(sweep(V^2, 2, Dsq / var, `*`)) # equation 19
+      #XtOmegay <- V %*% (VtXty / var) # equation 21 but multiply both sides by y
+      diagXtOmegaX <- calculate_diagXtOmegaX(V, Dsq, var)
+      XtOmegay <- calculate_XtOmegay(V, VtXty, var)
     }
 
     # Convergence based from PIP differences
@@ -160,7 +216,6 @@ susie_inf_rcpp <- function(X, y, L,
 
   duration = ending - beginning
 
-
   return(list(
     PIP = PIP,
     PIP2 = PIP2,
@@ -174,7 +229,7 @@ susie_inf_rcpp <- function(X, y, L,
     alpha = alpha,
     fitted = fitted,
     sets = cred,
-    duration = duration
+    duration = as.double(duration, units = "secs")
   ))
 
 }
