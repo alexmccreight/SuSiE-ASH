@@ -61,6 +61,38 @@ compare_functions <- function(r_func, rcpp_func, ..., times = 10) {
 }
 ```
 
+# Data Generation
+
+The data is generated from the following model:
+
+$$
+\begin{aligned}
+y &= X\beta + X\theta + \epsilon\\
+\end{aligned}\\
+$$
+
+Where $\beta$ represents the sparse effects (following the susie model)
+
+$$
+\begin{aligned}
+\beta &= \sum_{l=1}^LB_l\\
+B_l &=\gamma_lb_l\\
+\gamma_l &\sim Multi(1, \pi)\\
+b_l &\sim N(0,\sigma^2_{0l})
+\end{aligned}
+$$
+
+$\theta$ represents the infinitesimal effects (following the susie-inf model) and $\epsilon$ represents the error term.
+
+$$
+\begin{aligned}
+\theta &\sim N(0, \tau^2)\\
+\epsilon &\sim N(0, \sigma^2)
+\end{aligned}
+$$
+NOTE: The X matrix used for these simulations is 5000 x 1979
+
+
 # Rcpp functions versus R functions
 
 Here we compare the computation speed of the following objects: `XtX`, `Xty`, `Eigendecomposition`, `VtXty`, and `diagXtOmegaX`. For each iteration of this comparison we will first simulate data, compute all of the previously mentioned objects 10 times each and average their computation times for both Rcpp and R. We then repeat this process for a total of 10 iterations and take the average yielding three key outputs: `Average R Time`, `Average Rcpp Time`, and `Percent Change`, which measures relative difference in average computation time between Rcpp and R functions. A negative percentage change indicates a decrease in computation time, while a positive change indicates an increase computation time.
