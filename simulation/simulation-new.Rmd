@@ -112,6 +112,9 @@ true_effects$phi[which(true_effects$phi != 0)]
 
 mean(abs(result$true_effects$theta))
 
+tmp <- result$true_effects$beta + result$true_effects$phi + result$true_effects$theta
+
+head(sort(abs(tmp), decreasing = T), n = 10)
 ```
 
 ```{r}
