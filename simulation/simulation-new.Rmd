@@ -11,14 +11,15 @@ date: "2024-08-30"
 
 ```{r}
 library(tidyverse)
+#X <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/data/X4")
+X <- readRDS("/Users/alexmccreight/Columbia/data/X4")
 ```
 
 
 ```{r}
-X <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/data/X4")
-
 generate_twas_data <- function(X, n_large_effects = 3, n_medium_effects = 3, 
-                               total_pve = 0.4, seed = NULL) {
+                                total_pve = 0.4, seed = NULL) {
+  
   # Set seed for reproducibility
   if (!is.null(seed)) set.seed(seed)
   
@@ -40,76 +41,26 @@ generate_twas_data <- function(X, n_large_effects = 3, n_medium_effects = 3,
   
   # Set large effect sizes
   large_indices <- sample(1:n_features, n_large_effects)
-  beta[large_indices] <- rnorm(n_large_effects, 0, sqrt(large_pve / n_large_effects))
+  beta[large_indices] <- rnorm(n_large_effects, 0, 0.25)
   
   # Set medium effect sizes
   medium_indices <- sample(setdiff(1:n_features, large_indices), n_medium_effects)
-  phi[medium_indices] <- rnorm(n_medium_effects, 0, sqrt(medium_pve / n_medium_effects))
-  
-  # Generate y
-  y <- X %*% beta + X %*% phi + X %*% theta
-  
-  # Add noise to achieve desired PVE
-  var_y <- var(as.vector(y))
-  var_epsilon <- var_y * (1 - total_pve) / total_pve
-  epsilon <- rnorm(n_samples, 0, sqrt(var_epsilon))
-  y <- y + epsilon
-  
-  # Return results
-  return(list(
-    y = y,
-    true_effects = list(
-      beta = beta,
-      phi = phi,
-      theta = theta
-    )
-  ))
-}
-
-# Example usage:
-# X <- matrix(rnorm(1000 * 100), nrow = 1000, ncol = 100)
-result <- generate_twas_data(X)
-y <- result$y
-true_effects <- result$true_effects
-
-true_effects$beta[which(true_effects$beta != 0)]
-true_effects$phi[which(true_effects$phi != 0)]
-```
-
-```{r}
-generate_twas_data <- function(X, n_large_effects = 3, n_medium_effects = 3, 
-                               total_pve = 0.4, seed = NULL) {
-  # Set seed for reproducibility
-  if (!is.null(seed)) set.seed(seed)
-  
-  # Center and scale X
-  X <- scale(X)
-  
-  n_samples <- nrow(X)
-  n_features <- ncol(X)
-  
-  # Calculate effect sizes
-  large_pve <- 0.6 * total_pve
-  medium_pve <- 0.15 * total_pve
-  small_pve <- 0.25 * total_pve
-  
-  # Generate effect sizes
-  beta <- rep(0, n_features)
-  phi <- rep(0, n_features)
-  theta <- rnorm(n_features, 0, sqrt(small_pve / n_features))
-  
-  # Set large effect sizes
-  large_indices <- sample(1:n_features, n_large_effects)
-  beta[large_indices] <- rnorm(n_large_effects, 0, sqrt(large_pve / n_large_effects))
-  
-  # Set medium effect sizes
-  medium_indices <- sample(setdiff(1:n_features, large_indices), n_medium_effects)
-  phi[medium_indices] <- rnorm(n_medium_effects, 0, sqrt(medium_pve / n_medium_effects))
+  phi[medium_indices] <- rnorm(n_medium_effects, 0, 0.15)
   
   # Generate components of y
   y_beta <- X %*% beta
   y_phi <- X %*% phi
   y_theta <- X %*% theta
+  
+  # Calculate initial variances
+  var_y_beta <- var(as.vector(y_beta))
+  var_y_phi <- var(as.vector(y_phi))
+  var_y_theta <- var(as.vector(y_theta))
+  
+  # Scale components to match desired PVE
+  y_beta <- y_beta * sqrt(large_pve / var_y_beta)
+  y_phi <- y_phi * sqrt(medium_pve / var_y_phi)
+  y_theta <- y_theta * sqrt(small_pve / var_y_theta)
   
   # Combine components
   y <- y_beta + y_phi + y_theta
@@ -120,7 +71,7 @@ generate_twas_data <- function(X, n_large_effects = 3, n_medium_effects = 3,
   pve_phi <- var(as.vector(y_phi)) / var_y
   pve_theta <- var(as.vector(y_theta)) / var_y
   
-  # Add noise to achieve desired PVE
+  # Add noise to achieve desired total PVE
   var_epsilon <- var_y * (1 - total_pve) / total_pve
   epsilon <- rnorm(n_samples, 0, sqrt(var_epsilon))
   y <- y + epsilon
@@ -154,10 +105,13 @@ generate_twas_data <- function(X, n_large_effects = 3, n_medium_effects = 3,
 result <- generate_twas_data(X)
 y <- result$y
 true_effects <- result$true_effects
-pve <- result$pve; pve
-
+pve <- result$pve
+pve
 true_effects$beta[which(true_effects$beta != 0)]
 true_effects$phi[which(true_effects$phi != 0)]
+
+mean(abs(result$true_effects$theta))
+
 ```
 
 ```{r}
@@ -195,7 +149,8 @@ pve_hist <- ggplot(pve_long, aes(x = value, fill = PVE_type)) +
   geom_histogram(bins = 30, alpha = 0.7, position = "identity") +
   facet_wrap(~PVE_type, scales = "free") +
   theme_minimal() +
-  labs(title = "Distribution of PVE", x = "PVE", y = "Count")
+  labs(title = "Distribution of PVE", x = "PVE", y = "Count") +
+  xlim(0,0.7)
 
 # beta_hist <- ggplot(data.frame(beta = beta_data), aes(x = beta)) +
 #   geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
@@ -231,5 +186,3 @@ print(pve_hist)
 # Summary Dataframe
 print(summary_df)
 ```
-
-
