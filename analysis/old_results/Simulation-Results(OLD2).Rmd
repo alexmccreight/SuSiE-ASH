@@ -1,0 +1,259 @@
+---
+title: "Simulation Results (new setting)"
+output: html_document
+date: "2024-08-22"
+---
+
+```{r, include = F}
+knitr::opts_knit$set(root.dir = "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH")
+library(tidyverse)
+library(ROCR)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+# 1. ROC Curves
+
+```{r, echo = F}
+# Directory containing the files
+directory <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/8-26-24-results"
+
+# List all files in the specified directory
+files <- list.files(directory, pattern = "", full.names = TRUE)
+
+# Initialize an empty list to store the plots
+plot_list <- list()
+
+# Loop through each file
+for (file_path in files) {
+  # Extract the file name from the path
+  file_name <- basename(file_path)
+  
+  # Use regular expressions to parse out the parameters
+  parts <- parts <- regmatches(file_name, regexec("numIter(\\d+)_totHeritability([0-9.]+)_sparseEffect(\\d+)_nonsparse([0-9.]+)_ratio([0-9.]+)_L(\\d+)", file_name))
+  
+  
+  # Extract parameters
+  num_iter <- as.numeric(parts[[1]][2])
+  total_heritability <- as.numeric(parts[[1]][3])
+  sparse_effect <- as.numeric(parts[[1]][4])
+  nonsparse_coverage <- as.numeric(parts[[1]][5])
+  theta_beta_ratio <- as.numeric(parts[[1]][6])
+  L <- as.numeric(parts[[1]][7])
+  
+  # Read the file (assuming the file is an .rds file)
+  sim_results <- readRDS(file_path)
+  
+  # Extract the predictions and labels from the file
+  susie_predictions <- c()
+  susie_labels <- c()
+  susie_ash_predictions <- c()
+  susie_ash_labels <- c()
+  susie_inf_predictions <- c()
+  susie_inf_labels <- c()
+  
+  for (i in 1:30) {  
+    # SuSiE outputs
+    susie_pip <- sim_results$all_susie_outputs[[i]]$pip
+    susie_betas <- sim_results$all_betas[[i]]
+    susie_thetas <- sim_results$all_thetas[[i]]
+    
+    # Create true causal effect labels
+    susie_causal_beta <- (susie_betas != 0) | (susie_thetas != 0)
+    susie_predictions <- c(susie_predictions, susie_pip)
+    susie_labels <- c(susie_labels, susie_causal_beta)
+    
+    # SuSiE-ASH outputs
+    susie_ash_pip <- sim_results$all_susie_ash_outputs_v10[[i]]$pip
+    susie_ash_betas <- sim_results$all_betas[[i]]
+    susie_ash_thetas <- sim_results$all_thetas[[i]]
+    
+    susie_ash_causal_beta <- (susie_ash_betas != 0) | (susie_ash_thetas != 0)
+    susie_ash_predictions <- c(susie_ash_predictions, susie_ash_pip)
+    susie_ash_labels <- c(susie_ash_labels, susie_ash_causal_beta)
+    
+    # SuSiE-Inf outputs
+    susie_inf_pip <- sim_results$all_susie_inf_outputs[[i]]$PIP2
+    susie_inf_betas <- sim_results$all_betas[[i]]
+    susie_inf_thetas <- sim_results$all_thetas[[i]]
+    
+    susie_inf_causal_beta <- (susie_inf_betas != 0) | (susie_inf_thetas != 0)
+    susie_inf_predictions <- c(susie_inf_predictions, susie_inf_pip)
+    susie_inf_labels <- c(susie_inf_labels, susie_inf_causal_beta)
+  }
+  
+  # Create prediction objects 
+  pred_susie <- prediction(susie_predictions, susie_labels)
+  pred_susie_ash <- prediction(susie_ash_predictions, susie_ash_labels)
+  pred_susie_inf <- prediction(susie_inf_predictions, susie_inf_labels)
+  
+  # Create performance objects
+  perf_susie <- performance(pred_susie, "tpr", "fpr")
+  perf_susie_ash <- performance(pred_susie_ash, "tpr", "fpr")
+  perf_susie_inf <- performance(pred_susie_inf, "tpr", "fpr")
+  
+  # Create plot title with simulation parameters
+  plot_title <- paste0("h2 = ", total_heritability,
+                       ", Sparse Effects = ", sparse_effect, 
+                       ", Nonsparse Coverage = ", nonsparse_coverage,
+                       ", \nTheta to Beta Ratio = ", theta_beta_ratio)
+                       
+
+# Create the plot
+roc_plot <- ggplot() +
+  geom_line(data = data.frame(x = perf_susie@x.values[[1]], y = perf_susie@y.values[[1]], Method = "SuSiE"), 
+            aes(x = x, y = y, color = Method), linewidth = 1) +
+  geom_line(data = data.frame(x = perf_susie_ash@x.values[[1]], y = perf_susie_ash@y.values[[1]], Method = "SuSiE-ASH"), 
+            aes(x = x, y = y, color = Method), linewidth = 1) +
+  geom_line(data = data.frame(x = perf_susie_inf@x.values[[1]], y = perf_susie_inf@y.values[[1]], Method = "SuSiE-Inf"), 
+            aes(x = x, y = y, color = Method), linewidth = 1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+  labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
+  scale_color_manual(values = c("SuSiE" = "blue", "SuSiE-ASH" = "red", "SuSiE-Inf" = "green")) +
+  theme_minimal()
+
+
+
+  # Add the plot to the list
+  plot_list[[length(plot_list) + 1]] <- roc_plot
+  
+  # Clear memory
+  rm(sim_results, susie_predictions, susie_labels, susie_ash_predictions, susie_ash_labels, susie_inf_predictions, susie_inf_labels)
+  gc()
+}
+
+# After the loop, print all plots
+for (plot in plot_list) {
+  print(plot)
+}
+```
+
+
+
+```{r, include = F}
+# # Define the directory where the files are located
+# input_dir <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/8-21-24-results"
+# file_list <- list.files(input_dir, full.names = TRUE)
+# 
+# # Function to extract simulation settings from the filename
+# extract_simulation_settings <- function(file_name) {
+#   # Example regex to extract parameters from the filename
+#   parts <- str_match(file_name, "numIter(\\d+)_Ltrue(\\d+)_ssq([0-9.]+)_sigmasq([0-9.]+)_tausq([0-9.e-]+)")
+#   list(
+#     numIter = parts[2],
+#     Ltrue = parts[3],
+#     ssq = parts[4],
+#     sigmasq = parts[5],
+#     tausq = parts[6]
+#   )
+# }
+# 
+# # Loop through each file
+# for (file_path in file_list) {
+#   # Extract simulation settings
+#   settings <- extract_simulation_settings(basename(file_path))
+#   
+#   # Read the file
+#   sim_data <- readRDS(file_path)
+#   
+#   # Extract the avg_metrics portion
+#   avg_metrics <- sim_data$avg_metrics
+#   
+#   # Filter to include only the specified models
+#   selected_models <- c("SuSiE", "mr.ash", "SuSiE-ash (v10)", "SuSiE-inf", "SuSiE-inf-ash")
+#   filtered_data <- avg_metrics %>%
+#     filter(Model %in% selected_models) %>%
+#     select(Model, RMSE_y, CS_Size, Coverage)
+#   
+#   # Display the simulation settings
+#   cat("Simulation Setting: numIter =", settings$numIter, 
+#       ", Ltrue =", settings$Ltrue, 
+#       ", ssq =", settings$ssq, 
+#       ", sigmasq =", settings$sigmasq, 
+#       ", tausq =", settings$tausq, "\n")
+#   
+#   # Print the filtered table
+#   print(filtered_data)
+#   cat("\n")
+#   
+#   # Clear the environment
+#   rm(sim_data, avg_metrics, filtered_data, settings)
+#   gc()
+# }
+
+```
+
+# 2. Plots for Prediction, CS Cize, Coverage
+
+```{r, warning = F, echo = F, message = F}
+# Define the directory where the files are located
+input_dir <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/8-21-24-results"
+file_list <- list.files(input_dir, full.names = TRUE)
+
+# Function to extract simulation settings from the filename
+extract_simulation_settings <- function(file_name) {
+  # Example regex to extract parameters from the filename
+  parts <- str_match(file_name, "numIter(\\d+)_Ltrue(\\d+)_ssq([0-9.]+)_sigmasq([0-9.]+)_tausq([0-9.e-]+)")
+  list(
+    numIter = parts[2],
+    Ltrue = parts[3],
+    ssq = parts[4],
+    sigmasq = parts[5],
+    tausq = parts[6]
+  )
+}
+
+# Loop through each file
+for (file_path in file_list) {
+  # Extract simulation settings
+  settings <- extract_simulation_settings(basename(file_path))
+  
+  # Read the file
+  sim_data <- readRDS(file_path)
+  
+  # Extract the avg_metrics portion
+  avg_metrics <- sim_data$avg_metrics
+  
+  # Filter to include only the specified models
+  selected_models <- c("SuSiE", "mr.ash", "SuSiE-ash (v10)", "SuSiE-inf", "SuSiE-inf-ash")
+  filtered_data <- avg_metrics %>%
+    filter(Model %in% selected_models) %>%
+    select(Model, RMSE_y, CS_Size, Coverage)
+  
+  # Generate plots
+  plot_title_base <- paste0("Setting: Ltrue = ", settings$Ltrue, 
+                            ", ssq = ", settings$ssq, 
+                            ", sigmasq = ", settings$sigmasq, 
+                            ", tausq = ", settings$tausq)
+  
+  # Plot 1: RMSE_y
+  plot_rmse <- ggplot(filtered_data, aes(x = Model, y = RMSE_y, fill = Model)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = paste(plot_title_base, "\nRMSE y"), x = "Model", y = "RMSE y") +
+    theme_minimal()
+  
+  # Plot 2: CS_Size
+  plot_cs_size <- ggplot(filtered_data, aes(x = Model, y = CS_Size, fill = Model)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = paste(plot_title_base, "\nCS Size"), x = "Model", y = "CS Size") +
+    theme_minimal()
+  
+  # Plot 3: Coverage
+  plot_coverage <- ggplot(filtered_data, aes(x = Model, y = Coverage, fill = Model)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = paste(plot_title_base, "\nCoverage"), x = "Model", y = "Coverage") +
+    theme_minimal()
+  
+  # Print the plots
+  print(plot_rmse)
+  print(plot_cs_size)
+  print(plot_coverage)
+  
+  # Clear the environment
+  rm(sim_data, avg_metrics, filtered_data, settings, plot_rmse, plot_cs_size, plot_coverage)
+  gc()
+}
+
+```
+
