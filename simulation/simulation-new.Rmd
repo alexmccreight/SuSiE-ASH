@@ -10,7 +10,7 @@ X <- readRDS("/Users/alexmccreight/Columbia/data/X20")
 generate_data <- function(X,
                           n_large_effects = 3,      # Adjusted number of large effects
                           n_medium_effects = 50,    # Adjusted number of medium effects
-                          total_pve = 0.4,
+                          total_pve = 0.25,
                           seed = NULL) {
   # Set seed for reproducibility
   if (!is.null(seed)) set.seed(seed)
@@ -22,9 +22,9 @@ generate_data <- function(X,
   n_features <- ncol(X)
   
   # Calculate effect sizes
-  large_pve <- 0.20 * total_pve
-  medium_pve <- 0.30 * total_pve
-  small_pve <- 0.50 * total_pve
+  large_pve <- 0.30 * total_pve 
+  medium_pve <- 0.20 * total_pve 
+  small_pve <- 0.50 * total_pve 
   
   # Initialize effect sizes
   beta <- rep(0, n_features)
@@ -121,5 +121,22 @@ result$pve_beta + result$pve_phi + result$pve_theta
 # sum(result$phi[result$phi != 0]^2)
 # sum(result$theta[result$theta != 0]^2)
 
+```
+
+```{r}
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
+#source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v2.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
+
+susie_output <- susie(X = result$X, y = result$y, L = 10, standardize = F, intercept = F)
+susie_inf_output <- susie_inf(X = result$X, y = result$y, L = 10)
+
+
+which(result$beta != 0)
+
+susie_output$sets$cs
+susie_inf_output$sets
 ```
 
