@@ -5,12 +5,13 @@ date: "2024-08-30"
 ---
 
 ```{r}
-X <- readRDS("/Users/alexmccreight/Columbia/data/X20")
+#X <- readRDS("/Users/alexmccreight/Columbia/data/X20")
+X <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/data/X20")
 
 generate_data <- function(X,
                           n_large_effects = 3,      # Adjusted number of large effects
                           n_medium_effects = 50,    # Adjusted number of medium effects
-                          total_pve = 0.25,
+                          total_pve = 0.35,
                           seed = NULL) {
   # Set seed for reproducibility
   if (!is.null(seed)) set.seed(seed)
@@ -23,8 +24,8 @@ generate_data <- function(X,
   
   # Calculate effect sizes
   large_pve <- 0.30 * total_pve 
-  medium_pve <- 0.20 * total_pve 
-  small_pve <- 0.50 * total_pve 
+  medium_pve <- 0.10 * total_pve 
+  small_pve <- 0.60 * total_pve 
   
   # Initialize effect sizes
   beta <- rep(0, n_features)
