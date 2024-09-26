@@ -377,8 +377,8 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       term3 = sum(apply(X_c,2,function(.){sum(.^2)}) * colSums((s$alpha * s$mu2) - (s$alpha*s$mu)^2) )
       
       if(est.L>1){
-       term5.1 = log(t(s$alpha)/s$pi) * t(s$alpha); term5.1[is.na(term5.1) ==T] =0
-       term5 = sum(log(t(s$alpha)/s$pi) * t(s$alpha)) + sum((1 + log((s$mu2[1:est.L,]- (s$mu[1:est.L,])^2)/s$V[1:est.L]) - (s$mu2[1:est.L,]/s$V[1:est.L])) *s$alpha[1:est.L,])/2
+       term5.1 = log(t(s$alpha[1:est.L,])/s$pi) * t(s$alpha[1:est.L,]); term5.1[is.na(term5.1) ==T] =0
+       term5 = sum(log(t(s$alpha[1:est.L,])/s$pi) * t(s$alpha[1:est.L,])) + sum((1 + log((s$mu2[1:est.L,]- (s$mu[1:est.L,])^2)/s$V[1:est.L]) - (s$mu2[1:est.L,]/s$V[1:est.L])) *s$alpha[1:est.L,])/2
       }else if(est.L == 1){
       term5.1 = log(t(s$alpha)/s$pi) * t(s$alpha); term5.1[is.nan(term5.1)]  =0
       term5 = sum(term5.1) + sum((1 + log((s$mu2- (s$mu)^2)/s$V[1]) - (s$mu2/s$V[1])) *s$alpha[1,])/2
@@ -397,8 +397,12 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       
       # Step 5: Convergence Criterion
       # elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + sum(s$KL) #Issue which sigma^2 they used?
-      # elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + term5  # Joint ELBO
-      elbo[i+1] = max(abs(s$prev_alpha - s$alpha)) # SuSiE-Inf convergence criterion
+      if(est_var == "cal_v"){
+        elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + term5  # Joint ELBO
+      }else if(est_var != "cal_v"){
+        elbo[i+1] = max(abs(s$prev_alpha - s$alpha)) # SuSiE-Inf convergence criterion
+      }
+      # 
       
       #update new residuals:
       y_residuals = y - predict.mr.ash(mrash_output, newx = X)
