@@ -46,7 +46,7 @@ generate_eqtl_data <- function(X,
   beta[sentinel_index] <- rnorm(1, 0, sqrt(h2_sentinel))
 
   # Other sparse effects
-  n_other_sparse <- rpois(1, lambda = 3)  # Random number of other sparse effects
+  n_other_sparse <- rpois(1, lambda = 2)  # Random number of other sparse effects
   other_sparse_indices <- sample((1:n_features)[-sentinel_index], n_other_sparse)
   beta[other_sparse_indices] <- rnorm(n_other_sparse, 0, as.vector(sqrt(h2_other_sparse / n_other_sparse)))
 
@@ -108,12 +108,12 @@ generate_eqtl_data <- function(X,
     oligogenic_indices = oligogenic_indices,
     mixture_assignments = mixture_assignments,
     var_epsilon = var_epsilon,
-    causal_indices = c(sentinel_index, other_sparse_indices)
+    sparse_indices = c(sentinel_index, other_sparse_indices)
   ))
 }
 
 # Method and Metrics
-method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = data$causal_indices, L = 10) {
+method_and_score <- function(X = data$X, y = data$y, beta = data$beta, sparse = data$sparse_indices, oligo = data$oligogenic_indices, L = 10) {
   #### Run various methods ####
   cat("Starting SuSiE\n")
   susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
@@ -128,9 +128,11 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
   susie_inf_output <- susie_inf(X = X, y = y, L = L, verbose = F, coverage = 0.95)
 
 
-  calc_metrics <- function(mod, X = X, y = y, causal = causal){
+  calc_metrics <- function(mod, X = X, y = y, sparse = sparse, oligo = oligo){
     #### Set truth ####
-    all_causal <- causal
+    sparse_causal <- sparse
+    sparse_oligo_causal <- c(sparse, oligo)
+
 
     #### Initialize values ####
     test.cs <- susie_get_cs(mod, X = X, coverage = 0.95)$cs
@@ -144,19 +146,19 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
       cs_size <- length(unlist(test.cs)) / length(test.cs)
 
       # Calculate Coverage (proportion of credible sets with a causal effect)
-      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(test.cs))
+      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(sparse_oligo_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(test.cs))
 
       # CS Based FDR
-      TP = sum(all_causal %in% unlist(test.cs))
-      FN = length(all_causal) - TP
-      FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
-      cs_fdr = FP/(TP+FP)
+      TP_fdr = sum(sparse_oligo_causal %in% unlist(test.cs))
+      FN_fdr = length(sparse_oligo_causal) - TP_fdr
+      FP_fdr = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% sparse_oligo_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
+      cs_fdr = FP_fdr/(TP_fdr+FP_fdr)
 
       # CS Based Recall
-      TP = sum(all_causal %in% unlist(test.cs))
-      FN = length(all_causal) - TP
-      FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
-      cs_recall = TP/(TP+FN)
+      TP_recall = sum(sparse_causal %in% unlist(test.cs))
+      FN_recall = length(sparse_causal) - TP_recall
+      FP_recall = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% sparse_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
+      cs_recall = TP_recall/(TP_recall+FN_recall)
     }
 
     #### Calculate RMSE ####
@@ -172,9 +174,10 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
     ))
   }
 
-  calc_metrics_ash <- function(mod, X = X, y = y, causal = causal){
+  calc_metrics_ash <- function(mod, X = X, y = y, sparse = sparse, oligo = oligo){
     #### Set up truth ####
-    all_causal <- causal
+    sparse_causal <- sparse
+    sparse_oligo_causal <- c(sparse, oligo)
 
     #### Calculate RMSE ####
     RMSE_y <- sqrt(mean((y - predict(mod, X))^2))
@@ -189,9 +192,10 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
     ))
   }
 
-  calc_metrics_inf <- function(mod, X = X, y = y, causal = causal){
+  calc_metrics_inf <- function(mod, X = X, y = y, sparse = sparse, oligo = oligo){
     #### Set truth ####
-    all_causal <- causal
+    sparse_causal <- sparse
+    sparse_oligo_causal <- c(sparse, oligo)
 
     #### Initialize values ####
     test.cs <- mod$sets
@@ -205,18 +209,18 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
       cs_size <- length(unlist(mod$sets)) / length(mod$sets)
 
       # Calculate Coverage (proportion of credible sets with a causal effect)
-      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(all_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / length(mod$sets)
+      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(sparse_oligo_causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / length(mod$sets)
 
       # CS Based FDR
-      TP = sum(all_causal %in% unlist(test.cs))
-      FN = length(all_causal) - TP
-      FP = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% all_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
-      cs_fdr = FP/(TP+FP)
+      TP_fdr = sum(sparse_oligo_causal %in% unlist(test.cs))
+      FN_fdr = length(sparse_oligo_causal) - TP_fdr
+      FP_fdr = length(test.cs) - lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% sparse_oligo_causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
+      cs_fdr = FP_fdr/(TP_fdr+FP_fdr)
 
       # CS Based Recall
-      TP = sum(all_causal %in% unlist(test.cs))
-      FN = length(all_causal) - TP
-      cs_recall = TP/(TP+FN)
+      TP_recall = sum(sparse_causal %in% unlist(test.cs))
+      FN_recall = length(sparse_causal) - TP_recall
+      cs_recall = TP_recall/(TP_recall+FN_recall)
     }
 
     #### Calculate RMSE ####
@@ -234,10 +238,10 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
 
   #############
   # Calculate Metrics for each method
-  susie_metrics <- calc_metrics(susie_output, X, y, causal)
-  mrash_metrics <- calc_metrics_ash(mrash_output, X, y, causal)
-  #susie_ash_metrics <- calc_metrics(susie_ash_output, X, y, causal)
-  susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, causal)
+  susie_metrics <- calc_metrics(susie_output, X, y, sparse, oligo)
+  mrash_metrics <- calc_metrics_ash(mrash_output, X, y, sparse, oligo)
+  #susie_ash_metrics <- calc_metrics(susie_ash_output, X, y, sparse, oligo)
+  susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, sparse, oligo)
 
   #Create a data frame with the results
   metrics_table  <- data.frame(
@@ -273,7 +277,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, causal = 
     mrash_output = mrash_output,
     #susie_ash_output = susie_ash_output,
     susie_inf_output = susie_inf_output,
-    causal_indices = causal,
+    sparse_indices = sparse,
+    oligogenic_indices = oligo,
     betas = beta)
   )
 }
@@ -297,7 +302,8 @@ simulation <- function(num_simulations = NULL,
   # Initialize lists to store results
   all_metrics <- list()
   all_betas <- list()
-  all_causal_indices <- list()
+  all_sparse_indices <- list()
+  all_oligogenic_indices <- list()
   all_susie_outputs <- list()
   all_mrash_outputs <- list()
   #all_susie_ash_outputs <- list()
@@ -324,12 +330,13 @@ simulation <- function(num_simulations = NULL,
                                seed = seed)
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, causal = data$causal_indices, L = L)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, sparse = data$sparse_indices, oligo = data$oligogenic_indices, L = L)
 
     # Store results
     all_metrics[[i]] <- results$metrics
     all_betas[[i]] <- results$beta
-    all_causal_indices[[i]] <- results$causal_indices
+    all_sparse_indices[[i]] <- results$sparse_indices
+    all_oligogenic_indices[[i]] <- results$oligogenic_indices
     all_susie_outputs[[i]] <- results$susie_output
     all_mrash_outputs[[i]] <- results$mrash_output
     #all_susie_ash_outputs[[i]] <- results$susie_ash_output
@@ -349,13 +356,14 @@ simulation <- function(num_simulations = NULL,
   )
 
   # Save simulation results as Rds file
-  output_dir <- "/home/apm2217/output"
-  #output_dir <- "analysis"
+  #output_dir <- "/home/apm2217/output"
+  output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
     all_betas = all_betas,
-    all_causal_indices = all_causal_indices,
+    all_sparse_indices = all_sparse_indices,
+    all_oligogenic_indices = all_oligogenic_indices,
     all_susie_outputs = all_susie_outputs,
     all_mrash_outputs = all_mrash_outputs,
     #all_susie_ash_outputs = all_susie_ash_outputs,
