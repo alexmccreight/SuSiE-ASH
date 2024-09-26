@@ -5,139 +5,126 @@ date: "2024-08-30"
 ---
 
 ```{r}
-#X <- readRDS("/Users/alexmccreight/Columbia/data/X20")
-X <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/data/X20")
+library(tidyverse)
+X <- readRDS("/Users/alexmccreight/Columbia/data/X20")
+#X <- readRDS("/Users/alexmccreight/ALEX-TEMP-FOLDER/data/X20")
+```
 
-generate_data <- function(X,
-                          n_large_effects = 3,      # Adjusted number of large effects
-                          n_medium_effects = 50,    # Adjusted number of medium effects
-                          total_pve = 0.35,
-                          seed = NULL) {
-  # Set seed for reproducibility
+```{r}
+generate_eqtl_data <- function(X,
+                               h2_total = 0.3,            # Total heritability
+                               prop_h2_sparse = 0.65,     # Proportion of h2_total explained by sparse effects (including sentinel)
+                               prop_h2_oligogenic = 0.20, # Proportion of h2_total explained by oligogenic effects
+                               prop_h2_infinitesimal = 0.15, # Proportion of h2_total explained by infinitesimal effects
+                               prop_h2_sentinel = 0.7,    # Proportion of h2_sparse explained by sentinel SNP
+                               mixture_props = c(0.7, 0.2, 0.1),  # Mixture proportions for oligogenic effects
+                               mixture_sds = c(0.01, 0.03, 0.05), # Standard deviations for mixture components
+                               seed = NULL) {
+  
   if (!is.null(seed)) set.seed(seed)
   
-  # Center and scale X
+  ori.X <- X
   X <- scale(X)
   
   n_samples <- nrow(X)
   n_features <- ncol(X)
   
-  # Calculate effect sizes
-  large_pve <- 0.30 * total_pve 
-  medium_pve <- 0.10 * total_pve 
-  small_pve <- 0.60 * total_pve 
+  # Calculate effect sizes for each component
+  h2_sparse <- h2_total * prop_h2_sparse
+  h2_sentinel <- h2_sparse * prop_h2_sentinel
+  h2_other_sparse <- h2_sparse - h2_sentinel
+  h2_oligogenic <- h2_total * prop_h2_oligogenic
+  h2_infinitesimal <- h2_total * prop_h2_infinitesimal
   
-  # Initialize effect sizes
+  # Generate effect sizes
   beta <- rep(0, n_features)
-  phi <- rep(0, n_features)
-  theta <- rep(0, n_features)
   
-  # Set large effect sizes (mean = 0, SD = 0.15)
-  large_indices <- sample(1:n_features, n_large_effects)
-  beta[large_indices] <- rnorm(n_large_effects, mean = 0, sd = 0.15)
+  # Sentinel SNP effect
+  sentinel_index <- sample(1:n_features, 1)
+  beta[sentinel_index] <- rnorm(1, 0, sqrt(h2_sentinel))
   
-  # Set medium effect sizes (mean = 0, SD = 0.025)
-  remaining_indices <- setdiff(1:n_features, large_indices)
-  n_medium_effects <- min(n_medium_effects, length(remaining_indices))
-  medium_indices <- sample(remaining_indices, n_medium_effects)
-  phi[medium_indices] <- rnorm(n_medium_effects, mean = 0, sd = 0.025)
+  # Other sparse effects
+  n_other_sparse <- rpois(1, lambda = 3)  # Random number of other sparse effects
+  other_sparse_indices <- sample((1:n_features)[-sentinel_index], n_other_sparse)
+  beta[other_sparse_indices] <- rnorm(n_other_sparse, 0, as.vector(sqrt(h2_other_sparse / n_other_sparse)))
   
-  # Set infinitesimal effect sizes (mean = 0, SD = 0.0005)
-  small_indices <- setdiff(remaining_indices, medium_indices)
-  n_small_effects <- length(small_indices)
-  theta[small_indices] <- rnorm(n_small_effects, mean = 0, sd = 0.0005)
+  # Oligogenic effects (mixture of normals)
+  oligogenic_indices <- setdiff(1:n_features, c(sentinel_index, other_sparse_indices))
+  mixture_assignments <- sample(1:length(mixture_props), length(oligogenic_indices), replace = TRUE, prob = mixture_props)
+  beta[oligogenic_indices] <- rnorm(length(oligogenic_indices), 0, mixture_sds[mixture_assignments])
   
-  # Generate components of y
-  Xbeta <- X %*% beta
-  Xphi <- X %*% phi
-  Xtheta <- X %*% theta
+  # Scale oligogenic effects to achieve desired heritability
+  oligogenic_effects <- X[, oligogenic_indices] %*% beta[oligogenic_indices]
+  scaling_factor <- sqrt(h2_oligogenic / var(oligogenic_effects))
+  beta[oligogenic_indices] <- beta[oligogenic_indices] * as.vector(scaling_factor)
   
-  # Calculate initial variances
-  var_Xbeta <- var(as.vector(Xbeta))
-  var_Xphi <- var(as.vector(Xphi))
-  var_Xtheta <- var(as.vector(Xtheta))
+  # Infinitesimal effects (small effects on all SNPs)
+  infinitesimal_effects <- rnorm(n_features, 0, sqrt(h2_infinitesimal / n_features))
+  beta <- beta + as.vector(infinitesimal_effects)
   
-  # Scale components to match desired PVE
-  Xbeta <- Xbeta * sqrt(large_pve / var_Xbeta)
-  Xphi <- Xphi * sqrt(medium_pve / var_Xphi)
-  Xtheta <- Xtheta * sqrt(small_pve / var_Xtheta)
+  # Generate y
+  y <- X %*% beta
   
-  # Combine components
-  y_signal <- Xbeta + Xphi + Xtheta
-  var_signal <- var(as.vector(y_signal))
-  
-  # Add noise to achieve desired total PVE
-  var_epsilon <- var_signal * ((1 - total_pve) / total_pve)
+  # Add noise to achieve desired total heritability
+  var_y <- var(as.vector(y))
+  var_epsilon <- var_y * (1 - h2_total) / h2_total
   epsilon <- rnorm(n_samples, 0, sqrt(var_epsilon))
-  y <- y_signal + epsilon
+  y <- y + epsilon
   
-  # Recalculate total variance and PVEs after adding noise
+  # Calculate actual heritabilities
   var_y_total <- var(as.vector(y))
-  pve_beta <- var(as.vector(Xbeta)) / var_y_total
-  pve_phi <- var(as.vector(Xphi)) / var_y_total
-  pve_theta <- var(as.vector(Xtheta)) / var_y_total
-  pve_total <- pve_beta + pve_phi + pve_theta
+  h2_sentinel_actual <- var(X[, sentinel_index] * beta[sentinel_index]) / var_y_total
   
-  # Scale + center y (for no intercept)
-  y <- scale(y, center = TRUE, scale = FALSE)
+  # Check if other_sparse_indices is not empty
+  if (length(other_sparse_indices) > 0) {
+    sparse_indices <- c(sentinel_index, other_sparse_indices)
+    h2_sparse_actual <- var(X[, sparse_indices] %*% beta[sparse_indices]) / var_y_total
+  } else {
+    h2_sparse_actual <- h2_sentinel_actual  # If no other sparse effects, sparse is just the sentinel
+  }
   
-  # Return results
+  h2_oligogenic_actual <- var(X[, oligogenic_indices] %*% beta[oligogenic_indices]) / var_y_total
+  h2_infinitesimal_actual <- var(X %*% infinitesimal_effects) / var_y_total
+  h2_total_actual <- var(as.vector(X %*% beta)) / var_y_total
+  
   return(list(
+    ori.X = ori.X,
     X = X,
     y = y,
-    var_epsilon = var_epsilon,
     beta = beta,
-    phi = phi,
-    theta = theta,
-    pve_beta = pve_beta,
-    pve_phi = pve_phi,
-    pve_theta = pve_theta,
-    pve_total = pve_total
+    h2_total = h2_total_actual,
+    h2_sparse = h2_sparse_actual,
+    h2_sentinel = h2_sentinel_actual,
+    h2_oligogenic = h2_oligogenic_actual,
+    h2_infinitesimal = h2_infinitesimal_actual,
+    sentinel_index = sentinel_index,
+    other_sparse_indices = other_sparse_indices,
+    oligogenic_indices = oligogenic_indices,
+    mixture_assignments = mixture_assignments,
+    var_epsilon = var_epsilon
   ))
 }
 
-# After running the function:
-result <- generate_data(X)
+# Usage
+data <- generate_eqtl_data(X = X, 
+                           h2_total = 0.3,
+                           prop_h2_sparse = 0.65,
+                           prop_h2_oligogenic = 0.20,
+                           prop_h2_infinitesimal = 0.15,
+                           prop_h2_sentinel = 0.7,
+                           mixture_props = c(0.7, 0.2, 0.1),
+                           mixture_sds = c(0.01, 0.03, 0.05),
+                           seed = NULL)
 
-# Inspect effect sizes
-hist(result$beta[result$beta != 0], main = "Large Effect Sizes (beta)", xlab = "Effect Size")
-hist(result$phi[result$phi != 0], main = "Medium Effect Sizes (phi)", xlab = "Effect Size")
-hist(result$theta[result$theta != 0], main = "Small Effect Sizes (theta)", xlab = "Effect Size")
+data$h2_sparse
+data$h2_sentinel
+data$h2_oligogenic
+data$h2_infinitesimal
+data$h2_total
+data$var_epsilon
 
-# Check ranges
-range(result$beta[result$beta != 0])
-range(result$phi[result$phi != 0])
-range(result$theta[result$theta != 0])
-
-result$pve_beta
-result$pve_phi
-result$pve_theta
-#result$var_epsilon
-
-result$pve_beta + result$pve_phi + result$pve_theta
-
-
-
-# sum(result$beta[result$beta != 0]^2)
-# sum(result$phi[result$phi != 0]^2)
-# sum(result$theta[result$theta != 0]^2)
-
-```
-
-```{r}
-devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
-devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
-#source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash-v2.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie-ash.R")
-source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
-
-susie_output <- susie(X = result$X, y = result$y, L = 10, standardize = F, intercept = F)
-susie_inf_output <- susie_inf(X = result$X, y = result$y, L = 10)
-
-
-which(result$beta != 0)
-
-susie_output$sets$cs
-susie_inf_output$sets
+data$beta[data$sentinel_index]
+data$beta[data$other_sparse_indices]
+abs(data$beta)[order(abs(data$beta), decreasing = T)]
 ```
 
