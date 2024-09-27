@@ -116,13 +116,16 @@ generate_eqtl_data <- function(X,
 method_and_score <- function(X = data$X, y = data$y, beta = data$beta, sparse = data$sparse_indices, oligo = data$oligogenic_indices, L = 10) {
   #### Run various methods ####
   cat("Starting SuSiE\n")
-  susie_output <- susie(X = X, y = y, L = L, intercept = F, standardize = F)
+  susie_output <- susie(X = ori.X, y = ori.y, L = L, intercept = T, standardize = T)
 
   cat("Starting mr.ash\n")
-  mrash_output <- mr.ash(X = X, y = y, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = F, standardize = F)
+  mrash_output <- mr.ash(X = ori.X, y = ori.y, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = T, standardize = T)
 
-  #cat("Starting SuSiE-ash\n")
-  #susie_ash_output <- susie_ash(X = X, y = y, L = L, warm_start = 2, tol = 0.001, intercept = F, standardize = F)
+  #cat("Starting SuSiE-ash (MLE)\n")
+  #susie_ash_mle_output <- susie_ash(X = ori.X, y = ori.y, L = L, tol = 0.001, intercept = T, standardize = T, est_var == "cal_v")
+
+  #cat("Starting SuSiE-ash (MoM)\n")
+  #susie_ash_mom_output <- susie_ash(X = ori.X, y = ori.y, L = L, tol = 0.001, intercept = T, standardize = T, est_var == "mom")
 
   cat("Starting SuSiE-inf\n")
   susie_inf_output <- susie_inf(X = X, y = y, L = L, verbose = F, coverage = 0.95)
