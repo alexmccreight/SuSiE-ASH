@@ -1,72 +1,45 @@
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=0.5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=0.75 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=1.4 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=2.25 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=3 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.005 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.01 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.025 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.25 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.33 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=5 L=10 threshold=0.9
-Rscript /home/apm2217/data/simulation_script.R num_simulations=30 total_heritability=0.5 sparse_effects=2 nonsparse_coverage=0.05 theta_beta_ratio=5 L=10 threshold=0.9
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.8 L=10 n_oligogenic=150

@@ -2,11 +2,11 @@
 username=apm2217
 ./src/mm_jobman.sh \
  ./commands_to_submit.txt \
- -c 4 -m 8 \
- --job-size 72 \
+ -c 16 -m 32 \
+ --job-size 45 \
  --parallel-commands 9 \
- --mount gao-851725442056/ftp_fgc_xqtl/interactive_analysis/$username/susie-ash-data:/home/$username/data \
- --mount gao-851725442056/ftp_fgc_xqtl/analysis_result/interactive_analysis/$username/simulation_output:/home/$username/output \
+ --mount statfungen/ftp_fgc_xqtl/interactive_analysis/$username/susie-ash-data:/home/$username/data \
+ --mount statfungen/ftp_fgc_xqtl/analysis_result/interactive_analysis/$username/eqtl_output:/home/$username/output \
  --mountOpt "mode=r" "mode=rw" \
  --cwd "/home/$username/data" \
  --image ghcr.io/cumc/pecotmr_docker:latest \

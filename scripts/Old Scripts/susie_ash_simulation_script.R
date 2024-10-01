@@ -83,7 +83,7 @@ generate_data <- function(X,
   pve_total <- pve_beta + pve_phi + pve_theta
 
   # Scale + center y (for no intercept)
-  y <- scale(y)
+  y <- scale(y, center = T, scale = F)
 
   # Return results
   return(list(
@@ -331,8 +331,8 @@ simulation <- function(num_simulations = NULL,
   )
 
   # Save simulation results as Rds file
-  #output_dir <- "/home/apm2217/output"
-  output_dir <- "analysis"
+  output_dir <- "/home/apm2217/output"
+  #output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,

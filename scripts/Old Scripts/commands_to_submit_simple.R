@@ -1,10 +1,10 @@
-# Define the parameter grid (SUBSET: 4 settings (w/ 25 iterations))
+# Define the parameter grid
 parameter_grid <- expand.grid(
-  num_simulations = c(25),
-  Ltrue = c(15,20,25,30),
-  ssq = c(0.01, 0.05, 0.1, 0.125),
-  tausq = c(1e-4, 2.5e-4, 3.3e-4, 5e-4),
-  threshold = c(0.90),
+  num_simulations = c(30),
+  Ltrue = c(3, 5, 7, 10),
+  ssq = c(0.01),
+  sigmasq = c(1),
+  tausq = c(1e-4, 2.5e-4, 3.3e-4, 5e-4, 7.5e-4, 1e-3),
   stringsAsFactors = FALSE
 )
 
@@ -20,16 +20,16 @@ for (i in 1:nrow(parameter_grid)) {
   num_simulations <- params["num_simulations"]
   Ltrue <- params["Ltrue"]
   ssq <- params["ssq"]
+  sigmasq <- params["sigmasq"]
   tausq <- params["tausq"]
-  threshold <- params["threshold"]
 
   # Create the command
-  command <- paste0("Rscript /home/apm2217/data/simple_simulation_script.R",
+  command <- paste0("Rscript /home/apm2217/data/simulation_prediction_script_2.R",
                     " num_simulations=",num_simulations,
                     " Ltrue=", Ltrue,
                     " ssq=", ssq,
-                    " tausq=", tausq,
-                    " threshold=", threshold)
+                    " sigmasq=", sigmasq,
+                    " tausq=", tausq)
 
   # Write the command to the file
   writeLines(command, file_conn)

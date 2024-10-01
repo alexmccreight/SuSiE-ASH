@@ -8,10 +8,12 @@ library(dplyr)
 library(magrittr)
 source("susie-ash.R")
 source("susie_inf.R")
+source("susie_inf_ash.R")
 source("susie-ash-v4.R")
 source("susie-ash-v5.R")
 source("susie-ash-v10.R")
 source("susie-ash-v11.R")
+
 
 # Annotation Matrix (from S3 Bucket)
 X <- readRDS("X4")
@@ -81,6 +83,9 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
 
   cat("Starting SuSiE-inf\n")
   susie_inf_output <- susie_inf(X = X, y = y, L = L, verbose = F, coverage = 0.95)
+
+  cat("Starting SuSiE-inf-ash\n")
+  susie_inf_ash_output <- susie_inf_ash(X = X, y = y, L = L, verbose = F, coverage = 0.95)
 
 
 
@@ -260,7 +265,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     #### Calculate RMSE ####
     RMSE_y <- sqrt(mean((y - mod$fitted)^2))
     RMSE_beta <- sqrt(mean((Xbeta - X %*% rowSums(mod$PIP2 * mod$mu))^2))
-    RMSE_theta <- sqrt(mean((Xtheta - X %*% rowSums(susie_inf_output$PIP2 * susie_inf_output$alpha))^2))
+    RMSE_theta <- sqrt(mean((Xtheta - X %*% susie_inf_output$alpha)^2))
 
     #### Store Results ####
     return(list(
@@ -284,6 +289,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
   susie_ash_v10_metrics <- calc_metrics_predict_all(susie_ash_output_v10, X, y, beta, theta)
   susie_ash_v11_metrics <- calc_metrics_predict_all(susie_ash_output_v11, X, y, beta, theta)
   susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, beta, theta)
+  susie_inf_ash_metrics <- calc_metrics_inf(susie_inf_ash_output, X, y, beta, theta)
 
   #Create a data frame with the results
   metrics_table  <- data.frame(
@@ -294,7 +300,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
               "SuSiE-ash (v5)",
               "SuSiE-ash (v10)",
               "SuSiE-ash (v11)",
-              "SuSiE-inf"),
+              "SuSiE-inf",
+              "SuSiE-inf-ash"),
     RMSE_y = c(susie_metrics$RMSE_y,
                mrash_metrics$RMSE_y,
                susie_ash_metrics$RMSE_y,
@@ -302,7 +309,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                susie_ash_v5_metrics$RMSE_y,
                susie_ash_v10_metrics$RMSE_y,
                susie_ash_v11_metrics$RMSE_y,
-               susie_inf_metrics$RMSE_y),
+               susie_inf_metrics$RMSE_y,
+               susie_inf_ash_metrics$RMSE_y),
     RMSE_beta = c(susie_metrics$RMSE_beta,
                   mrash_metrics$RMSE_beta,
                   susie_ash_metrics$RMSE_beta,
@@ -310,7 +318,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                   susie_ash_v5_metrics$RMSE_beta,
                   susie_ash_v10_metrics$RMSE_beta,
                   susie_ash_v11_metrics$RMSE_beta,
-                  susie_inf_metrics$RMSE_beta),
+                  susie_inf_metrics$RMSE_beta,
+                  susie_inf_ash_metrics$RMSE_beta),
     RMSE_theta = c(susie_metrics$RMSE_theta,
                    mrash_metrics$RMSE_theta,
                    susie_ash_metrics$RMSE_theta,
@@ -318,7 +327,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                    susie_ash_v5_metrics$RMSE_theta,
                    susie_ash_v10_metrics$RMSE_theta,
                    susie_ash_v11_metrics$RMSE_theta,
-                   susie_inf_metrics$RMSE_theta),
+                   susie_inf_metrics$RMSE_theta,
+                   susie_inf_ash_metrics$RMSE_theta),
     CS_FDR = c(susie_metrics$cs_fdr,
                mrash_metrics$cs_fdr,
                susie_ash_metrics$cs_fdr,
@@ -326,7 +336,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                susie_ash_v5_metrics$cs_fdr,
                susie_ash_v10_metrics$cs_fdr,
                susie_ash_v11_metrics$cs_fdr,
-               susie_inf_metrics$cs_fdr),
+               susie_inf_metrics$cs_fdr,
+               susie_inf_ash_metrics$cs_fdr),
     CS_Recall = c(susie_metrics$cs_recall,
                   mrash_metrics$cs_recall,
                   susie_ash_metrics$cs_recall,
@@ -334,7 +345,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                   susie_ash_v5_metrics$cs_recall,
                   susie_ash_v10_metrics$cs_recall,
                   susie_ash_v11_metrics$cs_recall,
-                  susie_inf_metrics$cs_recall),
+                  susie_inf_metrics$cs_recall,
+                  susie_inf_ash_metrics$cs_recall),
     CS_Size = c(susie_metrics$cs_size,
                 mrash_metrics$cs_size,
                 susie_ash_metrics$cs_size,
@@ -342,7 +354,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                 susie_ash_v5_metrics$cs_size,
                 susie_ash_v10_metrics$cs_size,
                 susie_ash_v11_metrics$cs_size,
-                susie_inf_metrics$cs_size),
+                susie_inf_metrics$cs_size,
+                susie_inf_ash_metrics$cs_size),
     Coverage = c(susie_metrics$coverage,
                  mrash_metrics$coverage,
                  susie_ash_metrics$coverage,
@@ -350,7 +363,8 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
                  susie_ash_v5_metrics$coverage,
                  susie_ash_v10_metrics$coverage,
                  susie_ash_v11_metrics$coverage,
-                 susie_inf_metrics$coverage)
+                 susie_inf_metrics$coverage,
+                 susie_inf_ash_metrics$coverage)
   )
   # Return the results table
   return(list(
@@ -363,6 +377,7 @@ method_and_score <- function(X = data$X, y = data$y, beta = data$beta, theta = d
     susie_ash_output_v10 = susie_ash_output_v10,
     susie_ash_output_v11 = susie_ash_output_v11,
     susie_inf_output = susie_inf_output,
+    susie_inf_ash_output = susie_inf_ash_output,
     betas = beta,
     thetas = theta)
   )
@@ -373,9 +388,9 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   # Parse command-line arguments
   num_simulations = 2
   total_heritability = 0.5
-  sparse_effects = 3
-  nonsparse_coverage = 0.01
-  theta_beta_ratio = 5
+  sparse_effects = 2
+  nonsparse_coverage = 0.05
+  theta_beta_ratio = 0.75
   L = 10
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
@@ -394,6 +409,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
   all_susie_ash_outputs_v10 <- list()
   all_susie_ash_outputs_v11 <- list()
   all_susie_inf_outputs <- list()
+  all_susie_inf_ash_outputs <- list()
   all_seeds <- numeric(num_simulations)
 
   for (i in 1:num_simulations) {
@@ -421,6 +437,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_susie_ash_outputs_v10[[i]] <- results$susie_ash_output_v10
     all_susie_ash_outputs_v11[[i]] <- results$susie_ash_output_v11
     all_susie_inf_outputs[[i]] <- results$susie_inf_output
+    all_susie_inf_ash_outputs[[i]] <- results$susie_inf_ash_output
     all_seeds[i] <- seed
   }
 
@@ -452,6 +469,7 @@ simulation <- function(num_simulations = NULL, total_heritability = NULL, sparse
     all_susie_ash_outputs_v10 = all_susie_ash_outputs_v10,
     all_susie_ash_outputs_v11 = all_susie_ash_outputs_v11,
     all_susie_inf_outputs = all_susie_inf_outputs,
+    all_susie_inf_ash_outputs = all_susie_inf_ash_outputs,
     all_seeds = all_seeds
   )
 

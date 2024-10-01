@@ -6,6 +6,8 @@ susie_inf <- function(X, y, L,
                       method = "moments", sigmasq_range = NULL, tausq_range = NULL,
                       PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE) {
 
+  mean_y <- mean(y)
+
   # Compute n, z, p
   n <- nrow(X)
   z <- (t(X) %*% y)/sqrt(n)
@@ -157,8 +159,10 @@ susie_inf <- function(X, y, L,
   # Compute Credible Sets
   cred <- susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
 
-  # Compute fitted values. TODO: add scenarios with intercept
-  fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
+  # Compute fitted values.
+  #fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
+
+  fitted <- mean_y + X %*% (rowSums(PIP2 * mu) + alpha) # reintroduce the mean_y for fitted values because input y is already centered.
 
 
   return(list(

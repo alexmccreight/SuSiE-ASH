@@ -1,9 +1,10 @@
-# Define the parameter grid
+# Define the parameter grid (SUBSET: 8 settings (w/ 5 iterations))
 parameter_grid <- expand.grid(
   num_simulations = c(30),
-  n_large_effects = c(1,2,3,4,5),
-  n_medium_effects = c(1,2,3,4,5),
-  total_pve = c(0.25,0.3,0.4,0.5),
+  total_heritability = c(0.25, 0.33, 0.50),
+  sparse_effects = c(3),
+  nonsparse_coverage = c(0.005, 0.01, 0.025, 0.05),
+  theta_beta_ratio = c(0.5, 0.75, 1.4, 2.25, 3, 5),
   L = c(10),
   stringsAsFactors = FALSE
 )
@@ -18,17 +19,19 @@ for (i in 1:nrow(parameter_grid)) {
 
   # Extract parameter values
   num_simulations <- params["num_simulations"]
-  n_large_effects <- params["n_large_effects"]
-  n_medium_effects <- params["n_medium_effects"]
-  total_pve <- params["total_pve"]
+  total_heritability <- params["total_heritability"]
+  sparse_effects <- params["sparse_effects"]
+  nonsparse_coverage <- params["nonsparse_coverage"]
+  theta_beta_ratio <- params["theta_beta_ratio"]
   L <- params["L"]
 
   # Create the command
-  command <- paste0("Rscript /home/apm2217/data/susie_ash_simulation_script.R",
+  command <- paste0("Rscript /home/apm2217/data/simulation_prediction_script.R",
                     " num_simulations=",num_simulations,
-                    " n_large_effects=", n_large_effects,
-                    " n_medium_effects=", n_medium_effects,
-                    " total_pve=", total_pve,
+                    " total_heritability=", total_heritability,
+                    " sparse_effects=", sparse_effects,
+                    " nonsparse_coverage=", nonsparse_coverage,
+                    " theta_beta_ratio=", theta_beta_ratio,
                     " L=", L)
 
   # Write the command to the file
@@ -39,4 +42,3 @@ for (i in 1:nrow(parameter_grid)) {
 close(file_conn)
 
 cat("Commands file 'commands_to_submit.txt' created successfully.\n")
-

@@ -14,7 +14,7 @@ show_help() {
     echo "  --dryrun                                  Execute a dry run, printing commands without running them."
     echo "  --entrypoint '<command>'                  Set the initial command to run in the job script (required)."
     echo "  --image <value>                           Specify the Docker image to use for the job (required)."
-    echo "  --vm-policy <spotOnly|onDemand|spotFirst> Specify On-demand or Spot instance (default: spotOnly)".
+    echo "  --vm-policy <spotOnly|onDemand|spotFirst> Specify On-demand or Spot instance (default: spotFirst)".
     echo "  --job-size <value>                        Set the number of commands per job for creating virtual machines (required)."
     echo "  --mount <bucket>:<local>                  Mount an S3 bucket to a local directory. Format: <bucket>:<local path> (optional)."
     echo "  --mountOpt <value>                        Specify mount options for the bucket (required if --mount is used)."
@@ -38,13 +38,13 @@ c_min=""
 c_max=""
 m_min=""
 m_max=""
-vm_policy="spotOnly"
+vm_policy="spotFirst"
 declare -a mountOpt=()
 image=""
 entrypoint=""
 cwd="~"
 job_size=""
-opcenter="23.22.157.8"
+opcenter="44.222.241.133"
 parallel_commands=""
 min_cores_per_command=0
 min_mem_per_command=0
@@ -340,14 +340,14 @@ mount_buckets() {
   # If just one mount option, use the same one for all bucket mounting
   if [ ${#mountOpt[@]} -eq 1 ]; then
     for i in "${!mount_local[@]}"; do
-        dataVolume_cmd+="--dataVolume '[$mountOpt]s3://${mount_remote[$i]}:${mount_local[$i]}' "
+        dataVolume_cmd+="--dataVolume '[$mountOpt,endpoint=s3.us-east-1.amazonaws.com]s3://${mount_remote[$i]}:${mount_local[$i]}' "
     done
 
   # If more than one mount option, we expect there to be the same number of mounted buckets
   else
     if [ ${#mountOpt[@]} -eq  ${#mount_local[@]} ]; then
       for i in "${!mountOpt[@]}"; do
-            dataVolume_cmd+="--dataVolume '[${mountOpt[$i]}]s3://${mount_remote[$i]}:${mount_local[$i]}' "
+            dataVolume_cmd+="--dataVolume '[${mountOpt[$i]},endpoint=s3.us-east-1.amazonaws.com]s3://${mount_remote[$i]}:${mount_local[$i]}' "
       done
     else
       # Number of mountOptions > 1 and dne number of buckets
