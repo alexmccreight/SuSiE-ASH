@@ -1,0 +1,151 @@
+---
+title: "Simulation-Results-Tmp"
+output: html_document
+date: "2024-10-03"
+---
+
+```{r, include = F}
+knitr::opts_knit$set(root.dir = "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH")
+library(tidyverse)
+library(ROCR)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+
+mem.maxVSize(1024*64)
+
+# tmp <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/eqtl-results/numIter100_h2total0.1_h2sentinel0.6_L10_numOligogenic50")
+# 
+# tmp$all_betas[[1]][tmp$all_sparse_indices[[1]]]
+# 
+# tmp$all_susie_ash_mom_outputs
+# tmp$all_susie_ash_mle_outputs
+# tmp$all_susie_inf_outputs
+# tmp$all_susie_outputs
+```
+
+```{r, warning = F, echo = F, message = F}
+# Directory containing the files
+directory <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/eqtl-results"
+
+# List all files in the specified directory
+files <- list.files(directory, pattern = "", full.names = TRUE)
+
+# Initialize an empty list to store the plots
+plot_list <- list()
+
+# Load necessary libraries
+library(ROCR)
+library(ggplot2)
+library(ggthemes)
+
+# Loop through each file
+for (file_path in files) {
+  # Extract the file name from the path
+  file_name <- basename(file_path)
+
+  # Use regular expressions to parse out the parameters
+  parts <- regmatches(file_name, regexec("numIter(\\d+)_h2total([0-9.]+)_h2sentinel([0-9.]+)_L(\\d+)_numOligogenic(\\d+)", file_name))
+
+  # Ensure the file name matches the expected pattern
+  if (length(parts[[1]]) < 6) {
+    next  # Skip files that don't match the pattern
+  }
+
+  # Extract parameters
+  num_iter <- as.numeric(parts[[1]][2])
+  h2_total <- as.numeric(parts[[1]][3])
+  h2_sentinel <- as.numeric(parts[[1]][4])
+  Ltrue <- as.numeric(parts[[1]][5])
+  num_oligogenic <- as.numeric(parts[[1]][6])
+
+  # Read the file (assuming the file is an .rds file)
+  sim_results <- readRDS(file_path)
+
+  # Initialize vectors to store predictions and labels for each method
+  susie_predictions <- c()
+  susie_labels <- c()
+  susie_inf_predictions <- c()
+  susie_inf_labels <- c()
+  susie_ash_mle_predictions <- c()
+  susie_ash_mle_labels <- c()
+  susie_ash_mom_predictions <- c()
+  susie_ash_mom_labels <- c()
+
+  # Loop over iterations
+  for (i in 1:num_iter) {
+    # SuSiE outputs
+    susie_pip <- sim_results$all_susie_outputs[[i]]$pip
+    susie_betas <- sim_results$all_betas[[i]]
+    total_variants <- length(susie_betas)
+    causal_indices <- sim_results$all_sparse_indices[[i]]  # Indices of causal variants
+    susie_causal <- rep(FALSE, total_variants)
+    susie_causal[causal_indices] <- TRUE
+    susie_predictions <- c(susie_predictions, susie_pip)
+    susie_labels <- c(susie_labels, susie_causal)
+
+    # SuSiE-Inf outputs
+    susie_inf_pip <- sim_results$all_susie_inf_outputs[[i]]$PIP2
+    susie_inf_predictions <- c(susie_inf_predictions, susie_inf_pip)
+    susie_inf_labels <- c(susie_inf_labels, susie_causal)
+
+    # SuSiE-ASH-MLE outputs
+    susie_ash_mle_pip <- sim_results$all_susie_ash_mle_outputs[[i]]$pip
+    susie_ash_mle_predictions <- c(susie_ash_mle_predictions, susie_ash_mle_pip)
+    susie_ash_mle_labels <- c(susie_ash_mle_labels, susie_causal)
+
+    # SuSiE-ASH-MOM outputs
+    susie_ash_mom_pip <- sim_results$all_susie_ash_mom_outputs[[i]]$pip
+    susie_ash_mom_predictions <- c(susie_ash_mom_predictions, susie_ash_mom_pip)
+    susie_ash_mom_labels <- c(susie_ash_mom_labels, susie_causal)
+  }
+
+  # Create prediction objects
+  pred_susie <- prediction(susie_predictions, susie_labels)
+  pred_susie_inf <- prediction(susie_inf_predictions, susie_inf_labels)
+  pred_susie_ash_mle <- prediction(susie_ash_mle_predictions, susie_ash_mle_labels)
+  pred_susie_ash_mom <- prediction(susie_ash_mom_predictions, susie_ash_mom_labels)
+
+  # Create performance objects
+  perf_susie <- performance(pred_susie, "tpr", "fpr")
+  perf_susie_inf <- performance(pred_susie_inf, "tpr", "fpr")
+  perf_susie_ash_mle <- performance(pred_susie_ash_mle, "tpr", "fpr")
+  perf_susie_ash_mom <- performance(pred_susie_ash_mom, "tpr", "fpr")
+
+  # Create plot title with simulation parameters
+  plot_title <- paste0("ROC Curve (L = ", Ltrue, ", h2_total = ", h2_total,
+                       ", h2_sentinel = ", h2_sentinel, ", numOligogenic = ", num_oligogenic, ")")
+
+  # Create the plot
+  roc_plot <- ggplot() +
+    geom_line(data = data.frame(x = perf_susie@x.values[[1]], y = perf_susie@y.values[[1]], Method = "SuSiE"),
+              aes(x = x, y = y, color = Method), linewidth = 1) +
+    geom_line(data = data.frame(x = perf_susie_inf@x.values[[1]], y = perf_susie_inf@y.values[[1]], Method = "SuSiE-Inf"),
+              aes(x = x, y = y, color = Method), linewidth = 1) +
+    geom_line(data = data.frame(x = perf_susie_ash_mle@x.values[[1]], y = perf_susie_ash_mle@y.values[[1]], Method = "SuSiE-ASH-MLE"),
+              aes(x = x, y = y, color = Method), linewidth = 1) +
+    geom_line(data = data.frame(x = perf_susie_ash_mom@x.values[[1]], y = perf_susie_ash_mom@y.values[[1]], Method = "SuSiE-ASH-MOM"),
+              aes(x = x, y = y, color = Method), linewidth = 1) +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+    labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
+    scale_color_manual(values = c("SuSiE" = "blue", "SuSiE-Inf" = "green",
+                                  "SuSiE-ASH-MLE" = "red", "SuSiE-ASH-MOM" = "purple")) +
+    theme_minimal()
+
+  # Add the plot to the list
+  plot_list[[length(plot_list) + 1]] <- roc_plot
+
+  # Clear memory
+  rm(sim_results, susie_predictions, susie_labels, susie_inf_predictions, susie_inf_labels,
+     susie_ash_mle_predictions, susie_ash_mle_labels, susie_ash_mom_predictions, susie_ash_mom_labels)
+  gc()
+}
+
+# After the loop, print all plots
+for (plot in plot_list) {
+  print(plot)
+}
+
+```
+
+

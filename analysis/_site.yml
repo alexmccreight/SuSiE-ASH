@@ -11,6 +11,8 @@ navbar:
     href: license.html
   - text: "Simulation Results"
     href: Simulation-Results.html
+  - text: "Simulation Results (New)"
+    href: Simulation-Results-Tmp.html
   - text: "Simulation Tables"
     href: simulation-tables.html
   - text: "SuSiE Improvements"
