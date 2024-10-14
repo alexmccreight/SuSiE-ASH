@@ -4,7 +4,8 @@ susie_inf <- function(X, y, L,
                       est_ssq = TRUE, ssq = NULL, ssq_range = c(0, 1), pi0 = NULL,
                       est_sigmasq = TRUE, est_tausq = TRUE, sigmasq = 1, tausq = 0,
                       method = "moments", sigmasq_range = NULL, tausq_range = NULL,
-                      PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE) {
+                      PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE,
+                      XtX = NULL, LD = NULL, V = NULL, Dsq = NULL) {
 
   mean_y <- mean(y)
 
@@ -13,23 +14,28 @@ susie_inf <- function(X, y, L,
   z <- (t(X) %*% y)/sqrt(n)
   p <- length(z)
 
-  # Compute meansq, XtX, LD, V
-  meansq <- sum(y^2)/n # Mean-squared magnitude of y
-  XtX <- t(X) %*% X
-  LD <- (XtX)/n # LD Matrix
+  # Compute mean squared magnitude of y
+  meansq <- sum(y^2)/n
 
-  # Pre-compute eigen value decomposition X'X
-  eig <- eigen(LD, symmetric = T)
-  V <- (eig$vectors[, ncol(eig$vectors):1]) # pxp matrix of eigenvectors of XtX; use this [,ncol..] to match the python scheme. However, we still have differing signs
-  Dsq <- pmax(n * sort(eig$values), 0) # length-p vector of eigen values of XtX; use sort() to go from min to max (same as Python)
+  # Use precomputed XtX if provided
+  if (is.null(XtX)) {
+    XtX <- t(X) %*% X
+  }
 
-  # Pre-compute V,D^2 in the SVD X=UDV'
-  if ((is.null(V) || is.null(Dsq)) && is.null(LD)) {stop("Missing LD")}
-  else if (is.null(V) || is.null(Dsq)) {
-    eigvals <- eigen(LD, symmetric = TRUE, only.values = TRUE)$values # this can be fixed to match above later
-    V <- eigen(LD, symmetric = TRUE, only.vectors = TRUE)$vectors
-    Dsq <- pmax(n * eigvals, 0)}
-  else{Dsq <- pmax(Dsq, 0)}
+  # Use precomputed LD if provided
+  if (is.null(LD)) {
+    LD <- XtX / n
+  }
+
+  # Use precomputed V and Dsq if provided
+  if (is.null(V) || is.null(Dsq)) {
+    eig <- eigen(LD, symmetric = TRUE)
+    V <- eig$vectors[, ncol(eig$vectors):1]
+    Dsq <- pmax(n * sort(eig$values), 0)
+  }
+
+  # Ensure non-negative eigenvalues
+  Dsq <- pmax(Dsq, 0)
 
   # Pre-compute X'y, V'X'y, y'y
   Xty <- sqrt(n) * z # p x 1 matrix
