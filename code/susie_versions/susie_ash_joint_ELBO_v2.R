@@ -404,8 +404,8 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
       # Step 5: Convergence Criterion
       # elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + sum(s$KL) #Issue which sigma^2 they used?
       if(est_var == "cal_v"){
-        #elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + term5  # Joint ELBO
-        elbo[i+1] = max(abs(s$prev_alpha - s$alpha))
+        elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + term5  # Joint ELBO
+        #elbo[i+1] = max(abs(s$prev_alpha - s$alpha))
         }else if(est_var != "cal_v"){
         elbo[i+1] = max(abs(s$prev_alpha - s$alpha)) # SuSiE-Inf convergence criterion
       }
