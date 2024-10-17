@@ -1,0 +1,202 @@
+---
+title: "Identifying instances in our simulation where our method failed"
+output: html_document
+date: "2024-10-05"
+---
+
+```{r, include = F}
+# Set memory limit
+mem.maxVSize(1024*128)
+```
+
+```{r}
+# Get results
+simulation_results <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/eqtl-results/numIter100_h2total0.3_h2sentinel0.7_L10_numOligogenic100")
+
+# Read in data
+X = readRDS("/Users/alexmccreight/Columbia/data/X20")
+scaled_X <- scale(X)
+# Define the list of PVE thresholds to test
+thresholds <- c(0.01, 0.005, 0.001, 0.0005)
+
+
+# Libraries
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/mr.ash.alpha')
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_ash_joint_ELBO_v2.R")
+```
+
+```{r}
+compute_metrics <- function(test_cs, causal_SNPs) {
+  if (length(test_cs) > 0) {
+    cs_size <- mean(sapply(test_cs, length))
+    
+    # Calculate coverage (proportion of credible sets that include at least one causal SNP)
+    coverage <- mean(sapply(test_cs, function(cs) any(cs %in% causal_SNPs)))
+    
+    # CS-based FDR
+    TP_fdr <- sum(sapply(test_cs, function(cs) any(cs %in% causal_SNPs)))
+    FP_fdr <- length(test_cs) - TP_fdr
+    cs_fdr <- FP_fdr / length(test_cs)
+    
+    # CS-based Recall
+    causal_SNPs_detected <- unique(unlist(test_cs))[unique(unlist(test_cs)) %in% causal_SNPs]
+    cs_recall <- length(causal_SNPs_detected) / length(causal_SNPs)
+  } else {
+    cs_size <- NA
+    coverage <- NA
+    cs_fdr <- NA
+    cs_recall <- NA
+  }
+  
+  return(list(
+    cs_size = cs_size,
+    coverage = coverage,
+    cs_fdr = cs_fdr,
+    cs_recall = cs_recall
+  ))
+}
+
+# Initialize a list to store recalculated metrics for all thresholds
+all_thresholds_metrics <- list()
+
+# Get the number of simulations
+num_simulations <- length(simulation_results$all_betas)
+
+# Loop over each threshold
+for (threshold_pve in thresholds) {
+  cat("Processing threshold PVE >", threshold_pve, "\n")
+  
+  # Initialize a list to store recalculated metrics for this threshold
+  recalculated_metrics_list <- list()
+  
+  # Loop over each simulation
+  for (i in 1:num_simulations) {
+    cat("Processing simulation", i, "out of", num_simulations, "\n")
+    
+    # Get the beta vector and residual variance for this simulation
+    beta <- simulation_results$all_betas[[i]]
+    var_epsilon <- simulation_results$all_epsilons[i]
+    
+    # Compute variance explained by each SNP (since Var(X_j) = 1)
+    variance_explained <- beta^2
+    
+    # Compute total genetic variance (assuming SNPs are uncorrelated)
+    var_g <- sum(variance_explained)
+    
+    # Compute total variance (genetic variance + residual variance)
+    total_variance <- var_g + var_epsilon
+    
+    # Compute PVE for each SNP
+    proportion_var_explained <- variance_explained / total_variance
+    
+    # Define causal SNPs based on the current PVE threshold
+    causal_SNPs <- which(proportion_var_explained > threshold_pve)
+    
+    # Initialize a list to store metrics for all methods in this simulation
+    metrics_per_method <- list()
+    
+    # List of method names and their corresponding outputs
+    method_names <- c("SuSiE", "mr.ash", "SuSiE-ash (MLE)", "SuSiE-ash (MoM)", "SuSiE-inf")
+    method_outputs <- list(
+      simulation_results$all_susie_outputs[[i]],
+      simulation_results$all_mrash_outputs[[i]],
+      simulation_results$all_susie_ash_mle_outputs[[i]],
+      simulation_results$all_susie_ash_mom_outputs[[i]],
+      simulation_results$all_susie_inf_outputs[[i]]
+    )
+    
+    # Loop over each method to calculate the metrics
+    for (j in 1:length(method_names)) {
+      method_name <- method_names[j]
+      mod <- method_outputs[[j]]
+      
+      # Handle methods without credible sets (e.g., mr.ash)
+      if (method_name == "mr.ash") {
+        # Since mr.ash does not produce credible sets, we cannot compute CS-based metrics
+        cs_size <- NA
+        coverage <- NA
+        cs_fdr <- NA
+        cs_recall <- NA
+      } else if (method_name == "SuSiE-inf") {
+        # For SuSiE-inf, credible sets are stored differently
+        test_cs <- mod$sets  # Adjust according to how SuSiE-inf stores credible sets
+        if (is.null(test_cs)) test_cs <- list()
+        
+        # Compute metrics using a custom function
+        metrics <- compute_metrics(
+          test_cs = test_cs,
+          causal_SNPs = causal_SNPs
+        )
+        cs_size <- metrics$cs_size
+        coverage <- metrics$coverage
+        cs_fdr <- metrics$cs_fdr
+        cs_recall <- metrics$cs_recall
+      } else {
+        # For SuSiE and SuSiE-ash methods
+        test_cs <- susie_get_cs(mod, X = scaled_X, coverage = 0.95)$cs
+        if (is.null(test_cs)) test_cs <- list()
+        
+        # Compute metrics using a custom function
+        metrics <- compute_metrics(
+          test_cs = test_cs,
+          causal_SNPs = causal_SNPs
+        )
+        cs_size <- metrics$cs_size
+        coverage <- metrics$coverage
+        cs_fdr <- metrics$cs_fdr
+        cs_recall <- metrics$cs_recall
+      }
+      
+      # Store the metrics in a data frame
+      metrics_per_method[[j]] <- data.frame(
+        Threshold = threshold_pve,
+        Model = method_name,
+        CS_FDR = cs_fdr,
+        CS_Recall = cs_recall,
+        CS_Size = cs_size,
+        Coverage = coverage,
+        stringsAsFactors = FALSE
+      )
+    }
+    
+    # Combine metrics for all methods in this simulation
+    metrics_combined <- do.call(rbind, metrics_per_method)
+    rownames(metrics_combined) <- NULL  # Reset row names
+    
+    # Append to the list of recalculated metrics for this threshold
+    recalculated_metrics_list[[i]] <- metrics_combined
+  }
+  
+  # Combine all recalculated metrics for this threshold into one data frame
+  all_metrics_threshold <- do.call(rbind, recalculated_metrics_list)
+  rownames(all_metrics_threshold) <- NULL  # Reset row names
+  
+  # Append the results for this threshold to the overall list
+  all_thresholds_metrics[[as.character(threshold_pve)]] <- all_metrics_threshold
+}
+
+# Combine all thresholds into one data frame
+all_metrics_all_thresholds <- do.call(rbind, all_thresholds_metrics)
+rownames(all_metrics_all_thresholds) <- NULL  # Reset row names
+
+```
+
+```{r}
+# Calculate average metrics for each method and threshold
+avg_metrics_all_thresholds <- aggregate(cbind(CS_FDR, CS_Recall, CS_Size, Coverage) ~ Model + Threshold, 
+                                        data = all_metrics_all_thresholds, 
+                                        FUN = function(x) mean(x, na.rm = TRUE))
+
+# View the recalculated average metrics
+print(avg_metrics_all_thresholds)
+
+
+avg_metrics_all_thresholds %>% 
+  dplyr::filter(Threshold == 0.001)
+```
+
+
+
+
