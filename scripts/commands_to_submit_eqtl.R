@@ -1,10 +1,10 @@
 # Define the parameter grid
 parameter_grid <- expand.grid(
   num_simulations = c(100),
-  h2_total = c(0.1, 0.2, 0.3, 0.4, 0.5),
-  prop_h2_sentinel = c(0.6, 0.7, 0.8),
+  h2_total = c(0.3),
+  prop_h2_sentinel = c(0.7),
   L = c(10),
-  n_oligogenic = c(50, 100, 150),
+  n_oligogenic = c(100),
   stringsAsFactors = FALSE
 )
 

@@ -11,6 +11,17 @@ source("susie_inf.R")
 
 # Annotation Matrix (from S3 Bucket)
 X <- readRDS("X20")
+scaled_X <- scale(X)
+
+# Precompute Summary Statistics (for SuSiE-Inf)
+n <- nrow(scaled_X)
+XtX <- t(scaled_X) %*% scaled_X
+LD <- (XtX)/n # LD Matrix
+
+# Pre-compute eigen value decomposition X'X (for SuSiE-Inf)
+eig <- eigen(LD, symmetric = T)
+V <- (eig$vectors[, ncol(eig$vectors):1]) # pxp matrix of eigenvectors of XtX; use this [,ncol..] to match the python scheme. However, we still have differing signs
+Dsq <- pmax(n * sort(eig$values), 0)
 
 # Generate Data Function
 generate_eqtl_data <- function(X,
@@ -19,9 +30,9 @@ generate_eqtl_data <- function(X,
                                prop_h2_oligogenic = 0.20, # Proportion of h2_total explained by oligogenic effects
                                prop_h2_infinitesimal = 0.15, # Proportion of h2_total explained by infinitesimal effects
                                prop_h2_sentinel = 0.7,    # Proportion of h2_sparse explained by sentinel SNP
-                               n_oligogenic = 100,
-                               mixture_props = c(0.6, 0.3, 0.1), # Adjusted mixture proportions
-                               mixture_sds = c(0.001, 0.005, 0.015), # Number of oligogenic SNPs
+                               n_oligogenic = 20,
+                               mixture_props = c(0.6, 0.4), # Adjusted mixture proportions
+                               mixture_sds = c(0.0025, 0.005), # Number of oligogenic SNPs
                                seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   ori.X <- X
@@ -45,7 +56,8 @@ generate_eqtl_data <- function(X,
   beta[sentinel_index] <- rnorm(1, 0, sqrt(h2_sentinel))
 
   # Other sparse effects (large and mappable)
-  n_other_sparse <- max(1, rpois(1, lambda = 2))  # Ensure at least one other sparse effect
+  #n_other_sparse <- max(1, rpois(1, lambda = 2))  # Ensure at least one other sparse effect
+  n_other_sparse <- 2
   other_sparse_indices <- sample(setdiff(1:n_features, sentinel_index), n_other_sparse)
   if (n_other_sparse > 0) {
     # Distribute h2_other_sparse equally among other sparse SNPs
@@ -55,6 +67,21 @@ generate_eqtl_data <- function(X,
     if (abs(beta[sentinel_index]) <= max_other_sparse_effect) {
       beta[sentinel_index] <- sign(beta[sentinel_index]) * (max_other_sparse_effect + 0.01)
     }
+  }
+
+  # After assigning effect sizes to sparse SNPs
+  # Combined sparse effects
+  sparse_indices <- c(sentinel_index, other_sparse_indices)
+  sparse_effects <- X[, sparse_indices] %*% beta[sparse_indices]
+
+  # Scale sparse effects to achieve desired heritability
+  scaling_factor_sparse <- sqrt(h2_sparse / var(sparse_effects))
+  beta[sparse_indices] <- beta[sparse_indices] * as.vector(scaling_factor_sparse)
+
+  # Ensure the sentinel SNP has the largest effect
+  max_other_sparse_effect <- max(abs(beta[other_sparse_indices]))
+  if (abs(beta[sentinel_index]) <= max_other_sparse_effect) {
+    beta[sentinel_index] <- sign(beta[sentinel_index]) * (max_other_sparse_effect + 0.01)
   }
 
   # Oligogenic effects (adjust mixture proportions and sds)
@@ -132,20 +159,16 @@ generate_eqtl_data <- function(X,
 }
 
 # Usage
-data <- generate_eqtl_data(X = X,
-                           h2_total = 0.3,
-                           prop_h2_sparse = 0.65,
-                           prop_h2_oligogenic = 0.20,
-                           prop_h2_infinitesimal = 0.15,
-                           prop_h2_sentinel = 0.7,
-                           n_oligogenic = 100,
-                           seed = NULL)
-
+# data <- generate_eqtl_data(X = X,
+#                            h2_total = 0.3,
+#                            prop_h2_sparse = 0.65,
+#                            prop_h2_oligogenic = 0.20,
+#                            prop_h2_infinitesimal = 0.15,
+#                            prop_h2_sentinel = 0.7,
+#                            n_oligogenic = 20,
+#                            seed = NULL)
 # Method and Metrics
-method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, sparse = data$sparse_indices, mixture_assignments = data$mixture_assignments, L = 10) {
-
-  #### Set up oligo_indices ####
-  oligo_indices <- which(mixture_assignments == 2 | mixture_assignments == 3)
+method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, sparse = data$sparse_indices, oligo = data$oligogenic_indices, L = 10) {
 
   #### Run various methods ####
   cat("Starting SuSiE\n")
@@ -161,13 +184,22 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, s
   susie_ash_mom_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "mom", true_var_res = NULL)
 
   cat("Starting SuSiE-inf\n")
-  susie_inf_output <- susie_inf(X = scale(X), y = scale(y, center = T, scale = F), L = L, verbose = F, coverage = 0.95)
+  #susie_inf_output <- susie_inf(X = scale(X), y = scale(y, center = T, scale = F), L = L, verbose = F, coverage = 0.95)
+  susie_inf_output <- susie_inf(X = scale(X),
+                                y = scale(y, center = T, scale = F),
+                                L = L,
+                                verbose = F,
+                                coverage = 0.95,
+                                XtX = XtX,
+                                LD = LD,
+                                V = V,
+                                Dsq = Dsq
+                                )
 
-
-  calc_metrics <- function(mod, X = X, y = y, sparse = sparse, mixture_assignments = mixture_assignments){
+  calc_metrics <- function(mod, X = X, y = y, sparse = sparse, oligo = oligo){
     #### Set truth ####
     sparse_causal <- sparse
-    sparse_oligo_causal <- c(sparse, oligo_indices)
+    sparse_oligo_causal <- c(sparse, oligo)
 
 
     #### Initialize values ####
@@ -209,10 +241,10 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, s
     ))
   }
 
-  calc_metrics_ash <- function(mod, X = X, y = y, sparse = sparse, mixture_assignments = mixture_assignments){
+  calc_metrics_ash <- function(mod, X = X, y = y, sparse = sparse, oligo = oligo){
     #### Set up truth ####
     sparse_causal <- sparse
-    sparse_oligo_causal <- c(sparse, oligo_indices)
+    sparse_oligo_causal <- c(sparse, oligo)
 
     #### Calculate RMSE ####
     RMSE_y <- sqrt(mean((y - predict(mod, X))^2))
@@ -227,10 +259,10 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, s
     ))
   }
 
-  calc_metrics_inf <- function(mod, X = X, y = y, sparse = sparse, mixture_assignments = mixture_assignments){
+  calc_metrics_inf <- function(mod, X = X, y = y, sparse = sparse, oligo = oligo){
     #### Set truth ####
     sparse_causal <- sparse
-    sparse_oligo_causal <- c(sparse, oligo_indices)
+    sparse_oligo_causal <- c(sparse, oligo)
 
     #### Initialize values ####
     test.cs <- mod$sets
@@ -273,11 +305,11 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, s
 
   #############
   # Calculate Metrics for each method
-  susie_metrics <- calc_metrics(susie_output, X, y, sparse, mixture_assignments)
-  mrash_metrics <- calc_metrics_ash(mrash_output, X, y, sparse, mixture_assignments)
-  susie_ash_mle_metrics <- calc_metrics(susie_ash_mle_output, X, y, sparse, mixture_assignments)
-  susie_ash_mom_metrics <- calc_metrics(susie_ash_mom_output, X, y, sparse, mixture_assignments)
-  susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, sparse, mixture_assignments)
+  susie_metrics <- calc_metrics(susie_output, X, y, sparse, oligo)
+  mrash_metrics <- calc_metrics_ash(mrash_output, X, y, sparse, oligo)
+  susie_ash_mle_metrics <- calc_metrics(susie_ash_mle_output, X, y, sparse, oligo)
+  susie_ash_mom_metrics <- calc_metrics(susie_ash_mom_output, X, y, sparse, oligo)
+  susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, sparse, oligo)
 
 
 
@@ -323,7 +355,7 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, s
     susie_ash_mom_output = susie_ash_mom_output,
     susie_inf_output = susie_inf_output,
     sparse_indices = sparse,
-    oligogenic_indices = oligo_indices, # only refers to mixture assignments 2 and 3
+    oligogenic_indices = oligo,
     betas = beta)
   )
 }
@@ -337,11 +369,11 @@ simulation <- function(num_simulations = NULL,
                        n_oligogenic = NULL) {
 
   # Parse command-line arguments
-  num_simulations = 2
+  num_simulations = 20
   h2_total = 0.3
   prop_h2_sentinel = 0.7
   L = 10
-  n_oligogenic = 100
+  n_oligogenic = 20
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
     eval(parse(text=arg))
@@ -380,7 +412,7 @@ simulation <- function(num_simulations = NULL,
                                seed = seed)
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, sparse = data$sparse_indices, mixture_assignments = data$mixture_assignments, L = L)
+    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, sparse = data$sparse_indices, oligo = data$oligogenic_indices, L = L)
 
     # Store results
     all_metrics[[i]] <- results$metrics
@@ -407,8 +439,8 @@ simulation <- function(num_simulations = NULL,
   )
 
   # Save simulation results as Rds file
-  output_dir <- "/home/apm2217/output"
-  #output_dir <- "analysis"
+  #output_dir <- "/home/apm2217/output"
+  output_dir <- "analysis"
   simulation_results <- list(
     avg_metrics = avg_metrics,
     all_metrics = all_metrics,
