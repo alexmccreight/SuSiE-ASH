@@ -11,7 +11,9 @@ mem.maxVSize(1024*128)
 
 ```{r}
 # Get results
-simulation_results <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/eqtl-results/numIter100_h2total0.3_h2sentinel0.7_L10_numOligogenic100")
+#simulation_results <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/numIter100_h2total0.3_h2sentinel0.7_L10_numOligogenic100")
+
+simulation_results <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/analysis/numIter20_h2total0.3_h2sentinel0.7_L10_numOligogenic20")
 
 # Read in data
 X = readRDS("/Users/alexmccreight/Columbia/data/X20")
@@ -26,6 +28,8 @@ devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/s
 source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R")
 source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_ash_joint_ELBO_v2.R")
 ```
+
+# Heritability Cut-off based metric (CS-Based FDR, Recall)
 
 ```{r}
 compute_metrics <- function(test_cs, causal_SNPs) {
@@ -194,8 +198,202 @@ print(avg_metrics_all_thresholds)
 
 
 avg_metrics_all_thresholds %>% 
+  dplyr::filter(Threshold == 0.01)
+
+avg_metrics_all_thresholds %>% 
+  dplyr::filter(Threshold == 0.005)
+
+avg_metrics_all_thresholds %>% 
   dplyr::filter(Threshold == 0.001)
+
+avg_metrics_all_thresholds %>% 
+  dplyr::filter(Threshold == 0.0005)
 ```
+
+# SuSiE-Inf PIP-ranking based Recall for top N variants
+
+```{r}
+# Define the list of PVE thresholds to test
+thresholds <- c(0.01, 0.005, 0.001, 0.0005)
+
+# Define the list of N values to test
+N_values <- c(5, 10, 20, 30, 50, 75, 100)
+
+
+# Initialize a list to store Recall metrics for all thresholds and N values
+recall_metrics_all <- list()
+
+# Get the number of simulations
+num_simulations <- length(simulation_results$all_betas)
+
+# Loop over each threshold
+for (threshold_pve in thresholds) {
+  cat("Processing threshold PVE >", threshold_pve, "\n")
+  
+  # Loop over each N value
+  for (N in N_values) {
+    cat("Processing N =", N, "\n")
+    
+    # Initialize a list to store Recall metrics for this threshold and N
+    recall_metrics_list <- list()
+    
+    # Loop over each simulation
+    for (i in 1:num_simulations) {
+      cat("Processing simulation", i, "out of", num_simulations, "\n")
+      
+      # Get the beta vector and residual variance for this simulation
+      beta <- simulation_results$all_betas[[i]]
+      var_epsilon <- simulation_results$all_epsilons[i]
+      
+      # Compute variance explained by each SNP (since Var(X_j) = 1)
+      variance_explained <- beta^2
+      
+      # Compute total genetic variance
+      var_g <- sum(variance_explained)
+      
+      # Compute total variance
+      total_variance <- var_g + var_epsilon
+      
+      # Compute PVE for each SNP
+      proportion_var_explained <- variance_explained / total_variance
+      
+      # Identify simulated large effects based on the current PVE threshold
+      large_effects <- which(proportion_var_explained > threshold_pve)
+      
+      # Initialize a list to store Recall metrics for all methods in this simulation
+      recall_per_method <- list()
+      
+      # List of method names and their corresponding outputs
+      method_names <- c("SuSiE", "SuSiE-ash (MLE)", "SuSiE-ash (MoM)", "SuSiE-inf")
+      method_outputs <- list(
+        simulation_results$all_susie_outputs[[i]],
+        simulation_results$all_susie_ash_mle_outputs[[i]],
+        simulation_results$all_susie_ash_mom_outputs[[i]],
+        simulation_results$all_susie_inf_outputs[[i]]
+      )
+      
+      # PIP extraction function
+      get_pip <- function(mod, method_name) {
+        if (method_name == "SuSiE-inf") {
+          return(mod$PIP2)
+        } else {
+          return(mod$pip)
+        }
+      }
+      
+      # Loop over each method to calculate Recall
+      for (j in 1:length(method_names)) {
+        method_name <- method_names[j]
+        mod <- method_outputs[[j]]
+        
+        # Extract PIP values
+        pip_values <- get_pip(mod, method_name)
+        
+        # Check if PIP values are available
+        if (is.null(pip_values)) {
+          recall <- NA
+        } else {
+          # Rank SNPs by PIP
+          ranked_snps <- order(pip_values, decreasing = TRUE)
+          
+          # Get the top N SNPs (ensure N does not exceed the number of SNPs)
+          N_actual <- min(N, length(pip_values))
+          top_snps <- ranked_snps[1:N_actual]
+          
+          # Compute Recall
+          num_large_effects <- length(large_effects)
+          if (num_large_effects > 0) {
+            num_large_effects_in_top_N <- sum(large_effects %in% top_snps)
+            recall <- num_large_effects_in_top_N / num_large_effects
+          } else {
+            recall <- NA  # No large effects in this simulation for this threshold
+          }
+        }
+        
+        # Store the Recall metric
+        recall_per_method[[j]] <- data.frame(
+          Threshold = threshold_pve,
+          N = N,
+          Simulation = i,
+          Model = method_name,
+          Recall = recall,
+          stringsAsFactors = FALSE
+        )
+      }
+      
+      # Combine Recall metrics for all methods in this simulation
+      recall_combined <- do.call(rbind, recall_per_method)
+      
+      # Append to the list of Recall metrics for this threshold and N
+      recall_metrics_list[[i]] <- recall_combined
+    }
+    
+    # Combine all Recall metrics for this threshold and N into one data frame
+    recall_metrics_N <- do.call(rbind, recall_metrics_list)
+    
+    # Append the results to the overall list
+    recall_metrics_all[[paste0("Threshold_", threshold_pve, "_N_", N)]] <- recall_metrics_N
+  }
+}
+
+# Combine all results into one data frame
+recall_metrics_all_df <- do.call(rbind, recall_metrics_all)
+rownames(recall_metrics_all_df) <- NULL  # Reset row names
+
+# Calculate average Recall for each method, threshold, and N
+avg_recall_metrics <- aggregate(Recall ~ Model + Threshold + N, data = recall_metrics_all_df, FUN = function(x) mean(x, na.rm = TRUE))
+
+# View the average Recall metrics
+print(avg_recall_metrics)
+
+avg_recall_metrics
+
+```
+
+```{r}
+# Load necessary library
+library(ggplot2)
+
+# Assuming avg_recall_metrics is the aggregated dataframe from previous computations
+# It should contain columns: Model, Threshold, N, Recall
+
+# Create a mapping of colors for each method
+method_colors <- c("SuSiE" = "red",
+                   "SuSiE-ash (MLE)" = "blue",
+                   "SuSiE-ash (MoM)" = "green",
+                   "SuSiE-inf" = "purple")
+
+# Get the list of unique thresholds
+thresholds <- unique(avg_recall_metrics$Threshold)
+
+# Loop over each threshold to create individual plots
+for (threshold_pve in thresholds) {
+  # Filter data for the current threshold
+  data_threshold <- subset(avg_recall_metrics, Threshold == threshold_pve)
+  
+  # Create the plot
+  p <- ggplot(data_threshold, aes(x = as.factor(N), y = Recall, color = Model)) +
+    geom_point(position = position_dodge(width = 0.3), size = 2) +
+    scale_color_manual(values = method_colors) +
+    theme_minimal() +
+    labs(title = paste("Recall vs. N at Threshold =", threshold_pve),
+         x = "N (Number of Top SNPs Considered)",
+         y = "Recall") +
+    theme(legend.title = element_blank(),
+          axis.text.x = element_text(size = 10),
+          axis.title = element_text(size = 12),
+          legend.text = element_text(size = 10))
+  
+  # Print or save the plot
+  print(p)
+  
+  # Optionally, save the plot to a file
+  # ggsave(filename = paste0("Recall_vs_N_Threshold_", threshold_pve, ".png"), plot = p, width = 8, height = 6)
+}
+
+```
+
+
 
 
 
