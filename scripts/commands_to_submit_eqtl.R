@@ -4,7 +4,10 @@ parameter_grid <- expand.grid(
   h2_total = c(0.3),
   prop_h2_sentinel = c(0.7),
   L = c(10),
-  n_oligogenic = c(100),
+  n_oligogenic = c(20),
+  v_threshold = c(0.001, 0.0025, 0.005, 0.0075),
+  sample_size = c(1000),
+  pve_threshold = c(0.005),
   stringsAsFactors = FALSE
 )
 
@@ -22,6 +25,9 @@ for (i in 1:nrow(parameter_grid)) {
   prop_h2_sentinel <- params["prop_h2_sentinel"]
   L <- params["L"]
   n_oligogenic <- params["n_oligogenic"]
+  v_threshold <- params["v_threshold"]
+  sample_size <- params["sample_size"]
+  pve_threshold <- params["pve_threshold"]
 
   # Create the command
   command <- paste0("Rscript /home/apm2217/data/eqtl_simulation.R",
@@ -29,7 +35,10 @@ for (i in 1:nrow(parameter_grid)) {
                     " h2_total=", h2_total,
                     " prop_h2_sentinel=", prop_h2_sentinel,
                     " L=", L,
-                    " n_oligogenic=", n_oligogenic)
+                    " n_oligogenic=", n_oligogenic,
+                    " v_threshold=", v_threshold,
+                    " sample_size=", sample_size,
+                    " pve_threshold=", pve_threshold)
 
   # Write the command to the file
   writeLines(command, file_conn)
