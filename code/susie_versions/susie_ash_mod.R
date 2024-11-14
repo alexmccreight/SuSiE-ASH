@@ -1,33 +1,42 @@
 ######### SuSiE-Infinitesimal #########
+# Modified from susie-inf.R
 
-susie_inf_ash <- function(X, y, L,
+susie_ash_mod <- function(X, y, L,
                       est_ssq = TRUE, ssq = NULL, ssq_range = c(0, 1), pi0 = NULL,
                       est_sigmasq = TRUE, est_tausq = TRUE, sigmasq = 1, tausq = 0,
                       method = "moments", sigmasq_range = NULL, tausq_range = NULL,
-                      PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE) {
+                      PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE,
+                      XtX = NULL, LD = NULL, V = NULL, Dsq = NULL, ash_sd = (2^(0.05*(1:20-1)) - 1)^2) {
+
+  mean_y <- mean(y)
 
   # Compute n, z, p
   n <- nrow(X)
   z <- (t(X) %*% y)/sqrt(n)
   p <- length(z)
 
-  # Compute meansq, XtX, LD, V
-  meansq <- sum(y^2)/n # Mean-squared magnitude of y
-  XtX <- t(X) %*% X
-  LD <- (XtX)/n # LD Matrix
+  # Compute mean squared magnitude of y
+  meansq <- sum(y^2)/n
 
-  # Pre-compute eigen value decomposition X'X
-  eig <- eigen(LD, symmetric = T)
-  V <- (eig$vectors[, ncol(eig$vectors):1]) # pxp matrix of eigenvectors of XtX; use this [,ncol..] to match the python scheme. However, we still have differing signs
-  Dsq <- pmax(n * sort(eig$values), 0) # length-p vector of eigen values of XtX; use sort() to go from min to max (same as Python)
+  # Use precomputed XtX if provided
+  if (is.null(XtX)) {
+    XtX <- t(X) %*% X
+  }
 
-  # Pre-compute V,D^2 in the SVD X=UDV'
-  if ((is.null(V) || is.null(Dsq)) && is.null(LD)) {stop("Missing LD")}
-  else if (is.null(V) || is.null(Dsq)) {
-    eigvals <- eigen(LD, symmetric = TRUE, only.values = TRUE)$values # this can be fixed to match above later
-    V <- eigen(LD, symmetric = TRUE, only.vectors = TRUE)$vectors
-    Dsq <- pmax(n * eigvals, 0)}
-  else{Dsq <- pmax(Dsq, 0)}
+  # Use precomputed LD if provided
+  if (is.null(LD)) {
+    LD <- XtX / n
+  }
+
+  # Use precomputed V and Dsq if provided
+  if (is.null(V) || is.null(Dsq)) {
+    eig <- eigen(LD, symmetric = TRUE)
+    V <- eig$vectors[, ncol(eig$vectors):1]
+    Dsq <- pmax(n * sort(eig$values), 0)
+  }
+
+  # Ensure non-negative eigenvalues
+  Dsq <- pmax(Dsq, 0)
 
   # Pre-compute X'y, V'X'y, y'y
   Xty <- sqrt(n) * z # p x 1 matrix
@@ -110,29 +119,46 @@ susie_inf_ash <- function(X, y, L,
 
     } # Single Effect Regression Loop
 
-    # Update variance components
-    if (est_sigmasq || est_tausq) {
-      if (method == "moments") {
-        moments_result <- MoM(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
-                              est_sigmasq, est_tausq, verbose)
-        sigmasq <- moments_result$sigmasq
-        tausq <- moments_result$tausq
-      } else if (method == "MLE") {
-        mle_result <- MLE(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, yty,
-                          est_sigmasq, est_tausq, sigmasq_range, tausq_range, it, verbose)
-        sigmasq <- mle_result$sigmasq
-        tausq <- mle_result$tausq
-      } else {
-        stop("Unsupported variance estimation method")
-      }
 
+    ## Update variance estimation:
+    bhat <- apply(mu*PIP, 1, sum)
+    y_residuals <- y - X %*% bhat
+    #est.sa2 = init_prior_sd(X, y_residuals, n = 30); est.sa2 ## changed: X ->scaled (X) #center = T, scale = F (default)
+    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 =ash_sd, intercept = F, standardize = F) #CHECK!!! Initial value for theta?
+    mrash_post_output <- get.full.posterior(mrash_output)
+    mrash.s2 <- mrash_post_output$s2; mrash.mean <- mrash_post_output$m; mrash.phi <-mrash_post_output$phi # p * K
+    # mr.ash posterior values check:
+    # plot(mrash_output$pi, apply(mrash.phi,2,mean)); abline(0,1,col="red"); cbind(mrash_output$pi, apply(mrash.phi,2,mean))
+    # plot(mrash_output$beta, apply(mrash.phi*mrash.mean,1,sum)); abline(0,1,col="red"); head(cbind(mrash_output$beta, apply(mrash.phi*mrash.mean,1,sum)))
+
+    #Update variance componenets from mrash
+    sigmasq <- mrash_output$sigma2
+    tausq <- sum(ash_sd*mrash_output$pi)
+
+
+    # # # Update variance components
+    # if (est_sigmasq || est_tausq) {
+    #   if (method == "moments") {
+    #     moments_result <- MoM(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, Xty, yty,
+    #                           est_sigmasq, est_tausq, verbose)
+    #     sigmasq <- moments_result$sigmasq
+    #     tausq <- moments_result$tausq
+    #   } else if (method == "MLE") {
+    #     mle_result <- MLE(PIP, mu, omega, sigmasq, tausq, n, V, Dsq, VtXty, yty,
+    #                       est_sigmasq, est_tausq, sigmasq_range, tausq_range, it, verbose)
+    #     sigmasq <- mle_result$sigmasq
+    #     tausq <- mle_result$tausq
+    #   } else {
+    #     stop("Unsupported variance estimation method")
+    #   }
+    #
       # Update X'OmegaX, X'Omegay
       var <- tausq * Dsq + sigmasq
       diagXtOmegaX <- rowSums(sweep(V^2, 2, Dsq / var, `*`)) # equation 19
       XtOmegay <- V %*% (VtXty / var) # equation 21 but multiply both sides by y
-    }
+    # }
 
-    # Convergence based from PIP differences
+    # Convergence# Convergence# Convergence based from PIP differences
     PIP_diff <- max(abs(PIP_prev - PIP))
     if (verbose) {
       cat(sprintf("Maximum change in PIP: %f\n", PIP_diff))
@@ -149,16 +175,8 @@ susie_inf_ash <- function(X, y, L,
   b <- rowSums(mu * PIP) # posterior mean of the sparse effect for SNP j not conditional on inclusion
   XtOmegaXb <- V %*% ((t(V) %*% b) * Dsq / var)
   XtOmegar <- XtOmegay - XtOmegaXb # X'Omega(y - Xb)
-
-  residuals <- y - X %*% b
-
-  mr.ash.fit <- mr.ash.alpha::mr.ash(X = X,
-                                     y = residuals,
-                                     intercept = F,
-                                     standardize = F,
-                                     sa2 = nrow(X) * (2^((0:19)/20) - 1)^2)
-  alpha <- mr.ash.fit$beta
-  #alpha <- tausq * XtOmegar # Equation 27
+  # alpha <- tausq * XtOmegar # Equation 27
+  alpha <- mrash_output$beta
 
   # Compute Combined PIPs
   PIP2 <- 1 - apply(1-PIP, 1, prod) # PIP for each snp
@@ -166,8 +184,10 @@ susie_inf_ash <- function(X, y, L,
   # Compute Credible Sets
   cred <- susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
 
-  # Compute fitted values. TODO: add scenarios with intercept
-  fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
+  # Compute fitted values.
+  #fitted <- X %*% (rowSums(PIP2 * mu) + alpha)
+
+  fitted <- mean_y + X %*% (rowSums(PIP2 * mu) + alpha) # reintroduce the mean_y for fitted values because input y is already centered.
 
 
   return(list(
@@ -182,7 +202,12 @@ susie_inf_ash <- function(X, y, L,
     tausq = tausq,
     alpha = alpha,
     fitted = fitted,
-    sets = cred
+    sets = cred,
+    mrash.s2 = mrash_post_output$s2,
+    mrash.mean = mrash_post_output$m,
+    mrash.phi = mrash_post_output$phi, # p * K
+    mrash.pi = mrash_output$pi,
+    mrash.sa2 = mrash_output$data$sa2
   ))
 
 }
@@ -296,4 +321,10 @@ susie_inf_get_cs = function(PIP, coverage = coverage, purity = 0.5, LD = NULL, V
   }
 
   return(cred)
+}
+
+init_prior_sd <- function(X, y, n = 30) {
+  res <- univariate_regression(X, y)
+  smax <- 3 * max(res$betahat)
+  seq(0, smax, length.out = n)
 }

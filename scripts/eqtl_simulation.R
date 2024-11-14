@@ -172,7 +172,9 @@ is_causal <- function(eqtl_data, pve_threshold){
 }
 
 # Method and Metrics
-method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, causal = data$causal, L = 10, v_threshold = v_threshold, precomputed_matrices = precomputed_matrices) {
+method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, causal = data$causal, L = 10, v_threshold = v_threshold, precomputed_matrices = precomputed_matrices, seed) {
+
+  set.seed(seed)
 
   XtX <- precomputed_matrices$XtX
   LD <- precomputed_matrices$LD
@@ -181,16 +183,16 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, c
 
   #### Run various methods ####
   cat("Starting SuSiE\n")
-  susie_output <- susie(X = X, y = y, L = L, intercept = T, standardize = T)
+  susie_output <- susie(X = X, y = y, L = L, intercept = T, standardize = T, track_fit = T)
 
   cat("Starting mr.ash\n")
   mrash_output <- mr.ash(X = X, y = y, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = T, standardize = T)
 
   cat("Starting SuSiE-ash (MLE)\n")
-  susie_ash_mle_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "cal_v", true_var_res = NULL, v_threshold = v_threshold)
+  susie_ash_mle_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "cal_v", true_var_res = NULL, v_threshold = v_threshold, track_fit = T)
 
   cat("Starting SuSiE-ash (MoM)\n")
-  susie_ash_mom_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "mom", true_var_res = NULL, v_threshold = v_threshold)
+  susie_ash_mom_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "mom", true_var_res = NULL, v_threshold = v_threshold, track_fit = T)
 
   cat("Starting SuSiE-inf\n")
   #susie_inf_output <- susie_inf(X = scale(X), y = scale(y, center = T, scale = F), L = L, verbose = F, coverage = 0.95)
@@ -367,7 +369,7 @@ simulation <- function(num_simulations = NULL,
                        L = NULL,
                        n_oligogenic = NULL,
                        v_threshold = NULL,
-                       sample_size = NULL,
+                      # sample_size = NULL,
                        pve_threshold = NULL) {
 
   # Parse command-line arguments
@@ -376,8 +378,8 @@ simulation <- function(num_simulations = NULL,
   prop_h2_sentinel = 0.7
   L = 10
   n_oligogenic = 20
-  v_threshold = 0.04
-  sample_size = 1000
+  v_threshold = 0.005
+  #sample_size = 1000
   pve_threshold = 0.005
 
   for (arg in commandArgs(trailingOnly = TRUE)) {
@@ -385,16 +387,16 @@ simulation <- function(num_simulations = NULL,
   }
 
   # If sample_size is not provided, default to the number of rows in X_full
-  if (is.null(sample_size)) {
-    sample_size <- nrow(X_full)
-  }
-
-  # Sample n rows from X_full without replacement
-  if (sample_size > nrow(X_full)) {
-   stop("n cannot be greater than the number of rows in X_full")
-  }
-  sample_indices <- sample(1:nrow(X_full), sample_size, replace = FALSE)
-  X_sampled <- X_full[sample_indices, ]
+  # if (is.null(sample_size)) {
+  #   sample_size <- nrow(X_full)
+  # }
+  #
+  # # Sample n rows from X_full without replacement
+  # if (sample_size > nrow(X_full)) {
+  #  stop("n cannot be greater than the number of rows in X_full")
+  # }
+  # sample_indices <- sample(1:nrow(X_full), sample_size, replace = FALSE)
+  # X_sampled <- X_full[sample_indices, ]
 
   # Precompute values for susie-inf
   scaled_X_sampled <- scale(X_sampled)
@@ -447,7 +449,7 @@ simulation <- function(num_simulations = NULL,
 
 
     # Run methods and calculate metrics
-    results <- method_and_score(X = data$X, y = data$y, beta = data$beta, causal = data$causal, L = L, v_threshold = v_threshold, precomputed_matrices = precomputed_matrices)
+    results <- method_and_score(X = data$ori.X, y = data$ori.y, beta = data$beta, causal = data$causal, L = L, v_threshold = v_threshold, precomputed_matrices = precomputed_matrices, seed = seed)
 
     # Store results
     all_metrics[[i]] <- results$metrics
@@ -495,7 +497,7 @@ simulation <- function(num_simulations = NULL,
                       "_L", L,
                       "_numOligogenic", n_oligogenic,
                       "_vthreshold", v_threshold,
-                      "_samplesize", sample_size,
+                    #  "_samplesize", sample_size,
                       "_pvethreshold", pve_threshold)
 
   saveRDS(simulation_results, file.path(output_dir, file_name))
@@ -511,5 +513,5 @@ simulation_results <- simulation(num_simulations = NULL,
                                  L = NULL,
                                  n_oligogenic = NULL,
                                  v_threshold = NULL,
-                                 sample_size = NULL,
+                               #  sample_size = NULL,
                                  pve_threshold = NULL)
