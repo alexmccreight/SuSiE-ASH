@@ -26,10 +26,28 @@ process_ld_block <- function(ld_block_name) {
     stop("One or more PLINK files for ", ld_block_name, " are missing.")
   }
 
+  # Create a temporary directory for processing
+  temp_dir <- tempfile(pattern = "temp_ld_block_")
+  dir.create(temp_dir)
+
+  # Copy PLINK files to temporary directory
+  file.copy(bedfile, temp_dir)
+  file.copy(bimfile, temp_dir)
+  file.copy(famfile, temp_dir)
+
+  # Define paths to copied files
+  temp_bedfile <- file.path(temp_dir, basename(bedfile))
+  temp_bimfile <- file.path(temp_dir, basename(bimfile))
+  temp_famfile <- file.path(temp_dir, basename(famfile))
+
   # Read PLINK files using bigsnpr
-  temp_rdsfile <- tempfile(fileext = ".rds")
-  snp_readBed(bedfile, backingfile = temp_rdsfile)
-  obj.bigSNP <- snp_attach(temp_rdsfile)
+  backingfile <- file.path(temp_dir, paste0(ld_block_name, "_bk"))
+
+  # Convert PLINK files to bigSNP format (creates .rds and .bk files)
+  snp_readBed(temp_bedfile, backingfile = backingfile)
+
+  # Attach the bigSNP object
+  obj.bigSNP <- snp_attach(paste0(backingfile, ".rds"))
   G <- obj.bigSNP$genotypes
   sample_ids <- obj.bigSNP$fam$sample.ID
   variant_ids <- obj.bigSNP$map$marker.ID
@@ -68,7 +86,7 @@ process_ld_block <- function(ld_block_name) {
   message("Saved processed data to ", output_file)
 
   # Clean up temporary files
-  file.remove(temp_rdsfile)
+  unlink(temp_dir, recursive = TRUE)
 
   message("Completed processing for ", ld_block_name)
 }

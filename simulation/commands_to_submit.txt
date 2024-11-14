@@ -1,45 +1,10 @@
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.6 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.7 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.8 L=10 n_oligogenic=50
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.6 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.7 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.8 L=10 n_oligogenic=100
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.6 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.7 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.1 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.2 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.4 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
-Rscript /home/apm2217/data/eqtl_simulation.R num_simulations=100 h2_total=0.5 prop_h2_sentinel=0.8 L=10 n_oligogenic=150
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.5 p=4
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.6 p=4
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.7 p=4
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.8 p=4
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.9 p=4
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.5 p=5
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.6 p=5
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.7 p=5
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.8 p=5
+Rscript /home/apm2217/data/eqtl_ash_mod.R num_simulations=100 h2_total=0.3 prop_h2_sentinel=0.7 L=10 n_oligogenic=20 v_threshold=0.005 pve_threshold=0.005 u=0.9 p=5

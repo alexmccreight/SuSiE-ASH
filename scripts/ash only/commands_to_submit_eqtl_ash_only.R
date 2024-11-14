@@ -7,6 +7,8 @@ parameter_grid <- expand.grid(
   n_oligogenic = c(20),
   v_threshold = c(0.005),
   pve_threshold = c(0.005),
+  u = c(0.2, 0.3, 0.4),
+  p = c(3,4,5,6),
   stringsAsFactors = FALSE
 )
 
@@ -26,16 +28,20 @@ for (i in 1:nrow(parameter_grid)) {
   n_oligogenic <- params["n_oligogenic"]
   v_threshold <- params["v_threshold"]
   pve_threshold <- params["pve_threshold"]
+  u <- params["u"]
+  p <- params["p"]
 
   # Create the command
-  command <- paste0("Rscript /home/apm2217/data/eqtl_simulation.R",
+  command <- paste0("Rscript /home/apm2217/data/eqtl_simulation_ash_only.R",
                     " num_simulations=", num_simulations,
                     " h2_total=", h2_total,
                     " prop_h2_sentinel=", prop_h2_sentinel,
                     " L=", L,
                     " n_oligogenic=", n_oligogenic,
                     " v_threshold=", v_threshold,
-                    " pve_threshold=", pve_threshold)
+                    " pve_threshold=", pve_threshold,
+                    " u=", u,
+                    " p=", p)
 
   # Write the command to the file
   writeLines(command, file_conn)

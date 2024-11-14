@@ -28,7 +28,7 @@ for (i in 1:nrow(parameter_grid)) {
   pve_threshold <- params["pve_threshold"]
 
   # Create the command
-  command <- paste0("Rscript /home/apm2217/data/eqtl_simulation.R",
+  command <- paste0("Rscript /home/apm2217/data/eqtl_susie_ash_inf.R",
                     " num_simulations=", num_simulations,
                     " h2_total=", h2_total,
                     " prop_h2_sentinel=", prop_h2_sentinel,

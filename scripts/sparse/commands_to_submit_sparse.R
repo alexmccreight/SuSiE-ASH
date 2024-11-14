@@ -2,11 +2,10 @@
 parameter_grid <- expand.grid(
   num_simulations = c(100),
   h2_total = c(0.3),
-  prop_h2_sentinel = c(0.7),
-  L = c(10),
-  n_oligogenic = c(20),
-  v_threshold = c(0.005),
-  pve_threshold = c(0.005),
+  K = c(10),
+  L = c(20),
+  v_threshold = c(0.0025, 0.005),
+  sample_size = c(5000),
   stringsAsFactors = FALSE
 )
 
@@ -21,21 +20,19 @@ for (i in 1:nrow(parameter_grid)) {
   # Extract parameter values
   num_simulations <- params["num_simulations"]
   h2_total <- params["h2_total"]
-  prop_h2_sentinel <- params["prop_h2_sentinel"]
+  K <- params["K"]
   L <- params["L"]
-  n_oligogenic <- params["n_oligogenic"]
   v_threshold <- params["v_threshold"]
-  pve_threshold <- params["pve_threshold"]
+  sample_size <- params["sample_size"]
 
   # Create the command
-  command <- paste0("Rscript /home/apm2217/data/eqtl_simulation.R",
+  command <- paste0("Rscript /home/apm2217/data/sparse_eqtl_simulation.R",
                     " num_simulations=", num_simulations,
                     " h2_total=", h2_total,
-                    " prop_h2_sentinel=", prop_h2_sentinel,
+                    " K=", K,
                     " L=", L,
-                    " n_oligogenic=", n_oligogenic,
                     " v_threshold=", v_threshold,
-                    " pve_threshold=", pve_threshold)
+                    " sample_size=", sample_size)
 
   # Write the command to the file
   writeLines(command, file_conn)

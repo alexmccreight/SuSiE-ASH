@@ -3,17 +3,30 @@ data_path <- "/home/apm2217/data/"
 
 # Libraries
 library(susieR)
-library(mr.ash.alpha)
 library(dplyr)
+library(mr.ash.alpha)
 library(magrittr)
-source("susie_ash_joint_ELBO_v3.R")
-source("susie_inf.R")
+source("susie_ash_joint_ELBO_v4.R")
+# Note: Removed 'mr.ash.alpha' and 'susie_inf.R' as they are no longer needed
 
 # Annotation Matrix (from S3 Bucket)
 X_full <- readRDS("X20")
-all_seeds <- sample(1:1e9, 100, replace = FALSE)
+#all_seeds <- sample(1:1e9, 100, replace = FALSE)
+# Set simulation
+all_seeds <- c(
+  643222872, 642370445, 980619597, 592742195, 812940569, 874493715, 283685745, 272970643, 141777831, 966547239,
+  336635874,  87934614, 218490824, 828480440, 160984108, 138238651, 393276358, 261576669, 857535310, 786529725,
+  53585008, 670486776, 687961954, 214522377, 564120958,  64094188, 610307235, 289130629, 179824304, 115034695,
+  706509872, 250609098,  40608125, 834773543, 895149010, 625671285, 804197336, 410647268, 953414311, 188486097,
+  138702256, 980597446, 651248859, 284882193, 949728722, 135086103, 282482480, 655007900, 911828052,  34534519,
+  734510236, 395523674, 283749441, 747995237, 738276315, 792296938, 864040833, 214341810, 562898550, 546636977,
+  389332802, 889281319, 985937258, 756423001, 834950196, 491958827, 586230129, 118288578, 370853254, 474254047,
+  318475291, 498923779, 597127078, 175922978, 267345675, 745538518, 981681389, 254303966, 824205461, 655357804,
+  388218441, 882713019, 343395511, 325928029, 498971931, 373901722, 630480032, 982936899, 878924985, 203400282,
+  409586743,  22441724, 235542027, 284456998, 376685291, 424044515, 832585303, 634070142, 569987153,  56124815
+)
 
-# Generate Data Function
+# Generate Data Function (unchanged)
 generate_eqtl_data <- function(X,
                                h2_total = 0.3,            # Total heritability
                                prop_h2_sparse = 0.65,     # Proportion of h2_total explained by sparse effects (including sentinel)
@@ -171,43 +184,46 @@ is_causal <- function(eqtl_data, pve_threshold){
   return(causal = causal_SNPs)
 }
 
-# Method and Metrics
-method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, causal = data$causal, L = 10, v_threshold = v_threshold, precomputed_matrices = precomputed_matrices, seed) {
+# Method and Metrics Function (adjusted)
+method_and_score <- function(X, y, beta, causal, L, v_threshold, seed, u, p) {
 
   set.seed(seed)
 
-  XtX <- precomputed_matrices$XtX
-  LD <- precomputed_matrices$LD
-  V <- precomputed_matrices$V
-  Dsq <- precomputed_matrices$Dsq
-
-  #### Run various methods ####
-  cat("Starting SuSiE\n")
-  susie_output <- susie(X = X, y = y, L = L, intercept = T, standardize = T, track_fit = T)
-
-  cat("Starting mr.ash\n")
-  mrash_output <- mr.ash(X = X, y = y, sa2 = nrow(X) * (2^((0:19)/20) - 1)^2, intercept = T, standardize = T)
-
+  #### Run SuSiE-ash methods ####
   cat("Starting SuSiE-ash (MLE)\n")
-  susie_ash_mle_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "cal_v", true_var_res = NULL, v_threshold = v_threshold, track_fit = T)
+  ash_sd_values <- u * (seq(0, 1, length.out = 30))^p  # Calculate ash_sd
+
+  susie_ash_mle_output <- susie_ash_mod(
+    X = X,
+    y = y,
+    L = L,
+    tol = 0.001,
+    intercept = TRUE,
+    standardize = TRUE,
+    est_var = "cal_v",
+    true_var_res = NULL,
+    v_threshold = v_threshold,
+    track_fit = TRUE,
+    ash_sd = ash_sd_values  # Use calculated ash_sd
+  )
 
   cat("Starting SuSiE-ash (MoM)\n")
-  susie_ash_mom_output <- susie_ash(X = X, y = y, L = L, tol = 0.001, intercept = T, standardize = T, est_var = "mom", true_var_res = NULL, v_threshold = v_threshold, track_fit = T)
+  susie_ash_mom_output <- susie_ash_mod(
+    X = X,
+    y = y,
+    L = L,
+    tol = 0.001,
+    intercept = TRUE,
+    standardize = TRUE,
+    est_var = "mom",
+    true_var_res = NULL,
+    v_threshold = v_threshold,
+    track_fit = TRUE,
+    ash_sd = ash_sd_values  # Use calculated ash_sd
+  )
 
-  cat("Starting SuSiE-inf\n")
-  #susie_inf_output <- susie_inf(X = scale(X), y = scale(y, center = T, scale = F), L = L, verbose = F, coverage = 0.95)
-  susie_inf_output <- susie_inf(X = scale(X),
-                                y = scale(y, center = T, scale = F),
-                                L = L,
-                                verbose = F,
-                                coverage = 0.95,
-                                XtX = XtX,
-                                LD = LD,
-                                V = V,
-                                Dsq = Dsq
-                                )
-
-  calc_metrics <- function(mod, X = X, y = y, causal = causal){
+  # Calculation of metrics for SuSiE-ash methods
+  calc_metrics <- function(mod, X, y, causal) {
     #### Initialize values ####
     test.cs <- susie_get_cs(mod, X = X, coverage = 0.95)$cs
     coverage <- 0
@@ -215,23 +231,25 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, c
     cs_recall <- 0
     cs_size <- 0
 
-    if(length(test.cs) > 0){
+    if (length(test.cs) > 0) {
       # Calculate Average CS Size
       cs_size <- length(unlist(test.cs)) / length(test.cs)
 
       # Calculate Coverage (proportion of credible sets with a causal effect)
-      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(test.cs))
+      coverage <- (lapply(1:length(test.cs), function(cs.l) {
+        ifelse(sum(causal %in% test.cs[[cs.l]]) != 0, TRUE, FALSE)
+      }) %>% unlist(.) %>% sum(.)) / (length(test.cs))
 
       # CS Based FDR
-      TP_fdr = lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
-      FP_fdr = length(test.cs) - TP_fdr
-      FN_fdr = length(causal) - sum(causal %in% unlist(test.cs))
-      cs_fdr = FP_fdr/(TP_fdr+FP_fdr)
+      TP_fdr <- lapply(1:length(test.cs), function(cs.l) {
+        ifelse(sum(test.cs[[cs.l]] %in% causal) != 0, TRUE, FALSE)
+      }) %>% unlist(.) %>% sum(.)
+      FP_fdr <- length(test.cs) - TP_fdr
+      cs_fdr <- FP_fdr / (TP_fdr + FP_fdr)
 
       # CS Based Recall
-      TP_recall = sum(causal %in% unlist(test.cs))
-      FN_recall = length(causal) - TP_recall
-      cs_recall = TP_recall/(TP_recall+FN_recall)
+      TP_recall <- sum(causal %in% unlist(test.cs))
+      cs_recall <- TP_recall / length(causal)
     }
 
     #### Calculate RMSE ####
@@ -247,169 +265,63 @@ method_and_score <- function(X = data$ori.X, y = data$ori.y, beta = data$beta, c
     ))
   }
 
-  calc_metrics_ash <- function(mod, X = X, y = y, causal = causal){
-    #### Set up truth ####
-    causal <- causal
-
-    #### Calculate RMSE ####
-    RMSE_y <- sqrt(mean((y - predict(mod, X))^2))
-
-    #### Store Results ####
-    return(list(
-      RMSE_y = RMSE_y,
-      cs_size = NA,
-      coverage = NA,
-      cs_fdr = NA,
-      cs_recall = NA
-    ))
-  }
-
-  calc_metrics_inf <- function(mod, X = X, y = y, causal = causal){
-
-    #### Initialize values ####
-    test.cs <- mod$sets
-    coverage <- 0
-    cs_fdr <- 0
-    cs_recall <- 0
-    cs_size <- 0
-
-    if(length(test.cs) > 0){
-      # Calculate Average CS Size
-      cs_size <- length(unlist(test.cs)) / length(test.cs)
-
-      # Calculate Coverage (proportion of credible sets with a causal effect)
-      coverage <- (lapply(1:length(test.cs), function(cs.l){ ifelse(sum(causal %in% test.cs[[cs.l]]) != 0, T, F)}) %>% unlist(.) %>% sum(.)) / (length(test.cs))
-
-      # CS Based FDR
-      TP_fdr = lapply(1:length(test.cs), function(cs.l){ ifelse(sum(test.cs[[cs.l]] %in% causal)!=0,T,F)}) %>% unlist(.) %>% sum(.)
-      FP_fdr = length(test.cs) - TP_fdr
-      FN_fdr = length(causal) - sum(causal %in% unlist(test.cs))
-      cs_fdr = FP_fdr/(TP_fdr+FP_fdr)
-
-      # CS Based Recall
-      TP_recall = sum(causal %in% unlist(test.cs))
-      FN_recall = length(causal) - TP_recall
-      cs_recall = TP_recall/(TP_recall+FN_recall)
-    }
-
-    #### Calculate RMSE ####
-    RMSE_y <- sqrt(mean((y - mod$fitted)^2))
-
-    #### Store Results ####
-    return(list(
-      RMSE_y = RMSE_y,
-      cs_size = cs_size,
-      coverage = coverage,
-      cs_fdr = cs_fdr,
-      cs_recall = cs_recall
-    ))
-  }
-
-  #############
   # Calculate Metrics for each method
-  susie_metrics <- calc_metrics(susie_output, X, y, causal)
-  mrash_metrics <- calc_metrics_ash(mrash_output, X, y, causal)
   susie_ash_mle_metrics <- calc_metrics(susie_ash_mle_output, X, y, causal)
   susie_ash_mom_metrics <- calc_metrics(susie_ash_mom_output, X, y, causal)
-  susie_inf_metrics <- calc_metrics_inf(susie_inf_output, X, y, causal)
 
-
-
-  #Create a data frame with the results
-  metrics_table  <- data.frame(
-    Model = c("SuSiE",
-              "mr.ash",
-              "SuSiE-ash (MLE)",
-              "SuSiE-ash (MoM)",
-              "SuSiE-inf"),
-    RMSE_y = c(susie_metrics$RMSE_y,
-               mrash_metrics$RMSE_y,
-               susie_ash_mle_metrics$RMSE_y,
-               susie_ash_mom_metrics$RMSE_y,
-               susie_inf_metrics$RMSE_y),
-    CS_FDR = c(susie_metrics$cs_fdr,
-               mrash_metrics$cs_fdr,
-               susie_ash_mle_metrics$cs_fdr,
-               susie_ash_mom_metrics$cs_fdr,
-               susie_inf_metrics$cs_fdr),
-    CS_Recall = c(susie_metrics$cs_recall,
-                  mrash_metrics$cs_recall,
-                  susie_ash_mle_metrics$cs_recall,
-                  susie_ash_mom_metrics$cs_recall,
-                  susie_inf_metrics$cs_recall),
-    CS_Size = c(susie_metrics$cs_size,
-                mrash_metrics$cs_size,
-                susie_ash_mle_metrics$cs_size,
-                susie_ash_mom_metrics$cs_size,
-                susie_inf_metrics$cs_size),
-    Coverage = c(susie_metrics$coverage,
-                 mrash_metrics$coverage,
-                 susie_ash_mle_metrics$coverage,
-                 susie_ash_mom_metrics$coverage,
-                 susie_inf_metrics$coverage)
+  # Create a data frame with the results
+  metrics_table <- data.frame(
+    Model = c("SuSiE-ash (MLE)", "SuSiE-ash (MoM)"),
+    RMSE_y = c(susie_ash_mle_metrics$RMSE_y, susie_ash_mom_metrics$RMSE_y),
+    CS_FDR = c(susie_ash_mle_metrics$cs_fdr, susie_ash_mom_metrics$cs_fdr),
+    CS_Recall = c(susie_ash_mle_metrics$cs_recall, susie_ash_mom_metrics$cs_recall),
+    CS_Size = c(susie_ash_mle_metrics$cs_size, susie_ash_mom_metrics$cs_size),
+    Coverage = c(susie_ash_mle_metrics$coverage, susie_ash_mom_metrics$coverage)
   )
-  # Return the results table
+
+  # Return the results
   return(list(
     metrics = metrics_table,
-    susie_output = susie_output,
-    mrash_output = mrash_output,
     susie_ash_mle_output = susie_ash_mle_output,
     susie_ash_mom_output = susie_ash_mom_output,
-    susie_inf_output = susie_inf_output,
     causal = causal,
-    betas = beta)
-  )
+    betas = beta
+  ))
 }
 
-
-# Simulation Function
+# Simulation Function (adjusted)
 simulation <- function(num_simulations = NULL,
                        h2_total = NULL,
                        prop_h2_sentinel = NULL,
                        L = NULL,
                        n_oligogenic = NULL,
                        v_threshold = NULL,
-                       pve_threshold = NULL) {
+                       pve_threshold = NULL,
+                       u = NULL,
+                       p = NULL) {
+
+  # Set default parameter values
+  num_simulations <- 2
+  h2_total <- 0.3
+  prop_h2_sentinel <- 0.7
+  L <- 10
+  n_oligogenic <- 20
+  v_threshold <- 0.005
+  pve_threshold <- 0.005
+  u <- 1  # Default value for u
+  p <- 1  # Default value for p
 
   # Parse command-line arguments
-  num_simulations = 2
-  h2_total = 0.3
-  prop_h2_sentinel = 0.7
-  L = 10
-  n_oligogenic = 20
-  v_threshold = 0.005
-  pve_threshold = 0.005
-
   for (arg in commandArgs(trailingOnly = TRUE)) {
-    eval(parse(text=arg))
+    eval(parse(text = arg))
   }
-
-  # Precompute values for susie-inf
-  scaled_X_full <- scale(X_full)
-  n_samples <- nrow(scaled_X_full)
-  XtX <- t(scaled_X_full) %*% scaled_X_full
-  LD <- XtX / n_samples
-  eig <- eigen(LD, symmetric = TRUE)
-  V <- (eig$vectors[, ncol(eig$vectors):1])  # pxp matrix of eigenvectors of XtX
-  Dsq <- pmax(n_samples * sort(eig$values), 0)
-
-  # Store precomputed matrices
-  precomputed_matrices <- list(
-    XtX = XtX,
-    LD = LD,
-    V = V,
-    Dsq = Dsq
-  )
 
   # Initialize lists to store results
   all_metrics <- list()
   all_betas <- list()
   all_causal_indices <- list()
-  all_susie_outputs <- list()
-  all_mrash_outputs <- list()
   all_susie_ash_mle_outputs <- list()
   all_susie_ash_mom_outputs <- list()
-  all_susie_inf_outputs <- list()
   all_epsilons <- numeric(num_simulations)
 
   for (i in 1:num_simulations) {
@@ -419,32 +331,40 @@ simulation <- function(num_simulations = NULL,
     seed <- all_seeds[i]
 
     # Generate data
-    data <- generate_eqtl_data(X_full,
-                               h2_total = h2_total,       # Total heritability
-                               prop_h2_sparse = 0.65,     # Proportion of h2_total explained by sparse effects (including sentinel)
-                               prop_h2_oligogenic = 0.20, # Proportion of h2_total explained by oligogenic effects
-                               prop_h2_infinitesimal = 0.15, # Proportion of h2_total explained by infinitesimal effects
-                               prop_h2_sentinel = prop_h2_sentinel,    # Proportion of h2_sparse explained by sentinel SNP
-                               n_oligogenic = n_oligogenic,
-                               mixture_props = c(0.6, 0.4), # Adjusted mixture proportions
-                               mixture_sds = c(0.0025, 0.005), # Standard deviations for mixture components
-                               seed = seed)
+    data <- generate_eqtl_data(
+      X_full,
+      h2_total = h2_total,
+      prop_h2_sparse = 0.65,
+      prop_h2_oligogenic = 0.20,
+      prop_h2_infinitesimal = 0.15,
+      prop_h2_sentinel = prop_h2_sentinel,
+      n_oligogenic = n_oligogenic,
+      mixture_props = c(0.6, 0.4),
+      mixture_sds = c(0.0025, 0.005),
+      seed = seed
+    )
 
     data$causal <- is_causal(data, pve_threshold)
 
-
     # Run methods and calculate metrics
-    results <- method_and_score(X = data$ori.X, y = data$ori.y, beta = data$beta, causal = data$causal, L = L, v_threshold = v_threshold, precomputed_matrices = precomputed_matrices, seed = seed)
+    results <- method_and_score(
+      X = data$ori.X,
+      y = data$ori.y,
+      beta = data$beta,
+      causal = data$causal,
+      L = L,
+      v_threshold = v_threshold,
+      seed = seed,
+      u = u,
+      p = p
+    )
 
     # Store results
     all_metrics[[i]] <- results$metrics
-    all_betas[[i]] <- results$beta
+    all_betas[[i]] <- results$betas
     all_causal_indices[[i]] <- results$causal
-    all_susie_outputs[[i]] <- results$susie_output
-    all_mrash_outputs[[i]] <- results$mrash_output
     all_susie_ash_mle_outputs[[i]] <- results$susie_ash_mle_output
     all_susie_ash_mom_outputs[[i]] <- results$susie_ash_mom_output
-    all_susie_inf_outputs[[i]] <- results$susie_inf_output
     all_seeds[i] <- seed
     all_epsilons[i] <- data$var_epsilon
   }
@@ -459,7 +379,7 @@ simulation <- function(num_simulations = NULL,
     Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
   )
 
-  # Save simulation results as Rds file
+  # Save simulation results as RDS file
   output_dir <- "/home/apm2217/output"
   #output_dir <- "analysis"
   simulation_results <- list(
@@ -467,22 +387,23 @@ simulation <- function(num_simulations = NULL,
     all_metrics = all_metrics,
     all_betas = all_betas,
     all_causal_indices = all_causal_indices,
-    all_susie_outputs = all_susie_outputs,
-    all_mrash_outputs = all_mrash_outputs,
     all_susie_ash_mle_outputs = all_susie_ash_mle_outputs,
     all_susie_ash_mom_outputs = all_susie_ash_mom_outputs,
-    all_susie_inf_outputs = all_susie_inf_outputs,
     all_seeds = all_seeds,
     all_epsilons = all_epsilons
   )
 
-  file_name <- paste0("numIter", num_simulations,
-                      "_h2total", h2_total,
-                      "_h2sentinel", prop_h2_sentinel,
-                      "_L", L,
-                      "_numOligogenic", n_oligogenic,
-                      "_vthreshold", v_threshold,
-                      "_pvethreshold", pve_threshold)
+  file_name <- paste0(
+    "numIter", num_simulations,
+    "_h2total", h2_total,
+    "_h2sentinel", prop_h2_sentinel,
+    "_L", L,
+    "_numOligogenic", n_oligogenic,
+    "_vthreshold", v_threshold,
+    "_pvethreshold", pve_threshold,
+    "_u", u,
+    "_p", p
+  )
 
   saveRDS(simulation_results, file.path(output_dir, file_name))
 
@@ -491,10 +412,14 @@ simulation <- function(num_simulations = NULL,
 }
 
 # Run the simulation
-simulation_results <- simulation(num_simulations = NULL,
-                                 h2_total = NULL,
-                                 prop_h2_sentinel = NULL,
-                                 L = NULL,
-                                 n_oligogenic = NULL,
-                                 v_threshold = NULL,
-                                 pve_threshold = NULL)
+simulation_results <- simulation(
+  num_simulations = NULL,
+  h2_total = NULL,
+  prop_h2_sentinel = NULL,
+  L = NULL,
+  n_oligogenic = NULL,
+  v_threshold = NULL,
+  pve_threshold = NULL,
+  u = NULL,
+  p = NULL
+)
