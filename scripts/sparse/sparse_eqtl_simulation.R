@@ -367,22 +367,42 @@ simulation <- function(num_simulations = NULL,
     # Set Seed for Current Simulation
     seed <- all_seeds[i]
 
+    # Read in LD Block
+    ld_block_file <- ld_block_files[i]
     cat("Processing LD block file:", ld_block_file, "\n")
+
     ld_block_names[i] <- basename(ld_block_file)
 
     # Load the LD Block
-    ld_block <- readRDS(ld_block_files[i])
+    ld_block <- readRDS(ld_block_file)
 
     # Extract and Impute Genotype Matrix
     X <- mean_impute(ld_block$genotypes)
+
+    # Check for zero or near-zero variance columns
+    sd_X <- apply(X, 2, sd)
+    threshold <- 1e-8  # Adjust as needed
+    columns_to_remove <- which(sd_X < threshold)
+
+    if (length(columns_to_remove) > 0) {
+      cat("Removing", length(columns_to_remove), "columns with zero or near-zero variance.\n")
+      X <- X[, -columns_to_remove]
+    }
+
+    if (ncol(X) == 0) {
+      stop("No columns left after removing zero or near-zero variance columns.")
+    }
 
     # Precompute Matrices for Current Genotype Matrix
     n_samples <- nrow(X)
     n_features <- ncol(X)
 
     X_scaled <- scale(X)
+
+    cat("Computing XtX...\n")
     XtX <- t(X_scaled) %*% X_scaled
     LD <- XtX / n_samples
+    cat("Computing eigen values of LD matrix...\n")
     eig <- eigen(LD, symmetric = TRUE)
     V <- eig$vectors
     Dsq <- pmax(n_samples * eig$values, 0)
