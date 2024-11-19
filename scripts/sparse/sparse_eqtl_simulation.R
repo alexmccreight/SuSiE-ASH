@@ -357,7 +357,7 @@ simulation <- function(num_simulations = NULL,
   all_causal_indices <- vector("list", num_simulations)
   all_epsilons <- numeric(num_simulations)
   all_h2_estimated <- numeric(num_simulations)
-  ld_block_names <- vector("character", num_simulations)  # New line to store LD block names
+  ld_block_names <- vector("character", num_simulations)
 
 
   # Loop Over Each Simulation Replicate
@@ -399,10 +399,10 @@ simulation <- function(num_simulations = NULL,
 
     X_scaled <- scale(X)
 
-    cat("Computing XtX...\n")
+    cat("Computing XtX\n")
     XtX <- t(X_scaled) %*% X_scaled
     LD <- XtX / n_samples
-    cat("Computing eigen values of LD matrix...\n")
+    cat("Computing eigen values of LD matrix\n")
     eig <- eigen(LD, symmetric = TRUE)
     V <- eig$vectors
     Dsq <- pmax(n_samples * eig$values, 0)
@@ -449,26 +449,17 @@ simulation <- function(num_simulations = NULL,
   }
 
   #### Calculate Average Metrics ####
-  # Initialize a Data Frame with Model Names
-  model_names <- all_metrics[[1]]$Model
-  avg_metrics <- data.frame(
-    Model = model_names,
-    RMSE_y = numeric(length(model_names)),
-    CS_FDR = numeric(length(model_names)),
-    CS_Recall = numeric(length(model_names)),
-    CS_Size = numeric(length(model_names)),
-    Coverage = numeric(length(model_names))
-  )
-
-  # Aggregate Metrics Across All Simulations
-  for (metric in c("RMSE_y", "CS_FDR", "CS_Recall", "CS_Size", "Coverage")) {
-    avg_metrics[[metric]] <- rowMeans(
-      do.call(rbind, lapply(all_metrics, function(x) x[[metric]]))
+    avg_metrics <- data.frame(
+      Model = unique(all_metrics[[1]]$Model),
+      RMSE_y = Reduce("+", lapply(all_metrics, function(x) x$RMSE_y)) / num_simulations,
+      CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
+      CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations,
+      CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
+      Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
     )
-  }
 
   #### Save Simulation Results as RDS File ####
-  output_dir <- "/home/apm2217/output"  # Adjust if necessary
+  output_dir <- "/home/apm2217/output"
 
   # Compile All Results into a List
   simulation_results <- list(
