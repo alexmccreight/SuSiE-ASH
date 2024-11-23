@@ -225,7 +225,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
                       refine = FALSE,
                       n_purity = 100,
                       est_var = "mrash_v",
-                      true_var_res,
+                      true_var_res = NULL,
                       v_threshold = 0.005) {
 
   # Process input estimate_prior_method.
@@ -283,7 +283,7 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   # by attr(X,'scaled:center') and scaled by attr(X,'scaled:scale').
 
   #NOTE: We use the `:::` operator for any functions not exported to their original package's NAMESPACE.
-  out = susieR:::compute_colstats(X,center = intercept,scale = standardize)
+  out = susieR:::compute_colstats(X,center = intercept, scale = standardize)
   attr(X,"scaled:center") = out$cm
   attr(X,"scaled:scale") = out$csd
   attr(X,"d") = out$d
@@ -330,156 +330,204 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   # y_residuals =  X %*%  ini_y_residuals$beta
   for (i in 1:max_iter) {
 
-      if (track_fit)
-        tracking[[i]] = susieR:::susie_slim(s)
+    if (track_fit)
+      tracking[[i]] = susieR:::susie_slim(s)
 
-      # Step1. Run SuSiE to update beta_1 ,..., beta_L:
-      s$prev_alpha = s$alpha
-      s = susieR:::update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
-                                      check_null_threshold)
-      if (verbose)
-        print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
+    # Step1. Run SuSiE to update beta_1 ,..., beta_L:
+    s$prev_alpha = s$alpha
+    # s$sigma2 =  0.7346256
+    s = susieR:::update_each_effect(X,y_residuals,s,estimate_prior_variance,estimate_prior_method,
+                                    check_null_threshold)
+    if (verbose)
+      print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
 
-      # Check which credible sets have >= 0.5% heritability
-      high_heritability_ls <- which(s$V >v_threshold) ## CHECK!!!
+    # Check which credible sets have >= 100*v_threshold% heritability
+    high_heritability_ls <- which(s$V >v_threshold) ## CHECK!!!
 
-      # Update y_residuals if there are high heritability credible sets. If none, y residuals remain unchanged.
+    # base_sigma2_susie = c(var(y_residuals))
+    base_sigma2_susie = s$sigma2
+    # base_sigma2_susie =  0.7346256
+
+    if(length(high_heritability_ls) > 1){
       bhat <- colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])
-      # y_residuals <- y + mean_y - X %*% (bhat/attr(X,"scaled:scale")) ## attr(X,"scaled:scale") added, y + mean_y is the original y
-      y_residuals <- y - X %*% (bhat/attr(X,"scaled:scale")) + sum(attr(X,"scaled:center") * (bhat/attr(X,"scaled:scale"))) ## attr(X,"scaled:scale") added, y + mean_y is the original y
-      # y_residuals <- y + mean_y - X %*% (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")) ## let's keep all L.
+    } else{
+      bhat <- c(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])
+    }
+  
+    print(s$V)
+    # Update y_residuals if there are high heritability credible sets. If none, y residuals remain unchanged.
+    #bhat <- colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])
+    # y_residuals <- y + mean_y - X %*% (bhat/attr(X,"scaled:scale")) ## attr(X,"scaled:scale") added, y + mean_y is the original y
+    y_residuals <- y - X %*% (bhat/attr(X,"scaled:scale")) + sum(attr(X,"scaled:center") * (bhat/attr(X,"scaled:scale"))) ## attr(X,"scaled:scale") added, y + mean_y is the original y
+    
+    
+    # y_residuals <- y + mean_y - X %*% (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")) ## let's keep all L.
+    base_sigma2_ash = c(var(y_residuals))
 
-      ## CHECK!!! - sum(attr(X,"scaled:center") * (colSums(s$alpha * s$mu)/attr(X,"scaled:scale"))) : y_residuals calculation do we need this term?
+    ## CHECK!!! - sum(attr(X,"scaled:center") * (colSums(s$alpha * s$mu)/attr(X,"scaled:scale"))) : y_residuals calculation do we need this term?
 
-      # Step 2: Run Mr. ASH on Residuals:
+    # Step 2: Run Mr. ASH on Residuals:
 
-      # Step 2.1: Data-driven mixture varaince estimator:
-
-      init_prior_sd <- function(X, y, n = 30) {
-        res <- univariate_regression(X, y)
-        smax <- 3 * max(res$betahat)
-        seq(0, smax, length.out = n)
-      }
-
-      est.sa2 = init_prior_sd(X_sc, y_residuals, n = 10); est.sa2 ## changed: X ->scaled (X)
-
-      # mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:4)/5) - 1)^2, intercept = intercept, standardize = standardize) #CHECK!!! Initial value for theta?
-      # mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * c(0,0.001,0.01), intercept = intercept, standardize = standardize) #CHECK!!! Initial value for theta?
-      mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = est.sa2, intercept = intercept, standardize = F) #CHECK!!! Initial value for theta?
-      # Store theta and ELBO
-      # theta = mrash_output$beta
-      # elbo[i] =
-      # term1 = sum((y_residuals-(X %*%  mrash_output$beta))^2)
-      X_c = t(t(X) - out$cm)
-      term2 = sum((y_residuals-predict.mr.ash(mrash_output, newx = X))^2)
-
-      # Step 3: Update residual vector
-      # y_residuals2 = y - X %*%  mrash_output$beta # susie y is centered y so use y instead of y+mean_y (original scale y)
-
-      # Step 4: Calculate the joint ELBO ELBO ->Issue mr.ash output doesn't include mu_{1jk}/s_{1jk}^2 ->solved by using get.full.posterior
-      est.L = length(high_heritability_ls)
-
-      # Step 4-1: calculate the ELBO relevant to SuSiE
-      # term3 = sum(attr(X,"d")  * colSums((s$alpha * s$mu2) - (s$alpha*s$mu)^2)) VV original
-      term3 = sum(apply(X_c,2,function(.){sum(.^2)}) * colSums((s$alpha * s$mu2) - (s$alpha*s$mu)^2) )
-
-      if(est.L>1){
-       term5.1 = log(t(s$alpha[1:est.L,])/s$pi) * t(s$alpha[1:est.L,]); term5.1[is.na(term5.1) ==T] =0
-       term5 = sum(log(t(s$alpha[1:est.L,])/s$pi) * t(s$alpha[1:est.L,])) + sum((1 + log((s$mu2[1:est.L,]- (s$mu[1:est.L,])^2)/s$V[1:est.L]) - (s$mu2[1:est.L,]/s$V[1:est.L])) *s$alpha[1:est.L,])/2
-      }else if(est.L == 1){
-      term5.1 = log(t(s$alpha)/s$pi) * t(s$alpha); term5.1[is.nan(term5.1)]  =0
-      term5 = sum(term5.1) + sum((1 + log((s$mu2- (s$mu)^2)/s$V[1]) - (s$mu2/s$V[1])) *s$alpha[1,])/2
-      }
-
-      # Step 4-1: calculate the ELBO relevant to mr.ash
-      mrash_post_output <- get.full.posterior(mrash_output)
-      mrash.s2 <- mrash_post_output$s2; mrash.mean <- mrash_post_output$m; mrash.phi <-mrash_post_output$phi
-      # term4 = sum(attr(X,"d")  * (apply(mrash.phi*(mrash.mean^2+mrash.s2),1,sum) - apply(mrash.phi*mrash.mean,1,sum)^2))
-      term4 = sum(apply(X_c,2,function(.){sum(.^2)})  * (apply(mrash.phi*(mrash.mean^2+mrash.s2),1,sum) - apply(mrash.phi*mrash.mean,1,sum)^2))
+    # Step 2.1: Data-driven mixture varaince estimator:
+    X_c = t(t(X) - out$cm)
+    est.sa2 = init_prior_sd(X, y_residuals, n = 30); est.sa2 ## changed: X ->scaled (X)
 
 
-      # mr.ash posterior values check:
-      # plot(mrash_output$pi, apply(mrash.phi,2,mean)); abline(0,1,col="red")
-      # plot(mrash_output$beta, apply(mrash.phi*mrash.mean,1,sum)); abline(0,1,col="red")
+    # mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * (2^((0:4)/5) - 1)^2, intercept = intercept, standardize = standardize) #CHECK!!! Initial value for theta?
+    # mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = nrow(X) * c(0,0.001,0.01), intercept = intercept, standardize = standardize) #CHECK!!! Initial value for theta?
+    mrash_output = mr.ash.alpha::mr.ash(X = X, y = y_residuals, sa2 = est.sa2, intercept = intercept, standardize = F) #CHECK!!! Initial value for theta?
+    # Store theta and ELBO
+    # theta = mrash_output$beta
+    # elbo[i] =
+    # term1 = sum((y_residuals-(X %*%  mrash_output$beta))^2)
 
-      # Step 5: Convergence Criterion
-      # elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + sum(s$KL) #Issue which sigma^2 they used?
-      if(est_var == "cal_v"){
-        elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + term5  # Joint ELBO
-        #elbo[i+1] = max(abs(s$prev_alpha - s$alpha))
-        }else if(est_var != "cal_v"){
-        elbo[i+1] = max(abs(s$prev_alpha - s$alpha)) # SuSiE-Inf convergence criterion
-      }
-      #
+    term2 = sum((y_residuals-predict.mr.ash(mrash_output, newx = X))^2)
 
-      #update new residuals:
-      y_residuals = y - predict.mr.ash(mrash_output, newx = X)
+    # Step 3: Update residual vector
+    # y_residuals2 = y - X %*%  mrash_output$beta # susie y is centered y so use y instead of y+mean_y (original scale y)
+
+    # Step 4: Calculate the joint ELBO ELBO ->Issue mr.ash output doesn't include mu_{1jk}/s_{1jk}^2 ->solved by using get.full.posterior
+    est.L = length(high_heritability_ls)
+    #L.indices <- order(s$V, decreasing = TRUE)[1:est.L]
+
+    # Step 4-1: calculate the ELBO relevant to SuSiE
+    # term3 = sum(attr(X,"d")  * colSums((s$alpha * s$mu2) - (s$alpha*s$mu)^2)) VV original
+    # term3 = sum(apply(X_c,2,function(.){sum(.^2)}) * colSums((s$alpha * s$mu2) - (s$alpha*s$mu)^2) )
+    # term3 = sum(apply(X_c,2,function(.){sum(.^2)}) * colSums((s$alpha[high_heritability_ls,] * s$mu2[high_heritability_ls,]) - (s$alpha[high_heritability_ls,]*s$mu[high_heritability_ls,])^2) )
+
+    if(length(high_heritability_ls) > 1){
+      term3 = sum(apply(X_c^2,2,sum) * colSums((s$alpha[high_heritability_ls,] * s$mu2[high_heritability_ls,]))) - sum((as.matrix(t(X_c %*% t(s$alpha[high_heritability_ls,]*s$mu[high_heritability_ls,])))^2))
+    } else{
+      term3 = sum(apply(X_c^2,2,sum) * ((s$alpha[high_heritability_ls,] * s$mu2[high_heritability_ls,]))) - sum((as.matrix(t(X_c %*% c(s$alpha[high_heritability_ls,]*s$mu[high_heritability_ls,])))^2))
+    }
+
+    # sum(apply(X_c,2,function(.){sum(.^2)}) * colSums((s$alpha[high_heritability_ls,] * s$mu2[high_heritability_ls,])/attr(X,"scaled:scale")^2 - (s$alpha[high_heritability_ls,]*s$mu[high_heritability_ls,])^2)/attr(X,"scaled:scale")^2 )
+    #sum((apply(X_c,2,function(.){sum(.^2)}) == apply(X_c^2,2,sum))) == ncol(X)
 
 
-      # KL in mrash:
-      # a = (mrash.s2+mrash.mean^2)*mrash.phi; dim(a)
-      # test = sum(t(a[,-1])/est.sa2[-1])
-      # (term2+term4+test)/(n+(nrow(X)*(1-mrash_output$pi[1])))
+    #if(est.L>1){
+    term5.1 = -log(t(s$alpha[high_heritability_ls,])/s$pi) * t(s$alpha[high_heritability_ls,]); term5.1[is.nan(term5.1) ==T] =0
+    sigma2_1j_l = (s$mu2[high_heritability_ls,]- (s$mu[high_heritability_ls,])^2)
+    # term5 = sum(term5.1) + sum((1 + log((s$mu2[1:est.L,]- (s$mu[1:est.L,])^2)/s$V[1:est.L]) - (s$mu2[1:est.L,]/s$V[1:est.L])) *s$alpha[1:est.L,])/2
+    term5 = sum(term5.1) + sum((1 + (log(sigma2_1j_l/s$V[high_heritability_ls])) - ((s$mu2[high_heritability_ls,])/s$V[high_heritability_ls])) *  s$alpha[high_heritability_ls,])/2
+    # }else if(est.L == 1){
+    #   term5.1 = log(-t(s$alpha)/s$pi) * t(s$alpha); term5.1[is.nan(term5.1)]  =0
+    #   term5 = sum(term5.1) + sum((1 + log((s$mu2- (s$mu)^2)/s$V[1]) - (s$mu2/s$V[1])) *s$alpha[1,])/2
+    #  }
+    # term5 = -sum(s$KL)
 
 
-      # print(paste0("iter", i, "each_EBLO_term:"))
-      # # print(c(-mrash_output$varobj[length(mrash_output$varobj)],-term3/(2*mrash_output$sigma2), sum(s$KL)) )
-      # print(c(-mrash_output$varobj[length(mrash_output$varobj)], -term3/(2*mrash_output$sigma2), term5, est.L) )
-      #
-      # cannot be implemented:
-      # n = nrow(X)
-      # term1 = -(n/2) * log(2*pi*s$sigma2)
-      # term2 =  -(1/2/s$sigma2)*sum((y - s$Xr - t(t(X) - attr(X,"scaled:center")) %*% theta) * (y - s$Xr - t(t(X) - attr(X,"scaled:center")) %*% theta))
+    # Step 4-1: calculate the ELBO relevant to mr.ash
+    mrash_post_output <- get.full.posterior(mrash_output)
+    mrash.s2 <- mrash_post_output$s2; mrash.mean <- mrash_post_output$m; mrash.phi <-mrash_post_output$phi # p * K
+    # term4 = sum(attr(X,"d")  * (apply(mrash.phi*(mrash.mean^2+mrash.s2),1,sum) - apply(mrash.phi*mrash.mean,1,sum)^2))
+    # term4 = sum(apply(X_c^2,2,sum)  * (apply(mrash.phi*(mrash.mean^2+mrash.s2),1,sum) - apply(mrash.phi*mrash.mean,1,sum)^2))
+    term4 = sum(apply(X_c^2,2,sum) * apply(mrash.phi*(mrash.mean^2+mrash.s2),1,sum)) - sum((as.matrix(X_c) %*% as.matrix(mrash.phi*mrash.mean))^2)
 
-      s$theta = mrash_output$beta
 
-      # Update residual variance from mr.ash output:
+    # mr.ash posterior values check:
+    # plot(mrash_output$pi, apply(mrash.phi,2,mean)); abline(0,1,col="red")
+    # plot(mrash_output$beta, apply(mrash.phi*mrash.mean,1,sum)); abline(0,1,col="red")
 
-      if(est_var == "mrash_v"){
-        s$sigma2 = mrash_output$sigma2
-      }else if(est_var == "cal_v"){
-        # s$cal.sigma2 = (mrash_output$sigma2 * (nrow(X)+ncol(X)*(1-sum(mrash_output$pi[-1]))) + term3)/(nrow(X)+ncol(X)*(1-sum(mrash_output$pi[-1]))) # Calibrated sigma2-Wrong
-        s$sigma2 = (mrash_output$sigma2 * (nrow(X)+ncol(X)*(1-mrash_output$pi[1])) + term3)/(nrow(X)+ncol(X)*(1-mrash_output$pi[1]))
-      }else if(est_var == "mom"){
-        s$sigma2 = sum(term2 + term3 + term4)/n
-      }else{
-        s$sigma2 = true_var_res
-      }
+    #update new residuals:
+    y_residuals = y - predict.mr.ash(mrash_output, newx = X)
 
-      #Convergence Criterion
-      if(est_var == "cal_v"){
-      if (abs(elbo[i+1] - elbo[i]) < tol) {
+
+    # KL in mrash:
+    # a = (mrash.s2+mrash.mean^2)*mrash.phi; dim(a)
+    # test = sum(t(a[,-1])/est.sa2[-1])
+    # (term2+term4+test)/(n+(nrow(X)*(1-mrash_output$pi[1])))
+
+
+    # print(paste0("iter", i, "each_EBLO_term:"))
+    # # print(c(-mrash_output$varobj[length(mrash_output$varobj)],-term3/(2*mrash_output$sigma2), sum(s$KL)) )
+    # print(c(-mrash_output$varobj[length(mrash_output$varobj)], -term3/(2*mrash_output$sigma2), term5, est.L) )
+    #
+    # cannot be implemented:
+    # n = nrow(X)
+    # term1 = -(n/2) * log(2*pi*s$sigma2)
+    # term2 =  -(1/2/s$sigma2)*sum((y - s$Xr - t(t(X) - attr(X,"scaled:center")) %*% theta) * (y - s$Xr - t(t(X) - attr(X,"scaled:center")) %*% theta))
+
+    s$theta = mrash_output$beta
+
+    # term6 = sum((t(mrash.phi*(mrash.mean^2+mrash.s2))/mrash_output$data$sa2)[-1,])
+    term6 = sum(mrash.phi[,-1]*((mrash.mean^2)[,-1]+mrash.s2[,-1])/mrash_output$data$sa2[-1])
+
+    
+    # Update residual variance from mr.ash output:
+
+    if(est_var == "mrash_v"){
+      s$sigma2 = mrash_output$sigma2
+    }else if(est_var == "cal_v"){
+      # s$cal.sigma2 = (mrash_output$sigma2 * (nrow(X)+ncol(X)*(1-sum(mrash_output$pi[-1]))) + term3)/(nrow(X)+ncol(X)*(1-sum(mrash_output$pi[-1]))) # Calibrated sigma2-Wrong
+      # s$sigma2 = (mrash_output$sigma2 * (nrow(X)+ncol(X)*(1-mrash_output$pi[1])) + term3)/(nrow(X)+ncol(X)*(1-mrash_output$pi[1]))
+      s$sigma2 = (term2 + term3 + term4 + term6)/(nrow(X) + ncol(X)*(1-mrash_output$pi[1]))
+    }else if(est_var == "mom"){
+      s$sigma2 = sum(term2 + term3 + term4)/n
+    }else{
+      s$sigma2 = true_var_res
+    }
+
+    # Step 5: Convergence Criterion
+    # elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + sum(s$KL) #Issue which sigma^2 they used?
+    K = length(est.sa2)
+    # term6_ELBO =  sum(apply(mrash.phi * log (t(t(mrash.phi)/rep(1/K,K))),1,sum)) - 0.5 * sum(apply(mrash.phi[,-1]*(1 + log (t(t(mrash.s2[,-1])/(s$sigma2*est.sa2[-1]))) - t(t(mrash.s2[,-1]*mrash.mean[,-1]^2)/(s$sigma2*est.sa2[-1]))),1,sum))
+    # term6_ELBO =  sum(apply(mrash.phi * log (t(t(mrash.phi)/c(mrash_output$pi))),1,sum)) - 0.5 * sum(apply(mrash.phi[,-1]*(1 + log (t(t(mrash.s2[,-1])/(s$sigma2*est.sa2[-1]))) - t(t(mrash.s2[,-1]*mrash.mean[,-1]^2)/(s$sigma2*est.sa2[-1]))),1,sum))
+    # term6_ELBO =  sum(apply(mrash.phi * log (t(t(mrash.phi)/c(mrash_output$pi))),1,sum)) - 0.5 * sum(apply(mrash.phi[,-1]*(1 + log (t(t(mrash.s2[,-1])/(base_sigma2_ash*est.sa2[-1]))) - t(t(mrash.s2[,-1]*mrash.mean[,-1]^2)/(base_sigma2_ash*est.sa2[-1]))),1,sum))
+    
+    term6.1_ELBO = mrash.phi * log (t(t(mrash.phi)/c(mrash_output$pi))); term6.1_ELBO[is.nan(term6.1_ELBO) ==T] =0
+    term6_ELBO =  sum(apply(term6.1_ELBO, 1, sum)) - 0.5 * sum(apply(mrash.phi[,-1]*(1 + log (t(t(mrash.s2[,-1])/(base_sigma2_susie*est.sa2[-1]))) - t(t(mrash.s2[,-1]+mrash.mean[,-1]^2)/(base_sigma2_susie*est.sa2[-1]))),1,sum))
+
+    # print(sum(mrash.phi ==0))
+    
+    if(est_var == "cal_v"){
+      # elbo[i+1] =  -(mrash_output$varobj)[length(mrash_output$varobj)] - term3/(2*mrash_output$sigma2) + term5  # Joint ELBO
+      # elbo[i+1] = -nrow(X)*log(2*pi*s$sigma2) - (term2 +term3 +term4)/2/s$sigma2 + term5 - term6_ELBO
+      # elbo[i+1] = -nrow(X)*log(2*pi*base_sigma2_susie) - term2/2/base_sigma2_susie -term3/2/base_sigma2_susie - term4/2/base_sigma2_ash + term5 - term6_ELBO
+      elbo[i+1] = -nrow(X)*log(2*pi*base_sigma2_susie) - term2/2/base_sigma2_susie -term3/2/base_sigma2_susie - term4/2/base_sigma2_susie + term5 - term6_ELBO
+    }else if(est_var != "cal_v"){
+      elbo[i+1] = max(abs(s$prev_alpha - s$alpha)) # SuSiE-Inf convergence criterion
+    }
+    print(elbo[i+1])
+    #Convergence Criterion
+    if(est_var == "cal_v"){
+      if ((elbo[i+1] - elbo[i]) < tol) {
         s$converged = TRUE
         break
       }
-      }
+    }
 
-      if(est_var == "mom"){
+    # if( i >=10){
+    #   s$converged = T
+    #   break
+    # }
+
+    if(est_var == "mom"){
       if (elbo[i+1] < tol) {
         s$converged = TRUE
         break
       }
-      }
     }
+  }
 
-    # muted this is the residual variance from SuSiE: Overestimation Issue
-    # # Common objective and convergence check (adjust as needed for the transition)
-    #
-    # # Compute objective before updating residual variance because part
-    # # of the objective s$kl has already been computed under the
-    # # residual variance before the update.
-    # # Update residual variance after mr ash
-    #
-    # if (estimate_residual_variance) {
-    #   s$sigma2 = pmax(residual_variance_lowerbound,
-    #                   susieR:::estimate_residual_variance(X,y_residuals,s))
-    #   if (s$sigma2 > residual_variance_upperbound)
-    #     s$sigma2 = residual_variance_upperbound
-    #   if (verbose)
-    #     print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
-    # }
-    #
-    #
+  # muted this is the residual variance from SuSiE: Overestimation Issue
+  # # Common objective and convergence check (adjust as needed for the transition)
+  #
+  # # Compute objective before updating residual variance because part
+  # # of the objective s$kl has already been computed under the
+  # # residual variance before the update.
+  # # Update residual variance after mr ash
+  #
+  # if (estimate_residual_variance) {
+  #   s$sigma2 = pmax(residual_variance_lowerbound,
+  #                   susieR:::estimate_residual_variance(X,y_residuals,s))
+  #   if (s$sigma2 > residual_variance_upperbound)
+  #     s$sigma2 = residual_variance_upperbound
+  #   if (verbose)
+  #     print(paste0("objective:",susieR:::get_objective(X,y_residuals,s)))
+  # }
+  #
+  #
 
   # Step3. After the iterations update outputs:
 
@@ -501,16 +549,29 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
     # s$intercept = mean_y - sum(attr(X,"scaled:center") *
     #                              (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
     # s$fitted = s$Xr + mean_y + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
-
-    s$intercept = mean_y - sum(attr(X,"scaled:center") *
-                                 (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))-sum(attr(X,"scaled:center") *
-                                                                                         (mrash_output$beta))
-    s$fitted =  s$intercept + X %*% (colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")) + X %*%  mrash_output$beta
+    
+    if(length(high_heritability_ls) > 1 ){
+      s$intercept = mean_y - sum(attr(X,"scaled:center") *
+                                   (colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")))-sum(attr(X,"scaled:center") *
+                                                                                           (mrash_output$beta))
+      s$fitted =  s$intercept + X %*% (colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")) + X %*%  mrash_output$beta
+    }else if(length(high_heritability_ls) == 1){
+      s$intercept = mean_y - sum(attr(X,"scaled:center") *
+                                   (c(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")))-sum(attr(X,"scaled:center") *
+                                                                                                                                         (mrash_output$beta))
+      s$fitted =  s$intercept + X %*% (c(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")) + X %*%  mrash_output$beta
+      
+    } 
 
   } else {
     s$intercept = 0
     # s$fitted = s$Xr + X %*% (mr.ash.alpha::coef.mr.ash(mrash_output)[-1])
-    s$fitted = X %*% (colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")) + X %*%  mrash_output$beta
+    if(length(high_heritability_ls) >= 1){
+      s$fitted = X %*% (colSums(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")) + X %*%  mrash_output$beta  
+    }else if (length(high_heritability_ls) == 1){
+      s$fitted = X %*% (c(s$alpha[high_heritability_ls,] * s$mu[high_heritability_ls,])/attr(X,"scaled:scale")) + X %*%  mrash_output$beta  
+    }
+    
   }
   s$fitted = drop(s$fitted)
   names(s$fitted) = `if`(is.null(names(y)),rownames(X),names(y))
@@ -626,3 +687,11 @@ susie_ash = function (X,y,L = min(10,ncol(X)),
   }
   return(s)
 }
+
+# New simulation Setting Oct 19/2024
+init_prior_sd <- function(X, y, n = 30) {
+  res <- univariate_regression(X, y)
+  smax <- 3 * max(res$betahat)
+  seq(0, smax, length.out = n)
+}
+
