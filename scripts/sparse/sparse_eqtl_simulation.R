@@ -13,22 +13,6 @@ source("susie-ash-data/susie_ash_mod.R")
 source("susie-ash-data/susie_ash_mod_v2.R")
 source("susie-ash-data/susie_inf.R")
 
-# Function for Mean Imputation
-mean_impute <- function(geno) {
-  # Compute column-wise means excluding NAs
-  col_means <- apply(geno, 2, function(x) mean(x, na.rm = TRUE))
-
-  # Replace NAs with the corresponding column mean
-  for (i in seq_along(col_means)) {
-    na_indices <- which(is.na(geno[, i]))
-    if (length(na_indices) > 0) {
-      geno[na_indices, i] <- col_means[i]
-    }
-  }
-
-  return(geno)
-}
-
 # Updated Data Generation Function for Sparse Setting
 generate_sparse_eqtl_data <- function(X,
                                       K = 10,      # Number of non-zero effect SNPs
@@ -105,7 +89,7 @@ method_and_score <- function(X,
 
   # SuSiE
   cat("Starting SuSiE\n")
-  susie_output <- susie(X = X, y = y, L = L, intercept = TRUE, standardize = TRUE)
+  susie_output <- susie(X = X, y = y, L = L, intercept = TRUE, standardize = FALSE)
 
   # SuSiE-ash (default)
   cat("Starting SuSiE-ash (default)\n")
@@ -274,10 +258,10 @@ method_and_score <- function(X,
   #### Create a Data Frame with the Results ####
   metrics_table  <- data.frame(
     Model = c("SuSiE",
-              "SuSiE-ash (default)",
-              "SuSiE-ash (quadratic)",
-              "SuSiE-ash v2 (default)",
-              "SuSiE-ash v2 (quadratic)",
+              "SuSiE-ash RE (default)",
+              "SuSiE-ash RE (quadratic)",
+              "SuSiE-ash RE v2 (default)",
+              "SuSiE-ash RE v2 (quadratic)",
               "SuSiE-inf"),
     RMSE_y = c(susie_metrics$RMSE_y,
                susie_ash_default_metrics$RMSE_y,
@@ -322,7 +306,7 @@ simulation <- function(num_simulations = NULL,
                        h2_total = NULL,
                        K = NULL,
                        L = NULL,
-                       LD_blocks_dir = "LD_blocks") {
+                       LD_blocks_dir = "LD_blocks_precomputed") {
 
   # Set Default Values
   if (is.null(num_simulations)) num_simulations <- 200
@@ -359,7 +343,6 @@ simulation <- function(num_simulations = NULL,
   all_h2_estimated <- numeric(num_simulations)
   ld_block_names <- vector("character", num_simulations)
 
-
   # Loop Over Each Simulation Replicate
   for (i in 1:num_simulations) {
     cat("Running simulation", i, "out of", num_simulations, "\n")
@@ -367,45 +350,24 @@ simulation <- function(num_simulations = NULL,
     # Set Seed for Current Simulation
     seed <- all_seeds[i]
 
-    # Read in LD Block
+    # Read in Precomputed LD Block
     ld_block_file <- ld_block_files[i]
     cat("Processing LD block file:", ld_block_file, "\n")
 
     ld_block_names[i] <- basename(ld_block_file)
 
-    # Load the LD Block
-    ld_block <- readRDS(ld_block_file)
+    # Load the Precomputed Data
+    precomputed_data <- readRDS(ld_block_file)
 
-    # Extract and Impute Genotype Matrix
-    X <- mean_impute(ld_block$genotypes)
+    # Extract the Genotype Matrix and Precomputed Matrices
+    X <- precomputed_data$X  # Unscaled, imputed genotype matrix
+    XtX <- precomputed_data$XtX  # Computed using scaled X
+    LD <- precomputed_data$LD
+    V <- precomputed_data$V
+    Dsq <- precomputed_data$Dsq
 
-    # Check for zero or near-zero variance columns
-    sd_X <- apply(X, 2, sd)
-    threshold <- 1e-8  # Adjust as needed
-    columns_to_remove <- which(sd_X < threshold)
-
-    if (length(columns_to_remove) > 0) {
-      cat("Removing", length(columns_to_remove), "columns with zero or near-zero variance.\n")
-      X <- X[, -columns_to_remove]
-    }
-
-    if (ncol(X) == 0) {
-      stop("No columns left after removing zero or near-zero variance columns.")
-    }
-
-    # Precompute Matrices for Current Genotype Matrix
-    n_samples <- nrow(X)
-    n_features <- ncol(X)
-
-    X_scaled <- scale(X)
-
-    cat("Computing XtX\n")
-    XtX <- t(X_scaled) %*% X_scaled
-    LD <- XtX / n_samples
-    cat("Computing eigen values of LD matrix\n")
-    eig <- eigen(LD, symmetric = TRUE)
-    V <- eig$vectors
-    Dsq <- pmax(n_samples * eig$values, 0)
+    # Scale the genotype matrix
+    #X_scaled <- scale(X)
 
     # Store Precomputed Matrices
     precomputed_matrices <- list(
@@ -427,7 +389,7 @@ simulation <- function(num_simulations = NULL,
 
     # Run Methods and Calculate Metrics
     results <- method_and_score(
-      X = data$ori.X,
+      X = data$ori.X,       # Scaled genotype matrix
       y = data$ori.y,
       beta = data$beta,
       causal = causal_indices,
@@ -444,19 +406,20 @@ simulation <- function(num_simulations = NULL,
     all_h2_estimated[i] <- data$h2_estimated
 
     # Remove Large Objects to Free Memory
-    rm(ld_block, X, X_scaled, XtX, LD, eig, V, Dsq, precomputed_matrices, data, results)
+    rm(precomputed_data, X, X_scaled, XtX, LD, V, Dsq, precomputed_matrices, data, results)
     gc()
   }
 
   #### Calculate Average Metrics ####
-    avg_metrics <- data.frame(
-      Model = unique(all_metrics[[1]]$Model),
-      RMSE_y = Reduce("+", lapply(all_metrics, function(x) x$RMSE_y)) / num_simulations,
-      CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
-      CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations,
-      CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
-      Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
-    )
+
+  avg_metrics <- data.frame(
+    Model = unique(all_metrics[[1]]$Model),
+    RMSE_y = Reduce("+", lapply(all_metrics, function(x) x$RMSE_y)) / num_simulations,
+    CS_FDR = Reduce("+", lapply(all_metrics, function(x) x$CS_FDR)) / num_simulations,
+    CS_Recall = Reduce("+", lapply(all_metrics, function(x) x$CS_Recall)) / num_simulations,
+    CS_Size = Reduce("+", lapply(all_metrics, function(x) x$CS_Size)) / num_simulations,
+    Coverage = Reduce("+", lapply(all_metrics, function(x) x$Coverage)) / num_simulations
+  )
 
   #### Save Simulation Results as RDS File ####
   output_dir <- "/home/apm2217/output"
@@ -494,5 +457,5 @@ simulation_results <- simulation(
   h2_total = NULL,         # Defaults to 0.3
   K = NULL,                # Defaults to 10
   L = NULL,                # Defaults to 10
-  LD_blocks_dir = "LD_blocks"  # Directory containing LD block files
+  LD_blocks_dir = "LD_blocks_precomputed"  # Directory containing precomputed LD block files
 )

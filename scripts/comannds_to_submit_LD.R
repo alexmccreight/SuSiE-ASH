@@ -8,6 +8,8 @@ ld_block_files <- c(
   "LD_chr21_1673", "LD_chr22_1702"
 )
 
+ld_block_files <- sampled_blocks
+
 # Create the commands_to_submit.txt file
 commands_file <- "commands_to_submit.txt"
 file_conn <- file(commands_file, open = "w")
