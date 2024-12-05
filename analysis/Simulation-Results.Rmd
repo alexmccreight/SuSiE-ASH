@@ -15,7 +15,7 @@ library(ggplot2)
 
 # FDR and Recall Plots by Simulation Setting
 
-Each of the following simulations was run for 200 replicates. Each of the 200 replicates correspond to a different LD block from UKBB that passed all QC. As a reminder, n = 10,000 cases and 5000 ≤ p ≤ 8000 variants.
+Each of the following simulations was run for 200 replicates. Each of the 200 replicates correspond to a different LD block from UKBB that all passed QC. As a reminder, n = 10,000 cases and 5000 ≤ p ≤ 8000 variants.
 
 ```{r, echo = F, message = F, warning = F}
 # Load necessary libraries
@@ -80,10 +80,9 @@ for (file in rds_files) {
       scale_fill_brewer(palette = "Set2") +
       theme_minimal() +
       labs(
-        title = paste0("Simulation Setting: ",
-                      "h2total = ", h2total_value,
-                      ", numOligogenic = ", numOligogenic_value,
-                      ", mixturesmall = ", mixturesmall_value),
+        title = paste0("Total Heritability = ", h2total_value,
+                      ", Num Oligogenic = ", numOligogenic_value,
+                      ",\nSmall Oligogenic Mixture Proproportion = ", mixturesmall_value),
         y = "Value",
         x = "Model"
       ) +
