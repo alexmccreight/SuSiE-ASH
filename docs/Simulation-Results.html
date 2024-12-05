@@ -404,9 +404,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 2
 </p>
 <p>
 <strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
@@ -429,18 +429,21 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
@@ -573,15 +576,15 @@ simulation/9-10-24-results
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree92def054a2033c390f70e420393f871020970de3targetblank92def05a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree1e54f52987f6bf42575ddd07cd1bdae2bc5c2667targetblank1e54f52a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/92def054a2033c390f70e420393f871020970de3" target="_blank">92def05</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/1e54f52987f6bf42575ddd07cd1bdae2bc5c2667" target="_blank">1e54f52</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree92def054a2033c390f70e420393f871020970de3targetblank92def05a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree1e54f52987f6bf42575ddd07cd1bdae2bc5c2667targetblank1e54f52a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -591,7 +594,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/92def054a2033c390f70e420393f871020970de3" target="_blank">92def05</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/1e54f52987f6bf42575ddd07cd1bdae2bc5c2667" target="_blank">1e54f52</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -661,6 +664,7 @@ Untracked files:
 
 Unstaged changes:
     Modified:   analysis/Simulation-Results-Tmp.Rmd
+    Modified:   analysis/Simulation-Results.Rmd
     Modified:   scripts/commands_to_submit_eqtl.R
     Modified:   simulation/LD_blocks.sh
     Modified:   simulation/commands_to_submit.txt
@@ -714,6 +718,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/1e54f52987f6bf42575ddd07cd1bdae2bc5c2667/docs/Simulation-Results.html" target="_blank">1e54f52</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-12-04
+</td>
+<td>
+fix
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1050,8 +1071,8 @@ move folder
 class="section level1">
 <h1>FDR and Recall Plots by Simulation Setting</h1>
 <p>Each of the following simulations was run for 200 replicates. Each of
-the 200 replicates correspond to a different LD block from UKBB that
-passed all QC. As a reminder, n = 10,000 cases and 5000 ≤ p ≤ 8000
+the 200 replicates correspond to a different LD block from UKBB that all
+passed QC. As a reminder, n = 10,000 cases and 5000 ≤ p ≤ 8000
 variants.</p>
 <p><img src="figure/Simulation-Results.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
