@@ -13,150 +13,206 @@ library(stringr)
 library(ggplot2)
 ```
 
-# 1. ROC Curves (True Positive versus False Positive Rate)
+# FDR and Recall Plots by Simulation Setting
+
+Each of the following simulations was run for 200 replicates. Each of the 200 replicates correspond to a different LD block from UKBB that passed all QC. As a reminder, n = 10,000 cases and 5000 ≤ p ≤ 8000 variants.
+
+```{r, echo = F, message = F, warning = F}
+# Load necessary libraries
+# Directory containing the .rds files
+folder_path <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/eqtl-results/"
+
+# List all .rds files in the folder
+rds_files <- list.files(folder_path, pattern = "\\.rds$", full.names = TRUE)
+
+# Create an output directory for the plots
+output_dir <- file.path(folder_path, "plots")
+dir.create(output_dir, showWarnings = FALSE)
+
+# Loop through each file
+for (file in rds_files) {
+  # Read the .rds file
+  data <- readRDS(file)
+  
+  # Extract avg_metrics if it exists
+  if (!is.null(data$avg_metrics)) {
+    avg_metrics <- data$avg_metrics
+    
+    # Extract parameter values from filename
+    filename <- basename(file)
+    filename_no_ext <- sub("\\.rds$", "", filename)
+    params <- strsplit(filename_no_ext, "_")[[1]]
+    
+    h2total_value <- params[grep("^h2total", params)] %>% 
+      str_replace("h2total", "") %>% as.numeric()
+    
+    numOligogenic_value <- params[grep("^numOligogenic", params)] %>% 
+      str_replace("numOligogenic", "") %>% as.numeric()
+    
+    mixturesmall_value <- params[grep("^mixturesmall", params)] %>% 
+      str_replace("mixturesmall", "") %>% as.numeric()
+    
+    # Prepare data for plotting
+    long_data <- avg_metrics %>%
+      select(Model, CS_FDR, CS_Recall) %>%
+      pivot_longer(cols = c(CS_FDR, CS_Recall),
+                   names_to = "Metric",
+                   values_to = "Value")
+    
+    long_data$Metric <- sub("^CS_", "", long_data$Metric)
+    
+    # Create the plot
+    p <- long_data %>%
+      filter(!(Model %in% c("SuSiE-ash RE v2 (quadratic)", "SuSiE-ash RE v2 (default)"))) %>%
+      ggplot(aes(x = Model, y = Value, fill = Model)) +
+      geom_col(width = 0.6) +
+      # Add dashed line at y = 0.05 for FDR plot
+      geom_hline(data = data.frame(Metric = "FDR", yint = 0.05),
+                 aes(yintercept = yint),
+                 linetype = "dashed",
+                 color = "red") +
+      # Add value labels on top of bars
+      geom_text(aes(label = round(Value, 3)),
+                vjust = -0.3,
+                size = 3) +
+      # Create separate facets for FDR and Recall
+      facet_wrap(~Metric, scales = "free_y") +
+      scale_fill_brewer(palette = "Set2") +
+      theme_minimal() +
+      labs(
+        title = paste0("Simulation Setting: ",
+                      "h2total = ", h2total_value,
+                      ", numOligogenic = ", numOligogenic_value,
+                      ", mixturesmall = ", mixturesmall_value),
+        y = "Value",
+        x = "Model"
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none",
+        strip.text = element_text(size = 12)
+      )
+    
+    # Display the plot (optional)
+    print(p)
+    
+    # Save the plot
+    # output_filename <- paste0("plot_h2total", h2total_value,
+    #                           "_numOligogenic", numOligogenic_value,
+    #                           "_mixturesmall", mixturesmall_value, ".png")
+    # output_filepath <- file.path(output_dir, output_filename)
+    # ggsave(output_filepath, plot = p, width = 8, height = 6)
+  }
+}
+
+```
+
+
+
 
 ```{r, warning = F, echo = F, message = F}
 # Directory containing the files
-directory <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/9-10-24-results"
-
-# List all files in the specified directory
-files <- list.files(directory, pattern = "", full.names = TRUE)
-
-# Initialize an empty list to store the plots
-plot_list <- list()
-
-# Loop through each file
-for (file_path in files) {
-  # Extract the file name from the path
-  file_name <- basename(file_path)
-  
-  # Use regular expressions to parse out the parameters
-  parts <- regmatches(file_name, regexec("numIter(\\d+)_largeEffects(\\d+)_mediumEffects(\\d+)_totalPVE([0-9.]+)_L(\\d+)", file_name))
-  
-  # Extract parameters
-  num_iter <- as.numeric(parts[[1]][2])
-  large_effects <- as.numeric(parts[[1]][3])
-  medium_effects <- as.numeric(parts[[1]][4])
-  total_pve <- as.numeric(parts[[1]][5])
-  Ltrue <- as.numeric(parts[[1]][6])
-
-  # Read the file (assuming the file is an .rds file)
-  sim_results <- readRDS(file_path)
-
-  # Extract the predictions and labels from the file
-  susie_predictions <- c()
-  susie_labels <- c()
-  susie_inf_predictions <- c()
-  susie_inf_labels <- c()
-  
-  for (i in 1:50) {
-    # SuSiE outputs
-    susie_pip <- sim_results$all_susie_outputs[[i]]$pip
-    susie_betas <- sim_results$all_betas[[i]]
-    susie_phis <- sim_results$all_phis[[i]]
-
-    # Create true causal effect labels using both betas and phis
-    susie_causal <- (susie_betas != 0) | (susie_phis != 0)
-    susie_predictions <- c(susie_predictions, susie_pip)
-    susie_labels <- c(susie_labels, susie_causal)
-
-    # SuSiE-Inf outputs
-    susie_inf_pip <- sim_results$all_susie_inf_outputs[[i]]$PIP2
-    susie_inf_betas <- sim_results$all_betas[[i]]
-    susie_inf_phis <- sim_results$all_phis[[i]]
-
-    susie_inf_causal <- (susie_inf_betas != 0) | (susie_inf_phis != 0)
-    susie_inf_predictions <- c(susie_inf_predictions, susie_inf_pip)
-    susie_inf_labels <- c(susie_inf_labels, susie_inf_causal)
-
-    # SuSiE-ASH outputs 
-    # susie_ash_pip <- sim_results$all_susie_ash_outputs_v10[[i]]$pip
-    # susie_ash_betas <- sim_results$all_betas[[i]]
-    # susie_ash_phis <- sim_results$all_phis[[i]]
-
-    # susie_ash_causal <- (susie_ash_betas != 0) | (susie_ash_phis != 0)
-    # susie_ash_predictions <- c(susie_ash_predictions, susie_ash_pip)
-    # susie_ash_labels <- c(susie_ash_labels, susie_ash_causal)
-  }
-
-  # Create prediction objects   
-  pred_susie <- prediction(susie_predictions, susie_labels)
-  pred_susie_inf <- prediction(susie_inf_predictions, susie_inf_labels)
-  # pred_susie_ash <- prediction(susie_ash_predictions, susie_ash_labels) # Commented out
-
-  # Create performance objects
-  perf_susie <- performance(pred_susie, "tpr", "fpr")
-  perf_susie_inf <- performance(pred_susie_inf, "tpr", "fpr")
-  # perf_susie_ash <- performance(pred_susie_ash, "tpr", "fpr") # Commented out
-
-  # Create plot title with simulation parameters
-  plot_title <- paste0("ROC Curve (L = ", Ltrue, ", largeEffects = ", large_effects,
-                       ", mediumEffects = ", medium_effects, ", totalPVE = ", total_pve, ")")
-  
-  # Create the plot
-  roc_plot <- ggplot() +
-    geom_line(data = data.frame(x = perf_susie@x.values[[1]], y = perf_susie@y.values[[1]], Method = "SuSiE"),
-              aes(x = x, y = y, color = Method), linewidth = 1) +
-    geom_line(data = data.frame(x = perf_susie_inf@x.values[[1]], y = perf_susie_inf@y.values[[1]], Method = "SuSiE-Inf"),
-              aes(x = x, y = y, color = Method), linewidth = 1) +
-    # geom_line(data = data.frame(x = perf_susie_ash@x.values[[1]], y = perf_susie_ash@y.values[[1]], Method = "SuSiE-ASH"), 
-    #           aes(x = x, y = y, color = Method), linewidth = 1) + 
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
-    labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
-    scale_color_manual(values = c("SuSiE" = "blue", "SuSiE-Inf" = "green")) +
-    theme_minimal()
-
-  # Add the plot to the list
-  plot_list[[length(plot_list) + 1]] <- roc_plot
-  
-  # Clear memory
-  rm(sim_results, susie_predictions, susie_labels, susie_inf_predictions, susie_inf_labels)
-  gc()
-}
-
-# After the loop, print all plots
-for (plot in plot_list) {
-  print(plot)
-}
-
-```
-
-# 2. Combined Prediction Boxplots
-
-```{r, warning = F, echo = F, message = F}
-# Combine all avg_metrics into one data frame
-results_list <- list()  # Initialize an empty list to store all metrics
-for (file_path in files) {
-  tmp <- readRDS(file_path)
-  avg_metrics <- tmp$avg_metrics
-  #avg_metrics$Simulation <- basename(file_path)  # Add a column for the simulation scenario
-  avg_metrics$Simulation <- gsub("numIter50_|_L10", "", basename(file_path))
-
-  results_list[[length(results_list) + 1]] <- avg_metrics
-}
-
-# Combine into one data frame
-combined_results <- do.call(rbind, results_list)
-
-# Create a boxplot to compare RMSE
-ggplot(combined_results, aes(x = Model, y = RMSE_y, fill = Model)) +
-  geom_boxplot() +
-  labs(title = "Comparison of RMSE across Methods", y = "RMSE", x = "Method") +
-  theme_minimal()
+# directory <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/simulation/9-10-24-results"
+# 
+# # List all files in the specified directory
+# files <- list.files(directory, pattern = "", full.names = TRUE)
+# 
+# # Initialize an empty list to store the plots
+# plot_list <- list()
+# 
+# # Loop through each file
+# for (file_path in files) {
+#   # Extract the file name from the path
+#   file_name <- basename(file_path)
+#   
+#   # Use regular expressions to parse out the parameters
+#   parts <- regmatches(file_name, regexec("numIter(\\d+)_largeEffects(\\d+)_mediumEffects(\\d+)_totalPVE([0-9.]+)_L(\\d+)", file_name))
+#   
+#   # Extract parameters
+#   num_iter <- as.numeric(parts[[1]][2])
+#   large_effects <- as.numeric(parts[[1]][3])
+#   medium_effects <- as.numeric(parts[[1]][4])
+#   total_pve <- as.numeric(parts[[1]][5])
+#   Ltrue <- as.numeric(parts[[1]][6])
+# 
+#   # Read the file (assuming the file is an .rds file)
+#   sim_results <- readRDS(file_path)
+# 
+#   # Extract the predictions and labels from the file
+#   susie_predictions <- c()
+#   susie_labels <- c()
+#   susie_inf_predictions <- c()
+#   susie_inf_labels <- c()
+#   
+#   for (i in 1:50) {
+#     # SuSiE outputs
+#     susie_pip <- sim_results$all_susie_outputs[[i]]$pip
+#     susie_betas <- sim_results$all_betas[[i]]
+#     susie_phis <- sim_results$all_phis[[i]]
+# 
+#     # Create true causal effect labels using both betas and phis
+#     susie_causal <- (susie_betas != 0) | (susie_phis != 0)
+#     susie_predictions <- c(susie_predictions, susie_pip)
+#     susie_labels <- c(susie_labels, susie_causal)
+# 
+#     # SuSiE-Inf outputs
+#     susie_inf_pip <- sim_results$all_susie_inf_outputs[[i]]$PIP2
+#     susie_inf_betas <- sim_results$all_betas[[i]]
+#     susie_inf_phis <- sim_results$all_phis[[i]]
+# 
+#     susie_inf_causal <- (susie_inf_betas != 0) | (susie_inf_phis != 0)
+#     susie_inf_predictions <- c(susie_inf_predictions, susie_inf_pip)
+#     susie_inf_labels <- c(susie_inf_labels, susie_inf_causal)
+# 
+#     # SuSiE-ASH outputs 
+#     # susie_ash_pip <- sim_results$all_susie_ash_outputs_v10[[i]]$pip
+#     # susie_ash_betas <- sim_results$all_betas[[i]]
+#     # susie_ash_phis <- sim_results$all_phis[[i]]
+# 
+#     # susie_ash_causal <- (susie_ash_betas != 0) | (susie_ash_phis != 0)
+#     # susie_ash_predictions <- c(susie_ash_predictions, susie_ash_pip)
+#     # susie_ash_labels <- c(susie_ash_labels, susie_ash_causal)
+#   }
+# 
+#   # Create prediction objects   
+#   pred_susie <- prediction(susie_predictions, susie_labels)
+#   pred_susie_inf <- prediction(susie_inf_predictions, susie_inf_labels)
+#   # pred_susie_ash <- prediction(susie_ash_predictions, susie_ash_labels) # Commented out
+# 
+#   # Create performance objects
+#   perf_susie <- performance(pred_susie, "tpr", "fpr")
+#   perf_susie_inf <- performance(pred_susie_inf, "tpr", "fpr")
+#   # perf_susie_ash <- performance(pred_susie_ash, "tpr", "fpr") # Commented out
+# 
+#   # Create plot title with simulation parameters
+#   plot_title <- paste0("ROC Curve (L = ", Ltrue, ", largeEffects = ", large_effects,
+#                        ", mediumEffects = ", medium_effects, ", totalPVE = ", total_pve, ")")
+#   
+#   # Create the plot
+#   roc_plot <- ggplot() +
+#     geom_line(data = data.frame(x = perf_susie@x.values[[1]], y = perf_susie@y.values[[1]], Method = "SuSiE"),
+#               aes(x = x, y = y, color = Method), linewidth = 1) +
+#     geom_line(data = data.frame(x = perf_susie_inf@x.values[[1]], y = perf_susie_inf@y.values[[1]], Method = "SuSiE-Inf"),
+#               aes(x = x, y = y, color = Method), linewidth = 1) +
+#     # geom_line(data = data.frame(x = perf_susie_ash@x.values[[1]], y = perf_susie_ash@y.values[[1]], Method = "SuSiE-ASH"), 
+#     #           aes(x = x, y = y, color = Method), linewidth = 1) + 
+#     geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+#     labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
+#     scale_color_manual(values = c("SuSiE" = "blue", "SuSiE-Inf" = "green")) +
+#     theme_minimal()
+# 
+#   # Add the plot to the list
+#   plot_list[[length(plot_list) + 1]] <- roc_plot
+#   
+#   # Clear memory
+#   rm(sim_results, susie_predictions, susie_labels, susie_inf_predictions, susie_inf_labels)
+#   gc()
+# }
+# 
+# # After the loop, print all plots
+# for (plot in plot_list) {
+#   print(plot)
+# }
 
 ```
-
-# 3. Line Plot for RMSE by Scenario
-
-```{r, warning = F, echo = F, message = F}
-# Create a line plot for RMSE comparison across scenarios
-ggplot(combined_results, aes(x = Simulation, y = RMSE_y, color = Model, group = Model)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "RMSE Comparison Across Simulations", y = "RMSE", x = "Simulation Scenario") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))  
-```
-
-
 
