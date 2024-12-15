@@ -8,7 +8,7 @@
 #' or maximum likelihood estimation (still needs to be implemented).
 #'
 #' This function supports two modes of data input:
-#' 1) **Individual-level data mode**: Provide `X` (n x p, scaled & centered) and `y` (n x 1, centered).
+#' 1) **Individual-level data mode**: Provide `X` (n x p, scaled & centered) and `y` (n-vector, centered).
 #'    The function will compute `z`, `meansq`, `XtX`, `LD`, `V`, and `Dsq` as needed.
 #' 2) **Summary-level data mode**: Provide `z` (p-vector), `meansq` (scalar), and `n` (scalar),
 #'    along with either `LD` or (`V`, `Dsq`). In this mode, `X` and `y` are not required.
