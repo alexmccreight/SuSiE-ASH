@@ -6,7 +6,8 @@ susie_ash_mod <- function(X, y, L,
                       est_sigmasq = TRUE, est_tausq = TRUE, sigmasq = 1, tausq = 0,
                       method = "moments", sigmasq_range = NULL, tausq_range = NULL,
                       PIP = NULL, mu = NULL, maxiter = 100, PIP_tol = 1e-3, coverage = 0.9, verbose = TRUE,
-                      XtX = NULL, LD = NULL, V = NULL, Dsq = NULL, ash_sd = NULL, ash_sd_method = c("default", "quadratic")) {
+                      XtX = NULL, LD = NULL, V = NULL, Dsq = NULL, ash_sd = NULL, ash_sd_method = c("default", "quadratic"),
+                      K = 10, upper_bound = 3) {
 
   mean_y <- mean(y)
 
@@ -125,14 +126,16 @@ susie_ash_mod <- function(X, y, L,
     y_residuals <- y - X %*% bhat
 
     if (it == 1) {
+      cat("\nUpper bound mulitpler:", upper_bound)
+      cat("\nNumber of Variance Components:", K,"\n")
       if (ash_sd_method == "default") {
         # Use init_prior_sd() as is
-        ash_sd <- init_prior_sd(X, y_residuals, n = 30)
+        ash_sd <- init_prior_sd(X, y_residuals, upper_bound = upper_bound, n = K)
       } else if (ash_sd_method == "quadratic") {
         # Use init_prior_sd() to estimate upper bound 'u'
-        ash_sd_sequence <- init_prior_sd(X, y_residuals, n = 30)
+        ash_sd_sequence <- init_prior_sd(X, y_residuals, upper_bound = upper_bound, n = K)
         u <- max(ash_sd_sequence)
-        ash_sd <- u * (seq(0, 1, length.out = 30))^2
+        ash_sd <- u * (seq(0, 1, length.out = K))^2
       } else {
         stop("Unsupported ash variance grid. Choose 'default' or 'quadratic'.")
       }
@@ -337,8 +340,8 @@ susie_inf_get_cs = function(PIP, coverage = coverage, purity = 0.5, LD = NULL, V
   return(cred)
 }
 
-init_prior_sd <- function(X, y, n = 30) {
+init_prior_sd <- function(X, y, upper_bound = 3, n = 30) {
   res <- univariate_regression(X, y)
-  smax <- 3*max(res$betahat)
+  smax <- upper_bound*max(res$betahat)
   seq(0, smax, length.out = n)
 }
