@@ -7,3 +7,6 @@
 [submodule "submodules/VEB.Boost"]
 	path = submodules/VEB.Boost
 	url = https://github.com/stephenslab/VEB.Boost.git
+[submodule "submodules/mr.ash.alpha.modified"]
+	path = submodules/mr.ash.alpha.modified
+	url = https://github.com/alexmccreight/mr.ash.alpha.modified.git
