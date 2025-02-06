@@ -7,3 +7,6 @@
 [submodule "submodules/VEB.Boost"]
 	path = submodules/VEB.Boost
 	url = https://github.com/stephenslab/VEB.Boost.git
+[submodule "submodules/pecotmr"]
+	path = submodules/pecotmr
+	url = https://github.com/cumc/pecotmr
