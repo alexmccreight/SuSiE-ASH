@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2025-02-14" />
+
+<title>Vignette</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">SuSiE-ASH</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+<li>
+  <a href="vignette.html">Vignette</a>
+</li>
+<li>
+  <a href="improvements.html">SuSiE Improvements</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/alexmccreight/SuSiE-ASH">
+    <span class="fab fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Vignette</h1>
+<h4 class="date">2025-02-14</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-02-20
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20240328code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20240328)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20240328code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20240328)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
+</p>
+</div>
+<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Using absolute paths to the files within your workflowr project makes it
+difficult for you and others to run your code on a different machine.
+Change the absolute path(s) below to the suggested relative path(s) to
+make your code more reproducible.
+</p>
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th style="text-align:left;">
+absolute
+</th>
+<th style="text-align:left;">
+relative
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR
+</td>
+<td style="text-align:left;">
+submodules/susieR
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/new-rcpp/mr.ash.alpha
+</td>
+<td style="text-align:left;">
+new-rcpp/mr.ash.alpha
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/susie_inf.R
+</td>
+<td style="text-align:left;">
+code/susie_versions/susie_inf.R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/SuSiE_Ash_Marginal.R
+</td>
+<td style="text-align:left;">
+code/susie_versions/SuSiE_Ash_Marginal.R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/vignettes/precomputed_matrices.rds
+</td>
+<td style="text-align:left;">
+vignettes/precomputed_matrices.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/vignettes/seed5_oligo.rds
+</td>
+<td style="text-align:left;">
+vignettes/seed5_oligo.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/overleaf_graphics/marginal_omnigenic_results_experiments_rerun/numIter100_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.75_K10_upperBound3.rds
+</td>
+<td style="text-align:left;">
+overleaf_graphics/marginal_omnigenic_results_experiments_rerun/numIter100_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.75_K10_upperBound3.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/vignettes/independent_res.rds
+</td>
+<td style="text-align:left;">
+vignettes/independent_res.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/vignettes/lowLD_res.rds
+</td>
+<td style="text-align:left;">
+vignettes/lowLD_res.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/vignettes/mediumLD_res.rds
+</td>
+<td style="text-align:left;">
+vignettes/mediumLD_res.rds
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreebd350968d432a6676a78ea1afd869707d7b02aabtargetblankbd35096a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/bd350968d432a6676a78ea1afd869707d7b02aab" target="_blank">bd35096</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreebd350968d432a6676a78ea1afd869707d7b02aabtargetblankbd35096a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/bd350968d432a6676a78ea1afd869707d7b02aab" target="_blank">bd35096</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rapp.history
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    code/.DS_Store
+    Ignored:    code/susie_versions/.DS_Store
+    Ignored:    data/.DS_Store
+    Ignored:    new-rcpp/.DS_Store
+    Ignored:    new-rcpp/matrix.multiplication/.Rapp.history
+    Ignored:    scripts/.DS_Store
+    Ignored:    scripts/Old Scripts/.DS_Store
+    Ignored:    simulation/.DS_Store
+    Ignored:    simulation/misc/.DS_Store
+    Ignored:    submodules/.DS_Store
+
+Untracked files:
+    Untracked:  X_subset
+    Untracked:  analysis/1-28-2025.Rmd
+    Untracked:  analysis/1-5-2025.Rmd
+    Untracked:  analysis/ConservativeSparseSim_numIter100_h20.3_L20_K10.rds
+    Untracked:  analysis/MarginalSparseSim_numIter10_h20.3_L20_K10_Length20_UB2.rds
+    Untracked:  analysis/MarginalSparseSim_numIter10_h20.4_L20_K10_Length20_UB2.rds
+    Untracked:  analysis/MarginalSparseSim_numIter2_h20.3_L20_K10.rds
+    Untracked:  analysis/MarginalnumIter1_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.75_length20_UB2.rds
+    Untracked:  analysis/New Simulation Results.Rmd
+    Untracked:  analysis/New results.Rmd
+    Untracked:  analysis/Sparse-Iteration-Analysis.Rmd
+    Untracked:  analysis/Sparse-Results.Rmd
+    Untracked:  analysis/SparseSim_numIter100_h20.3_L20_K10.rds
+    Untracked:  analysis/SparseSim_numIter100_h20.4_L10_K5.rds
+    Untracked:  analysis/SparseSim_numIter2_h20.3_L10_K10.rds
+    Untracked:  analysis/SparseSim_numIter2_h20.3_L10_K5.rds
+    Untracked:  analysis/SparseSim_numIter2_h20.3_L20_K10.rds
+    Untracked:  analysis/computational speed.Rmd
+    Untracked:  analysis/experiments.Rmd
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.25_K10_upperBound3.rds
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.4_K10_upperBound1.rds
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.4_K10_upperBound2.rds
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.4_K7_upperBound3.5.rds
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_pvethreshold0.005_mixturesmall0.75_length5_UB1.rds
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_vthreshold0.005_pvethreshold0.005
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_vthreshold0.005_pvethreshold0.005_u0.8_p3
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_numOligogenic20_vthreshold0.005_pvethreshold0.005_u1_p1
+    Untracked:  analysis/numIter2_h2total0.3_h2sentinel0.7_L10_pvethreshold0.001_K10_upperBound3.5.rds
+    Untracked:  code/Tmp.Rmd
+    Untracked:  code/susie_versions/SuSiE_Ash_Marginal.R
+    Untracked:  misc/
+    Untracked:  overleaf_graphics/
+    Untracked:  preprint/KISS-paper.Rmd
+    Untracked:  scripts/LD_blocks/
+    Untracked:  scripts/commands_to_submit_eqtl_simple.R
+    Untracked:  scripts/eqtl_simulation_marginal.R
+    Untracked:  scripts/eqtl_simulation_simple.R
+    Untracked:  scripts/eqtl_simulation_v2.R
+    Untracked:  scripts/sparse_blip.R
+    Untracked:  scripts/sparse_eqtl_simulation_marginal.R
+    Untracked:  scripts/sparse_eqtl_simulation_simple.R
+    Untracked:  scripts/susie_ash_mod/
+    Untracked:  simulation/MarginalnumIter100_h2total0.3_h2sentinel0.7_L20_numOligogenic20_pvethreshold0.005_mixturesmall0.75_length5_UB1.rds
+    Untracked:  simulation/eqtl-results/
+    Untracked:  simulation/misc/Rcpp-Comparison.R
+    Untracked:  simulation/misc/RcppTesting.Rmd
+    Untracked:  simulation/misc/inf_debugging.Rmd
+    Untracked:  simulation/misc/learner.Rmd
+    Untracked:  simulation/misc/sim_analysis.Rmd
+    Untracked:  simulation/misc/sim_debugging.Rmd
+    Untracked:  simulation/misc/sim_download.Rmd
+    Untracked:  simulation/sparse-results/
+    Untracked:  vignettes/
+
+Unstaged changes:
+    Modified:   analysis/Simulation-Results-Tmp.Rmd
+    Modified:   code/susie_versions/susie_ash_mod.R
+    Modified:   code/susie_versions/susie_inf.R
+    Modified:   new-rcpp/matrix.multiplication/matrix_multiplication.cpp
+    Deleted:    scripts/LD_blocks_precomputations.R
+    Deleted:    scripts/comannds_to_submit_LD.R
+    Deleted:    scripts/commands_to_submit_LD_precomputations.R
+    Deleted:    scripts/commands_to_submit_ash_mod.R
+    Modified:   scripts/commands_to_submit_eqtl.R
+    Deleted:    scripts/eqtl_ash_mod.R
+    Deleted:    scripts/eqtl_ash_mod_default_grid.R
+    Modified:   scripts/eqtl_simulation.R
+    Deleted:    scripts/process_ld_block.R
+    Modified:   scripts/sparse/commands_to_submit_sparse.R
+    Modified:   simulation/LD_blocks.sh
+    Modified:   simulation/commands_to_submit.txt
+    Modified:   simulation/eqtl_sim.sh
+    Modified:   simulation/identification.Rmd
+    Modified:   simulation/sparse_eqtl_sim.sh
+    Deleted:    simulation/src/mm_jobman.sh
+    Modified:   submodules/VEB.Boost
+    Modified:   submodules/pecotmr
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/vignette.Rmd</code>) and HTML
+(<code>docs/vignette.html</code>) files. If you’ve configured a remote
+Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/bd350968d432a6676a78ea1afd869707d7b02aab/analysis/vignette.Rmd" target="_blank">bd35096</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-02-20
+</td>
+<td>
+add vignette
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<p>This vignette demonstrates investigates the contribution of the ash
+component in a replicate of the oligogenic setting, compares SuSiE-ash’s
+overall performance to SuSiE and SuSiE-inf across three sparse scenarios
+of varying LD structure, and delves into an iteration analysis
+pinpointing where false positives are introduced. For the oligogenic
+scenario, we set L = 10, heritability = 0.3 and use a n = 5000, p = 6300
+genotype matrix. For all sparse scenarios, we sample 10 causal variants,
+set <code>L=20</code>, heritability = 0.3, and use a n = 540, p = 950
+genotype matrix.</p>
+<p><strong>I will start by pointing out areas of concern I have noticed
+in our results</strong></p>
+<ol style="list-style-type: decimal">
+<li><p>mr.ash coefficient values and their variance are small, <span
+class="math inline">\(\theta\)</span> and Var(<span
+class="math inline">\(\theta_j\)</span>) are very in both sparse and
+oligogenic settings (even compared to susie-inf’s infinitesimal
+component, <span class="math inline">\(\alpha\)</span>,
+values).</p></li>
+<li><p>Each time we run the mr.ash algorithm within our susie-ash
+(Marginal) code, it usually converges on the first outer-loop iteration,
+but never goes above three iterations.</p></li>
+</ol>
+<div id="examples-of-issues-in-oligogenic-setting"
+class="section level1">
+<h1>Examples of Issues in Oligogenic Setting</h1>
+<div id="metrics-for-this-single-replicate" class="section level2">
+<h2>Metrics for this single replicate</h2>
+<pre><code>               Model CS_FDR CS_Recall CS_Size
+1 SuSiE-ash Marginal  0.250     0.857  15.000
+2              SuSiE  0.333     0.857  15.556
+3          SuSiE-inf  0.000     0.714   2.000</code></pre>
+</div>
+<div id="first-replicate-ld-of-causal-variants-and-a-window-around-them"
+class="section level2">
+<h2>First Replicate LD of Causal Variants (and a window around
+them)</h2>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Causal variants in this setting are nearly independent. The highest
+correlation between two causal variants is r = 0.21.</p>
+<pre><code>SuSiE-ash mixture proportions (pi):</code></pre>
+<pre><code>Component  1: 0.99999301
+Component  2: 0.00000007
+Component  3: 0.00000009
+Component  4: 0.00000012
+Component  5: 0.00000016
+Component  6: 0.00000019
+Component  7: 0.00000022
+Component  8: 0.00000026
+Component  9: 0.00000029
+Component 10: 0.00000033
+Component 11: 0.00000036
+Component 12: 0.00000040
+Component 13: 0.00000044
+Component 14: 0.00000047
+Component 15: 0.00000051
+Component 16: 0.00000054
+Component 17: 0.00000058
+Component 18: 0.00000062
+Component 19: 0.00000065
+Component 20: 0.00000069</code></pre>
+<p>Nearly all mixture proportions are zero besides the first, which
+corresponds to the null effects. This is a regular occurance in both
+oligogenic and sparse settings.</p>
+<pre><code>
+SuSiE-ash Var(theta): 1.702764e-06</code></pre>
+<pre><code>
+SuSiE-inf Var(alpha): 1.594728e-05</code></pre>
+<p>The ash component variance is actually smaller than the infinitesimal
+component variance even though it is supposed to be capturing the
+oligogenic effects. I wonder if this is because the null weight,
+component 1 shown just above, has such a high proportion compared to
+everything else.</p>
+<pre><code>
+SuSiE-ash max(abs(theta)): 1.517325e-06</code></pre>
+<pre><code>
+SuSiE-inf max(abs(alpha)): 0.003702252</code></pre>
+<p>Additionally, the maximum absolute coefficient value from the ash
+component is incredibly small, essentially negligible. Again, I wonder
+if this is because the component 1 dominance shown above.</p>
+<pre><code>     Method ResidualVariance
+1     Truth            0.726
+2     SuSiE            0.749
+3 SuSiE-ash            0.700
+4 SuSiE-inf            0.670</code></pre>
+<p>When looking at the residual variance estimates SuSiE over predicts
+the residual variance, meanwhile SuSiE-ash and Inf both under predict
+it.</p>
+</div>
+</div>
+<div
+id="overall-performance-in-sparse-setting.-metrics-averaged-over-100-replicates."
+class="section level1">
+<h1>Overall Performance in Sparse Setting. Metrics Averaged over 100
+Replicates.</h1>
+<div id="completely-independent-genotype-matrix" class="section level2">
+<h2>Completely Independent Genotype Matrix</h2>
+<pre><code># A tibble: 4 × 3
+  method               FDR Power
+  &lt;chr&gt;              &lt;dbl&gt; &lt;dbl&gt;
+1 SuSiE                  0 0.444
+2 SuSiE (w/ Refine)      0 0.445
+3 SuSiE-ash Marginal     0 0.456
+4 SuSiE-inf              0 0.442</code></pre>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>When we create an independent genotype matrix and run our SuSiE
+variants, we see they all perform nearly identically. None of the
+methods suffer from any false positives and they all capture roughly
+half of all causal variants. It is important to note that none of the
+methods look calibrated in this scenario. Specifically, they all seem to
+underestimating the true probability of a variant being causal</p>
+</div>
+<div id="sparse-setting-real-genotype-matrix-ld-structure-p-930"
+class="section level2">
+<h2>Sparse Setting Real Genotype Matrix LD Structure (p = 930)</h2>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="low-ld-among-causal-variants-absr-0.25" class="section level2">
+<h2>Low LD among Causal variants (abs(r) &lt; 0.25)</h2>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Even in this Low LD among causal variant scenario, we begin to see
+increased FDR in both SuSiE/SuSiE-ash. While it remains, controlled
+SuSiE-inf is clearly able to remain more conservative while maintaining
+competitive recall. As for the calibration, all three methods appear to
+work the same around the extremes (e.g. mean PIP = 0 , 1), however, in
+where things become less clear (e.g. mean PIP = 0.5), SuSiE-inf has
+better performance. At this mean PIP = 0.5, it looks like both SuSiE and
+especially SuSiE-ash are too anti-conservative (much below the red
+line).</p>
+</div>
+<div id="moderate-ld-among-causal-variants-absr-0.50"
+class="section level2">
+<h2>Moderate LD among Causal variants (abs(r) &lt; 0.50)</h2>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In the moderate LD among causal variant scenario, the increase in FDR
+in all SuSiE/SuSiE-ash is even more extreme, while SuSiE-inf remains
+controlled and still maintaining competitive recall. In terms of
+calibration plots, visually there is becoming less of a difference among
+the three methods</p>
+</div>
+</div>
+<div id="iteration-analysis-of-sparse-setting-with-low-ld-absr-0.25."
+class="section level1">
+<h1>Iteration Analysis of Sparse Setting with Low LD abs(r) &lt;
+0.25.</h1>
+<p>For the following iteration analysis, we will be examining how the
+alpha plots change across each iteration (determining whether this they
+begin to vary early on or later), also seeing if this could be remedied
+by a better initialization (i.e. using <code>refine = T</code>). For the
+plots, if a single alpha values within one of the effect groups,
+<code>L</code>, is greater than 0.05, than we will include that group
+into the legend (this is to stop including 20 different Ls).
+Additionally, causal variants are marked as dots on the bottom of the
+graph (red = not captured, green = captured) – <strong>these dots’ size
+are proportional to their magnitude</strong>.</p>
+<div
+id="scenario-1-susie-susie-ash-pick-up-4-total-sets-2-true-2-false-susie-inf-picks-up-no-sets."
+class="section level2">
+<h2>Scenario 1: SuSiE + SuSiE-ash pick up 4 total sets (2 true, 2
+false), SuSiE-inf picks up no sets.</h2>
+<pre><code>     Method FDR Recall CS_Size
+1     SuSiE 0.5    0.2    15.0
+2 SuSiE-inf 0.0    0.0     0.0
+3 SuSiE-ash 0.5    0.2    14.5</code></pre>
+<div id="iteration-1" class="section level3">
+<h3>Iteration 1</h3>
+<p>For the first iteration, all three methods pick up a single, false
+positive set. Every variant in this set is in moderate LD with both one
+of the largest variants by magnitude and another smaller causal variant
+(LD ~0.6 and ~0.4, respectively).</p>
+</div>
+<div id="iteration-2" class="section level3">
+<h3>Iteration 2</h3>
+<p>For the second iteration, both SuSiE and SuSiE-ash have 3 total CS (2
+true, 1 false positive). Note this false positive is different from the
+one from the first iteration. The original false positive from iteration
+1 was shrunk. SuSiE-inf capture has a single credible set containing a
+causal variant.</p>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-18-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="iteration-3" class="section level3">
+<h3>Iteration 3</h3>
+<p>For the third iteration, SuSiE / SuSiE-ash both introduce an
+additional false positive cs of size 53 and 50, respectively and retain
+the original 3 from the previous iteration. All of these variants in the
+new CS are in moderately high LD (~ 0.65) with the same small causal
+variant from the first iteration. On the PIP graph this corresponds to
+Group 4 and they’re in LD with causal variant ID = 741. SuSiE-inf no
+longer has any credible sets past this iteration.</p>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-20-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="final-iteration" class="section level3">
+<h3>Final Iteration</h3>
+<p>SuSiE converged after 8 iterations, SuSiE-inf after 7, and SuSiE-ash
+after 22. SuSiE and SuSiE-ash retained their 4 CS, although slightly
+reduced the sizes of them. SuSiE-inf not only didn’t have a single CS,
+it’s maximum PIP value (alpha value in SuSiE) was only 0.001. Thus, it
+was so uncertain it shrunk every effect to essentially null.</p>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="scenario-1-continued-with-refine" class="section level2">
+<h2>Scenario 1 Continued (with refine):</h2>
+<p>We can see by adding the <code>refine = T</code> parameter for this
+situation, we see no change in FDR/Recall. Infact, the contents of the
+credible sets are identical.</p>
+<pre><code>             Method FDR Recall CS_Size
+1             SuSiE 0.5    0.2      15
+2 SuSiE (w/ refine) 0.5    0.2      15</code></pre>
+</div>
+<div
+id="scenario-2-susie-and-susie-ash-perform-nearly-identically.-susie-inf-has-perfect-fdr-and-only-misses-1-variant-compared-to-the-other-two."
+class="section level2">
+<h2>Scenario 2: SuSiE and SuSiE-ash perform nearly identically.
+SuSiE-inf has perfect FDR and only misses 1 variant compared to the
+other two.</h2>
+<pre><code>     Method  FDR Recall CS_Size
+1     SuSiE 0.25    0.3   20.25
+2 SuSiE-inf 0.00    0.2    9.00
+3 SuSiE-ash 0.25    0.3   20.00</code></pre>
+<div id="iteration-1-1" class="section level3">
+<h3>Iteration 1</h3>
+<p>Again, the first iteration will always be equivalent for all three
+methods. They all construct 3 total CS (2 causals, 1 false positive).
+The false positive CS is a single variant in moderately high LD (~0.70)
+with a relatively small effect variable (ranked 6 / 10 in terms of
+magnitude, largest to smallest).</p>
+</div>
+<div id="iteration-2-1" class="section level3">
+<h3>Iteration 2</h3>
+<p>For the second iteration, both SuSiE and SuSiE-ash remained the same
+in terms of CS, while SuSiE-inf got rid of the false positive CS. Now,
+SuSiE-inf only has 2 CS both true positives. It is important to note
+that the marginal PIP for this non-causal variant, ID = 546, captured by
+SuSiE and SuSiE-ash is 0.997 whereas for SuSiE-inf it is ~ 0.83 (already
+significantly shrunk compared with the first iteration). Here the
+infinitesimal component seems to be working as intended, however, the
+ash component missed this.</p>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-29-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-29-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="iteration-3-1" class="section level3">
+<h3>Iteration 3</h3>
+<p>By the third iteration, SuSiE and SuSiE-ash have managed to capture
+the largest variant by effect size whereas SuSiE-inf missed this.
+Additionally, SuSiE and SuSiE-ash are slowly starting to reduce the
+marginal PIP value for the problematic variant described in the first
+two iterations, decreasing from 0.99 to ~0.85. This variant is still
+being captured, just the credible set size has increased from 1 to 16.
+SuSiE-inf still only has 2 credible sets, and is managing to shrink the
+problematic variant further. However, it is completly missing the
+largest effect that the other two methods captured.</p>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-31-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="final-iteration-1" class="section level3">
+<h3>Final Iteration</h3>
+<p>SuSiE converged after 7 iterations, SuSiE-inf after 8, and SuSiE-ash
+after 8. SuSiE and SuSiE-ash both retained their 4 CS from iteration 3
+while further reducing the marginal PIP of the problematic variant down
+to ~0.01, however, its credible set only grew while never capturing any
+true casuals. When examining the LD structure of this large CS, all of
+the variants are in either high (~0.75) to near perfect LD with a single
+causal variant (as mentioned in the first iteration). SuSiE-inf remained
+relatively unchanged, it just kept shrinking variants until
+convergence.</p>
+<p><img src="figure/vignette.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-33-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/vignette.Rmd/unnamed-chunk-33-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="scenario-2-continued-with-refine" class="section level2">
+<h2>Scenario 2 Continued (with refine):</h2>
+<p>We can see by adding the <code>refine = T</code> parameter for this
+situation, we see no change in FDR/Recall. The only change in
+performance was the slight improvement in average credible set size from
+20.25 to 20.</p>
+<pre><code>             Method  FDR Recall CS_Size
+1             SuSiE 0.25    0.3   20.25
+2 SuSiE (w/ refine) 0.25    0.3   20.00</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.0 (2024-04-24)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sonoma 14.1
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/New_York
+tzcode source: internal
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] RColorBrewer_1.1-3  simxQTL_0.1.0       RcppEigen_0.3.4.0.2
+ [4] Rcpp_1.0.14         mr.ash.alpha_0.1-43 susieR_0.14.4      
+ [7] testthat_3.2.3      corrplot_0.95       patchwork_1.3.0    
+[10] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
+[13] dplyr_1.1.4         purrr_1.0.4         readr_2.1.5        
+[16] tidyr_1.3.1         tibble_3.2.1        ggplot2_3.5.1      
+[19] tidyverse_2.0.0     workflowr_1.7.1    
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1    farver_2.1.2        fastmap_1.2.0      
+ [4] reshape_0.8.9       promises_1.3.2      digest_0.6.37      
+ [7] timechange_0.3.0    mime_0.12           lifecycle_1.0.4    
+[10] ellipsis_0.3.2      processx_3.8.5      magrittr_2.0.3     
+[13] compiler_4.4.0      rlang_1.1.5         sass_0.4.9         
+[16] tools_4.4.0         utf8_1.2.4          yaml_2.3.10        
+[19] knitr_1.49          labeling_0.4.3      htmlwidgets_1.6.4  
+[22] pkgbuild_1.4.6      plyr_1.8.9          pkgload_1.4.0      
+[25] miniUI_0.1.1.1      withr_3.0.2         desc_1.4.3         
+[28] grid_4.4.0          urlchecker_1.0.1    git2r_0.35.0       
+[31] profvis_0.4.0       xtable_1.8-4        colorspace_2.1-1   
+[34] MASS_7.3-64         scales_1.3.0        cli_3.6.4          
+[37] rmarkdown_2.29      crayon_1.5.3        generics_0.1.3     
+[40] remotes_2.5.0       RcppParallel_5.1.10 rstudioapi_0.17.1  
+[43] httr_1.4.7          tzdb_0.4.0          sessioninfo_1.2.3  
+[46] cachem_1.1.0        matrixStats_1.5.0   vctrs_0.6.5        
+[49] devtools_2.4.5      Matrix_1.7-2        jsonlite_1.8.9     
+[52] callr_3.7.6         hms_1.1.3           mixsqp_0.3-54      
+[55] irlba_2.3.5.1       jquerylib_0.1.4     glue_1.8.0         
+[58] ps_1.8.1            stringi_1.8.4       gtable_0.3.6       
+[61] later_1.4.1         RcppZiggurat_0.1.6  munsell_0.5.1      
+[64] pillar_1.10.1       htmltools_0.5.8.1   brio_1.1.5         
+[67] R6_2.6.1            rprojroot_2.0.4     evaluate_1.0.3     
+[70] shiny_1.10.0        lattice_0.22-6      Rfast_2.1.4        
+[73] memoise_2.0.1       httpuv_1.6.15       bslib_0.9.0        
+[76] whisker_0.4.1       xfun_0.50           fs_1.6.5           
+[79] usethis_3.1.0       getPass_0.2-4       pkgconfig_2.0.3    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
