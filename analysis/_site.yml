@@ -9,12 +9,8 @@ navbar:
     href: about.html
   - text: License
     href: license.html
-  - text: "Simulation Results"
-    href: Simulation-Results.html
-  - text: "Simulation Results (New)"
-    href: Simulation-Results-Tmp.html
-  - text: "Simulation Tables"
-    href: simulation-tables.html
+  - text: "Vignette"
+    href: vignette.html
   - text: "SuSiE Improvements"
     href: improvements.html
   right:
