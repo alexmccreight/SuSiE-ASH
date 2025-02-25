@@ -13,6 +13,8 @@ navbar:
     href: vignette.html
   - text: "SuSiE Improvements"
     href: improvements.html
+  - text: "test"
+    href: tmp-vignette.nb.html
   right:
   - icon: fab fa-github
     text: Source code
