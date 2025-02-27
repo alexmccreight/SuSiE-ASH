@@ -1,0 +1,32 @@
+Encoding: UTF-8
+Type: Package
+Package: mr.ash.alpha
+Version: 0.1-43
+Date: 2023-10-27
+Title: Multiple Regression with Adaptive Shrinkage
+Authors@R: c(person("Youngseok","Kim",role=c("aut","cre"),
+                    email="youngseok@uchicago.edu"),
+             person("Peter","Carbonetto",role="aut",
+                    email="peter.carbonetto@gmail.com"),
+             person("Matthew","Stephens",role="aut"))
+URL: https://github.com/stephenslab/mr.ash.alpha
+BugReports: https://github.com/stephenslab/mr.ash.alpha/issues
+Description: Implements variational empirical Bayes methods for linear
+    regression. Coordinate-wise optimization algorithms for model fitting
+    are implemented in C++ for efficient handling of large-scale data
+    sets.
+License: MIT + file LICENSE
+Depends: R (>= 3.1.0)
+Imports:
+    Rcpp (>= 1.0.1),
+    Matrix,
+    stats
+LinkingTo:
+    Rcpp,
+    RcppArmadillo (>= 0.9.700.2)
+Suggests:
+    glmnet,
+    ncvreg
+NeedsCompilation: yes
+LazyData: true
+RoxygenNote: 7.1.2
