@@ -5,7 +5,19 @@ output:
     code_folding: hide
 ---
 
-```{r, include = F}
+This vignette demonstrates an issue where our SuSiE.ash (Marginal) model fails to update its coefficients after the first iteration of SuSiE. In this simulation, we generate an oligogenic data setting and run the following steps:
+
+1. Run a single iteration of SuSiE.
+
+2. Extract the residuals.
+
+3. Perform univariate regression on the residuals and compute & plot the z-scores to demonstrate there are signals SuSiE missed in the first iteration.
+
+4. Continue on with the SuSiE.ash (Marginal) algorithm, specifically showcasing how the mr.ash component misses all signals. 
+
+## Read in Libraries, Packages, & Helper Functions
+
+```{r, results='hide', message = F, warning = F}
 # Libraries
 library(tidyverse)
 library(Rcpp)
@@ -219,17 +231,6 @@ generate_sparse_eqtl_data <- function(X,
 }
 ```
 
-
-This vignette demonstrates an issue where our SuSiE.ash (Marginal) model fails to update its coefficients after the first iteration of SuSiE. In this simulation, we generate an oligogenic data setting and run the following steps:
-
-1. Run a single iteration of SuSiE.
-
-2. Extract the residuals.
-
-3. Perform univariate regression on the residuals and compute & plot the z-scores to demonstrate there are signals SuSiE missed in the first iteration.
-
-4. Continue on with the SuSiE.ash (Marginal) algorithm, specifically showcasing how the mr.ash component misses all signals. 
-
 ## Univariate Regression on Residuals
 
 ```{r, message = F, warning = F}
@@ -271,7 +272,7 @@ After the first iteration of SuSiE, none of the z-scores surpasses the Bonferron
 
 ## Running the mr.ash update
 
-```{r ash, message = F, include = F}
+```{r ash, message = F, warning = F, results='hide'}
 # Run first iteration of susie-ash marginal
 res_marg <- susie_ash_RE_Marg(
                   X                = scale(data$ori.X),
