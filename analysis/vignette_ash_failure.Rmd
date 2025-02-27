@@ -1,0 +1,310 @@
+---
+title: "Failure of the mr.ash component to update after the first iteration of SuSiE"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r, include = F}
+# Libraries
+library(tidyverse)
+library(Rcpp)
+library(RcppArmadillo)
+
+# Packages
+source("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/code/susie_versions/SuSiE_Ash_Marginal.R")
+devtools::load_all("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/new-rcpp/mr.ash.alpha", recompile = T)
+devtools::load_all('/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/submodules/susieR')
+
+# Data
+precomputed_matrices <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/vignettes/precomputed_matrices.rds")
+X20 <- readRDS("/Users/alexmccreight/Columbia/data/X20")
+X_subset <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/X_subset")
+
+# Data Generation Function
+generate_eqtl_data <- function(X,
+                               h2_total = 0.3,            # Total heritability. h2
+                               prop_h2_sparse = 0.65,     # Proportion of h2_total explained by sparse effects (including sentinel).
+                               prop_h2_oligogenic = 0.20, # Proportion of h2_total explained by oligogenic effects
+                               prop_h2_infinitesimal = 0.15, # Proportion of h2_total explained by infinitesimal effects
+                               prop_h2_sentinel = 0.7,    # Proportion of h2_sparse explained by sentinel SNP. h2_s
+                               n_oligogenic = 20,
+                               mixture_props = c(0.6, 0.4), # Adjusted mixture proportions
+                               mixture_sds = c(0.0025, 0.005), # Standard deviations for mixture components
+                               seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+
+  ori.X <- X
+  X <- scale(X)
+
+  n_samples <- nrow(X)
+  n_features <- ncol(X)
+
+  # Calculate effect sizes for each component
+  h2_sparse <- h2_total * prop_h2_sparse #h2_cojo --> change to 30%?
+  h2_sentinel <- h2_sparse * prop_h2_sentinel
+  h2_other_sparse <- h2_sparse - h2_sentinel
+  h2_oligogenic <- h2_total * prop_h2_oligogenic
+  h2_infinitesimal <- h2_total * prop_h2_infinitesimal
+
+  # Generate effect sizes
+  beta <- rep(0, n_features)
+
+  # Sentinel SNP effect (largest effect among sparse effects)
+  sentinel_index <- sample(1:n_features, 1)
+  beta[sentinel_index] <- rnorm(1, 0, sqrt(h2_sentinel))
+
+  # Other sparse effects (large and mappable)
+  n_other_sparse <- 2
+  other_sparse_indices <- sample(setdiff(1:n_features, sentinel_index), n_other_sparse)
+  if (n_other_sparse > 0) {
+    # Distribute h2_other_sparse equally among other sparse SNPs
+    beta[other_sparse_indices] <- rnorm(n_other_sparse, 0, sqrt(h2_other_sparse / n_other_sparse))
+    # Ensure the sentinel SNP has the largest effect size
+    max_other_sparse_effect <- max(abs(beta[other_sparse_indices]))
+    if (abs(beta[sentinel_index]) <= max_other_sparse_effect) {
+      beta[sentinel_index] <- sign(beta[sentinel_index]) * (max_other_sparse_effect + 0.01)
+    }
+  }
+
+  # Combined sparse effects
+  sparse_indices <- c(sentinel_index, other_sparse_indices)
+  sparse_effects <- X[, sparse_indices] %*% beta[sparse_indices]
+
+  # Scale sparse effects to achieve desired heritability
+  scaling_factor_sparse <- sqrt(h2_sparse / var(sparse_effects))
+  beta[sparse_indices] <- beta[sparse_indices] * as.vector(scaling_factor_sparse)
+
+  # Ensure the sentinel SNP has the largest effect
+  max_other_sparse_effect <- max(abs(beta[other_sparse_indices]))
+  if (abs(beta[sentinel_index]) <= max_other_sparse_effect) {
+    beta[sentinel_index] <- sign(beta[sentinel_index]) * (max_other_sparse_effect + 0.01)
+  }
+
+  # Oligogenic effects (adjust mixture proportions and sds)
+  non_sparse_indices <- setdiff(1:n_features, c(sentinel_index, other_sparse_indices))
+  n_oligogenic <- min(n_oligogenic, length(non_sparse_indices))
+  oligogenic_indices <- sample(non_sparse_indices, n_oligogenic, replace = FALSE)
+
+  mixture_assignments <- sample(1:length(mixture_props), length(oligogenic_indices), replace = TRUE, prob = mixture_props)
+  beta[oligogenic_indices] <- rnorm(length(oligogenic_indices), 0, mixture_sds[mixture_assignments])
+
+  # Scale oligogenic effects to achieve desired heritability
+  oligogenic_effects <- X[, oligogenic_indices] %*% beta[oligogenic_indices]
+  scaling_factor <- sqrt(h2_oligogenic / var(oligogenic_effects))
+  beta[oligogenic_indices] <- beta[oligogenic_indices] * as.vector(scaling_factor)
+
+  # Infinitesimal effects (small effects on remaining SNPs)
+  infinitesimal_indices <- setdiff(non_sparse_indices, oligogenic_indices)
+  infinitesimal_effects <- rep(0, n_features)
+  if (length(infinitesimal_indices) > 0) {
+    infinitesimal_effects[infinitesimal_indices] <- rnorm(length(infinitesimal_indices), 0, sqrt(h2_infinitesimal / length(infinitesimal_indices)))
+  }
+  beta <- beta + as.vector(infinitesimal_effects)
+
+  # Generate y
+  y <- X %*% beta
+
+  # Add noise to achieve desired total heritability
+  var_y <- var(as.vector(y))
+  var_epsilon <- var_y * (1 - h2_total) / h2_total
+  epsilon <- rnorm(n_samples, 0, sqrt(var_epsilon))
+  y <- y + epsilon
+
+  # Calculate actual heritabilities
+  var_y_total <- var(as.vector(y))
+  h2_sentinel_actual <- var(X[, sentinel_index] * beta[sentinel_index]) / var_y_total
+
+  # Sparse effects heritability
+  sparse_indices <- c(sentinel_index, other_sparse_indices)
+  h2_sparse_actual <- var(X[, sparse_indices] %*% beta[sparse_indices]) / var_y_total
+
+  # Oligogenic effects heritability
+  h2_oligogenic_actual <- var(X[, oligogenic_indices] %*% beta[oligogenic_indices]) / var_y_total
+
+  # Infinitesimal effects heritability
+  h2_infinitesimal_actual <- var(X %*% infinitesimal_effects) / var_y_total
+
+  h2_total_actual <- var(as.vector(X %*% beta)) / var_y_total
+
+  ori.y <- y
+  y <- scale(y, center = TRUE, scale = FALSE)
+
+  # Create a full-length mixture_assignments vector
+  mixture_assignments_full <- rep(NA, n_features)
+  mixture_assignments_full[oligogenic_indices] <- mixture_assignments
+
+  return(list(
+    ori.X = ori.X,
+    X = X,
+    ori.y = ori.y,
+    y = y,
+    beta = beta,
+    h2_total = h2_total_actual,
+    h2_sparse = h2_sparse_actual,
+    h2_sentinel = h2_sentinel_actual,
+    h2_oligogenic = h2_oligogenic_actual,
+    h2_infinitesimal = h2_infinitesimal_actual,
+    sentinel_index = sentinel_index,
+    other_sparse_indices = other_sparse_indices,
+    oligogenic_indices = oligogenic_indices,
+    infinitesimal_indices = infinitesimal_indices,
+    mixture_assignments = mixture_assignments_full,
+    var_epsilon = var_epsilon,
+    sparse_indices = sparse_indices
+  ))
+}
+
+# Function to Identify Causal SNPs Based on PVE Threshold
+is_causal <- function(eqtl_data, pve_threshold) {
+  # Get the beta vector and residual variance for this simulation
+  beta <- eqtl_data$beta
+  var_epsilon <- eqtl_data$var_epsilon
+
+  # Compute variance explained by each SNP (since Var(X_j) = 1)
+  variance_explained <- beta^2
+
+  # Compute total genetic variance
+  var_g <- sum(variance_explained)
+
+  # Compute total variance (genetic variance + residual variance)
+  total_variance <- var_g + var_epsilon
+
+  # Compute PVE for each SNP
+  proportion_var_explained <- variance_explained / total_variance
+
+  # Define causal SNPs based on the current PVE threshold
+  causal_SNPs <- which(proportion_var_explained > pve_threshold)
+  return(causal = causal_SNPs)
+}
+
+generate_sparse_eqtl_data <- function(X,
+                                      K = 10,      # Number of effect SNPs
+                                      h2 = 0.3,    # Variance explained
+                                      seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+
+  n_samples <- nrow(X)
+  n_features <- ncol(X)
+
+  # Initialize beta (effect sizes) to zero
+  beta <- rep(0, n_features)
+
+  # (a) Sample causal SNP indices
+  causal_indices <- sample(1:n_features, K, replace = FALSE)
+
+  # (b) Assign N(0, 0.6^2) effects to causal SNPs
+  beta[causal_indices] <- rnorm(K, mean = 0, sd = 0.6)
+
+  # Compute genetic effects
+  genetic_effect <- X %*% beta
+
+  # (c) Solve for σ²
+  var_g <- var(genetic_effect)  # Variance from genetic effects
+  var_e <- var_g * (1 - h2) / h2  # Residual variance
+
+  # (d) Generate phenotype y ~ N(Xβ, σ²)
+  y <- genetic_effect + rnorm(n_samples, mean = 0, sd = sqrt(var_e))
+
+  # Return results
+  return(list(
+    X = X,
+    y = y,
+    beta = beta,
+    causal_indices = causal_indices,
+    var_epsilon = var_e,
+    h2_input = h2,
+    h2_estimated = var_g / (var_g + var_e)
+  ))
+}
+```
+
+
+This vignette demonstrates an issue where our SuSiE.ash (Marginal) model fails to update its coefficients after the first iteration of SuSiE. In this simulation, we generate an oligogenic data setting and run the following steps:
+
+1. Run a single iteration of SuSiE.
+
+2. Extract the residuals.
+
+3. Perform univariate regression on the residuals and compute & plot the z-scores to demonstrate there are signals SuSiE missed in the first iteration.
+
+4. Continue on with the SuSiE.ash (Marginal) algorithm, specifically showcasing how the mr.ash component misses all signals. 
+
+## Univariate Regression on Residuals
+
+```{r, message = F, warning = F}
+# Generate Data
+data <- generate_eqtl_data(X = X20, h2_total = 0.3, mixture_props = c(0.75, 0.25), seed = 1)
+data$causal <- is_causal(data, 0.005)
+
+# Run single iteration of SuSiE
+res_susie <- susie(X = data$ori.X, y = data$ori.y, L = 10, max_iter = 1, standardize = T, intercept = T)
+
+# Extract Intercept + Coefficients
+coefs         <- coef(res_susie)
+intercept_hat <- coefs[1]
+beta_hat      <- coefs[-1]
+
+# Calculate Residuals
+resid <- data$ori.y - (intercept_hat + data$ori.X %*% beta_hat)
+
+# Run univariate regression on residuals + calculate z-scores
+res_reg <- univariate_regression(X = data$ori.X, y = resid, center = F, scale = F)
+z_scores <- res_reg$betahat / res_reg$sebetahat
+
+# Calculate p-value + bonferroni adjustment
+pvals <- 2 * pnorm(abs(z_scores), lower.tail = FALSE)
+pvals_bonf <- p.adjust(pvals, method = "bonferroni")
+sig_idx <- which(pvals_bonf < 0.05)  # no variants meet threshold
+alpha_bonf <- 0.05 / length(pvals_bonf)
+z_thresh   <- qnorm(1 - alpha_bonf / 2)
+highlight_idx <- c(data$oligogenic_indices)
+
+# Plot z-scores, highlight oligogenic indices, and include bonferonni threshold
+plot(z_scores, main = "Univariate z-scores on the residuals\nPurple points denote oligogenic variants", ylab = "z-score", ylim = c(-5,5))
+abline(h =  z_thresh, col = "red", lty = 2)
+abline(h = -z_thresh, col = "red", lty = 2)
+points(highlight_idx, z_scores[highlight_idx], col = "purple", pch = 19)
+```
+
+After the first iteration of SuSiE, none of the z-scores surpasses the Bonferroni threshold, although many variants (particularly oligogenic variants) come close. This suggests that there should still be a sufficient signals remaining in after the first iteration of SuSiE for the mr.ash component to capture. 
+
+## Running the mr.ash update
+
+```{r ash, message = F, include = F}
+# Run first iteration of susie-ash marginal
+res_marg <- susie_ash_RE_Marg(
+                  X                = scale(data$ori.X),
+                  y                = scale(data$ori.y),
+                  L                = 10,
+                  verbose          = F,
+                  coverage         = 0.95,
+                  XtX              = precomputed_matrices$XtX,
+                  LD               = precomputed_matrices$LD,
+                  V                = precomputed_matrices$V,
+                  Dsq              = precomputed_matrices$Dsq,
+                  VtXt             = precomputed_matrices$VtXt,
+                  update_ash_sigma = F,
+                  K.length         = 20,
+                  upper_bound      = 2,
+                  maxiter          = 1)
+```
+
+
+```{r plot}
+# Compute the desired values
+max_theta <- max(abs(res_marg$theta))
+var_theta <- var(res_marg$theta)
+
+plot(res_marg$theta, ylim = c(-1e-5, 1e-5),
+     main = "Distribution of Theta Values after First\nIteration of SuSiE-ash (Marginal)",
+     ylab = "Theta")
+legend("topright", 
+       legend = c(
+         bquote(Max("|" * bold(theta) * "|") == .(format(max_theta, digits = 3))),
+         bquote(Var(bold(theta)) == .(format(var_theta, digits = 3)))
+       ),
+       bty = "n")
+```
+
+The mr.ash coefficient values, theta, are very small--essentially negligible--despite there being sufficient signals after the first SuSiE iteration.   
