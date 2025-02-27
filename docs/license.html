@@ -13,7 +13,7 @@
 
 <title>License</title>
 
-<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
@@ -32,8 +32,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
 <!-- Add a small amount of space between sections. -->
@@ -264,7 +264,13 @@ $(document).ready(function () {
   <a href="license.html">License</a>
 </li>
 <li>
-  <a href="Simulation-Results.html">Simulation Results</a>
+  <a href="vignette_ash_failure.html">Vignette: mr.ash failure</a>
+</li>
+<li>
+  <a href="vignette_iteration_analysis_1.html">Vignette: iteration analysis</a>
+</li>
+<li>
+  <a href="improvements.html">SuSiE Improvements</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -313,7 +319,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-04-21
+<strong>Last updated:</strong> 2025-02-27
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -360,15 +366,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree95669ae562202051fb4cc48bcf8f5339746a9f43targetblank95669aea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree688975216449a97eb73efacbf01cc05e83f86543targetblank6889752a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/95669ae562202051fb4cc48bcf8f5339746a9f43" target="_blank">95669ae</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/688975216449a97eb73efacbf01cc05e83f86543" target="_blank">6889752</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree95669ae562202051fb4cc48bcf8f5339746a9f43targetblank95669aea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree688975216449a97eb73efacbf01cc05e83f86543targetblank6889752a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -378,7 +384,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/95669ae562202051fb4cc48bcf8f5339746a9f43" target="_blank">95669ae</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/688975216449a97eb73efacbf01cc05e83f86543" target="_blank">6889752</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -394,25 +400,94 @@ were generated:
 <pre><code>
 Ignored files:
     Ignored:    .DS_Store
+    Ignored:    .Rapp.history
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/.DS_Store
     Ignored:    code/.DS_Store
-    Ignored:    code/SuSiE-ASH-Versions/.DS_Store
+    Ignored:    code/susie_versions/.DS_Store
     Ignored:    data/.DS_Store
+    Ignored:    manuscript_scripts/
+    Ignored:    new-rcpp/.DS_Store
+    Ignored:    new-rcpp/matrix.multiplication/.DS_Store
+    Ignored:    new-rcpp/matrix.multiplication/.Rapp.history
+    Ignored:    new-rcpp/mr.ash.alpha/.DS_Store
+    Ignored:    new-rcpp/mr.ash.alpha/.Rbuildignore
+    Ignored:    new-rcpp/mr.ash.alpha/R/.DS_Store
+    Ignored:    new-rcpp/mr.ash.alpha/src/.DS_Store
+    Ignored:    new-rcpp/mr.ash.alpha/src/RcppExports.o
+    Ignored:    new-rcpp/mr.ash.alpha/src/caisa_rcpp.o
+    Ignored:    new-rcpp/mr.ash.alpha/src/mr.ash.alpha.so
+    Ignored:    scripts/.DS_Store
+    Ignored:    scripts/Old Scripts/.DS_Store
+    Ignored:    simulation/.DS_Store
+    Ignored:    simulation/misc/.DS_Store
     Ignored:    submodules/.DS_Store
 
 Untracked files:
-    Untracked:  Genotype-Matrix.R
-    Untracked:  X20
-    Untracked:  code/ROC_PR.Rmd
-    Untracked:  data/SimulationData.zip
-    Untracked:  data/SimulationData/
+    Untracked:  X_subset
+    Untracked:  code/Tmp.Rmd
+    Untracked:  misc/
+    Untracked:  overleaf_graphics/
+    Untracked:  preprint/KISS-paper.Rmd
+    Untracked:  scripts/LD_blocks/
+    Untracked:  scripts/commands_to_submit_eqtl_simple.R
+    Untracked:  scripts/eqtl_simulation_marginal.R
+    Untracked:  scripts/eqtl_simulation_simple.R
+    Untracked:  scripts/eqtl_simulation_v2.R
+    Untracked:  scripts/fineboost/
+    Untracked:  scripts/sparse_blip.R
+    Untracked:  scripts/sparse_eqtl_simulation_marginal.R
+    Untracked:  scripts/sparse_eqtl_simulation_simple.R
+    Untracked:  scripts/susie_ash_mod/
+    Untracked:  simulation/MarginalnumIter100_h2total0.3_h2sentinel0.7_L20_numOligogenic20_pvethreshold0.005_mixturesmall0.75_length5_UB1.rds
+    Untracked:  simulation/eqtl-results/
+    Untracked:  simulation/misc/Rcpp-Comparison.R
+    Untracked:  simulation/misc/RcppTesting.Rmd
+    Untracked:  simulation/misc/inf_debugging.Rmd
+    Untracked:  simulation/misc/learner.Rmd
+    Untracked:  simulation/misc/sim_analysis.Rmd
+    Untracked:  simulation/misc/sim_debugging.Rmd
+    Untracked:  simulation/misc/sim_download.Rmd
+    Untracked:  simulation/sparse-results/
+    Untracked:  simulation/src/bind_mount.sh
+    Untracked:  simulation/src/host_init.sh
+    Untracked:  simulation/src/mm_batch.sh
+    Untracked:  simulation/src/mm_interactive.sh
+    Untracked:  tmp_files/
+    Untracked:  vignettes/
 
 Unstaged changes:
-    Modified:   code/Simulation-Final.Rmd
-    Modified:   code/SuSiE-ASH-Versions/susie-ash-warmstart-v2.R
-    Modified:   submodules/susieR
+    Deleted:    analysis/Rcpp-Comparison.Rmd
+    Deleted:    analysis/Simulation-Results-Tmp.Rmd
+    Deleted:    analysis/Simulation-Results.Rmd
+    Deleted:    analysis/old_results/Simulation-Results(OLD).Rmd
+    Deleted:    analysis/old_results/Simulation-Results(OLD2).Rmd
+    Deleted:    analysis/old_results/Simulation-Results-2(OLD).Rmd
+    Deleted:    analysis/simulation-tables.Rmd
+    Deleted:    analysis/tmp-vignette.Rmd
+    Deleted:    analysis/vignette.Rmd
+    Modified:   code/susie_versions/SuSiE_Ash_Marginal.R
+    Modified:   code/susie_versions/susie_ash_mod.R
+    Modified:   code/susie_versions/susie_inf.R
+    Deleted:    scripts/LD_blocks_precomputations.R
+    Deleted:    scripts/comannds_to_submit_LD.R
+    Deleted:    scripts/commands_to_submit_LD_precomputations.R
+    Deleted:    scripts/commands_to_submit_ash_mod.R
+    Modified:   scripts/commands_to_submit_eqtl.R
+    Deleted:    scripts/eqtl_ash_mod.R
+    Deleted:    scripts/eqtl_ash_mod_default_grid.R
+    Modified:   scripts/eqtl_simulation.R
+    Deleted:    scripts/process_ld_block.R
+    Modified:   scripts/sparse/commands_to_submit_sparse.R
+    Modified:   simulation/LD_blocks.sh
+    Modified:   simulation/commands_to_submit.txt
+    Modified:   simulation/eqtl_sim.sh
+    Modified:   simulation/identification.Rmd
+    Modified:   simulation/sparse_eqtl_sim.sh
+    Modified:   simulation/src/mm_jobman.sh
+    Modified:   submodules/VEB.Boost
+    Modified:   submodules/pecotmr
 
 </code></pre>
 <p>
@@ -458,6 +533,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/830c08bbad47a1532d0785fa9147c0c3ba443fe8/docs/license.html" target="_blank">830c08b</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2024-04-21
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 html
