@@ -9,12 +9,12 @@ navbar:
     href: about.html
   - text: License
     href: license.html
-  - text: "Vignette"
-    href: vignette.html
+  - text: "Vignette: mr.ash failure"
+    href: vignette_ash_failure.html
+  - text: "Vignette: iteration analysis"
+    href: vignette_iteration_analysis_1.html
   - text: "SuSiE Improvements"
     href: improvements.html
-  - text: "test"
-    href: tmp-vignette.nb.html
   right:
   - icon: fab fa-github
     text: Source code
