@@ -334,19 +334,16 @@ div.tocify {
   <a href="index.html">Home</a>
 </li>
 <li>
-  <a href="about.html">About</a>
-</li>
-<li>
-  <a href="license.html">License</a>
-</li>
-<li>
-  <a href="vignette_ash_failure.html">Vignette: mr.ash failure</a>
-</li>
-<li>
-  <a href="vignette_iteration_analysis_1.html">Vignette: iteration analysis</a>
-</li>
-<li>
   <a href="improvements.html">SuSiE Improvements</a>
+</li>
+<li>
+  <a href="vignette_ash_failure.html">Vignette: mr.ash Failure</a>
+</li>
+<li>
+  <a href="vignette_iteration_analysis_1.html">Vignette: Iteration Analysis</a>
+</li>
+<li>
+  <a href="synthetic_association.html">Synthetic Association</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -395,7 +392,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-02-27
+<strong>Last updated:</strong> 2025-03-03
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -442,15 +439,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree688975216449a97eb73efacbf01cc05e83f86543targetblank6889752a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6betargetblank1c6083ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/688975216449a97eb73efacbf01cc05e83f86543" target="_blank">6889752</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6be" target="_blank">1c6083e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree688975216449a97eb73efacbf01cc05e83f86543targetblank6889752a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6betargetblank1c6083ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -460,7 +457,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/688975216449a97eb73efacbf01cc05e83f86543" target="_blank">6889752</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6be" target="_blank">1c6083e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -496,6 +493,7 @@ Ignored files:
     Ignored:    new-rcpp/mr.ash.alpha/src/mr.ash.alpha.so
     Ignored:    scripts/.DS_Store
     Ignored:    scripts/Old Scripts/.DS_Store
+    Ignored:    scripts/benchmark/.DS_Store
     Ignored:    simulation/.DS_Store
     Ignored:    simulation/misc/.DS_Store
     Ignored:    submodules/.DS_Store
@@ -504,9 +502,15 @@ Untracked files:
     Untracked:  X_subset
     Untracked:  code/Tmp.Rmd
     Untracked:  misc/
+    Untracked:  oligogenic_data_generation.R
     Untracked:  overleaf_graphics/
     Untracked:  preprint/KISS-paper.Rmd
     Untracked:  scripts/LD_blocks/
+    Untracked:  scripts/benchmark/command_generation/
+    Untracked:  scripts/benchmark/plots/
+    Untracked:  scripts/benchmark/sparse_metrics/
+    Untracked:  scripts/benchmark/sparse_result_files/
+    Untracked:  scripts/benchmark/sparse_result_files_2/
     Untracked:  scripts/commands_to_submit_eqtl_simple.R
     Untracked:  scripts/eqtl_simulation_marginal.R
     Untracked:  scripts/eqtl_simulation_simple.R
@@ -516,7 +520,11 @@ Untracked files:
     Untracked:  scripts/sparse_eqtl_simulation_marginal.R
     Untracked:  scripts/sparse_eqtl_simulation_simple.R
     Untracked:  scripts/susie_ash_mod/
-    Untracked:  simulation/MarginalnumIter100_h2total0.3_h2sentinel0.7_L20_numOligogenic20_pvethreshold0.005_mixturesmall0.75_length5_UB1.rds
+    Untracked:  seed9_data.rds
+    Untracked:  seed9_ld.rds
+    Untracked:  seed9_res.rds
+    Untracked:  simulation/15x3jxl3enlnnsejfeke1_tmate.log
+    Untracked:  simulation/15x3jxl3enlnnsejfeke1_tmate_session.log
     Untracked:  simulation/eqtl-results/
     Untracked:  simulation/misc/Rcpp-Comparison.R
     Untracked:  simulation/misc/RcppTesting.Rmd
@@ -526,23 +534,12 @@ Untracked files:
     Untracked:  simulation/misc/sim_debugging.Rmd
     Untracked:  simulation/misc/sim_download.Rmd
     Untracked:  simulation/sparse-results/
-    Untracked:  simulation/src/bind_mount.sh
-    Untracked:  simulation/src/host_init.sh
-    Untracked:  simulation/src/mm_batch.sh
-    Untracked:  simulation/src/mm_interactive.sh
+    Untracked:  sparse_simulation.ipynb
+    Untracked:  test_script.R
     Untracked:  tmp_files/
     Untracked:  vignettes/
 
 Unstaged changes:
-    Deleted:    analysis/Rcpp-Comparison.Rmd
-    Deleted:    analysis/Simulation-Results-Tmp.Rmd
-    Deleted:    analysis/Simulation-Results.Rmd
-    Deleted:    analysis/old_results/Simulation-Results(OLD).Rmd
-    Deleted:    analysis/old_results/Simulation-Results(OLD2).Rmd
-    Deleted:    analysis/old_results/Simulation-Results-2(OLD).Rmd
-    Deleted:    analysis/simulation-tables.Rmd
-    Deleted:    analysis/tmp-vignette.Rmd
-    Deleted:    analysis/vignette.Rmd
     Modified:   code/susie_versions/SuSiE_Ash_Marginal.R
     Modified:   code/susie_versions/susie_ash_mod.R
     Modified:   code/susie_versions/susie_inf.R
@@ -561,7 +558,6 @@ Unstaged changes:
     Modified:   simulation/eqtl_sim.sh
     Modified:   simulation/identification.Rmd
     Modified:   simulation/sparse_eqtl_sim.sh
-    Modified:   simulation/src/mm_jobman.sh
     Modified:   submodules/VEB.Boost
     Modified:   submodules/pecotmr
 
@@ -578,7 +574,6 @@ have uncommitted changes.
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
-
 <p>
 These are the previous versions of the repository in which changes were
 made to the R Markdown (<code>analysis/improvements.Rmd</code>) and HTML
@@ -609,6 +604,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/42bff018856a73a2c8529044430d71018dad43ae/docs/improvements.html" target="_blank">42bff01</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-02-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -790,6 +802,11 @@ testing)</li>
 href="https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-023-01597-3/MediaObjects/41588_2023_1597_MOESM1_ESM.pdf">susie-inf</a>
 pg. 14)</li>
 </ol>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
