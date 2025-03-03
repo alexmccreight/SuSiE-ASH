@@ -1,0 +1,50 @@
+---
+title: "Synthetic Association"
+output: html_document
+---
+
+The following vignette will explore a replicate where many non-causal variants are in near-perfect to moderate LD with two other causal variants creating a synthetic association. We will compare the difference in model output between SuSiE and Fineboost. 
+
+# Moderate LD (|r| < 0.5) Sparse Simulation Setting
+
+```{r, message = F, warning = F}
+library(tidyverse)
+LD_mat <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/seed9_ld.rds")
+data <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/seed9_data.rds")
+result <- readRDS("/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/seed9_res.rds")
+```
+
+# Causal Indices, Effect Sizes, and LD
+
+This replicate contains 5 causal variants where the two strongest ones (ID = 408 and 565) are in moderate LD (|r| = 0.43).
+
+```{r}
+data$causal_indices
+data$beta[data$causal_indices] %>% round(.,2)
+
+LD_mat[data$causal_indices, data$causal_indices] %>% round(.,2) %>% abs()
+```
+
+## SuSiE vs Fineboost Credible Sets
+
+Both SuSiE and Fineboost capture a single CS of size 70 and 77 respectively. Fineboost managed to capture all 70 variants found in the SuSiE CS and added 7 additional variants INCLUDING a causal variant. 
+
+```{r, echo =F}
+cat("SuSiE CS:\n")
+susie_cs <- result$susie_out$sets$cs$L1; susie_cs
+
+cat("\n Fineboost CS:\n")
+fineboost_cs <- result$fineboost_out$ucos_details$ucos$ucos_index$`ucos1:y1`; sort(fineboost_cs)
+
+#intersect(fineboost_cs, susie_cs) %>% length()
+```
+
+## LD Between Credible SuSiE's Credible Set and Causal Variants
+
+All variants in SuSiE's credible set are in near perfect LD with a causal variant and moderate LD with another. 
+
+```{r}
+LD_mat[susie_cs, data$causal_indices] %>% abs() %>% round(.,2)
+#LD_mat[sort(fineboost_cs), data$causal_indices] %>% abs() %>% round(.,2)
+```
+
