@@ -5,18 +5,15 @@ navbar:
   left:
   - text: Home
     href: index.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
-  - text: "Vignette: mr.ash failure"
+  - text: "SuSiE Improvements"
+    href: improvements.html
+  - text: "Vignette: mr.ash Failure"
     href: vignette_ash_failure.html
-  - text: "Vignette: iteration analysis"
+  - text: "Vignette: Iteration Analysis"
     href: vignette_iteration_analysis_1.html
   - text: "Synthetic Association"
     href: synthetic_association.html
-  - text: "SuSiE Improvements"
-    href: improvements.html
+
   right:
   - icon: fab fa-github
     text: Source code
