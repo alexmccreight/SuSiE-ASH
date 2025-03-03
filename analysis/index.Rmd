@@ -8,11 +8,12 @@ editor_options:
   chunk_output_type: console
 ---
 
-The `susieash` package combines the Sum of Single Effects regression model with adaptive shrinkage priors to improve FDR and Power in both sparse and oligogenic simulation settings. Currently, you can find three key sections on the website i) a list of general improvements to build upon the `susieR` package, ii) a vignette detailing when the ash component fails to capture signals in an oligogenic setting, and iii) an iteration analysis comparing how SuSiE, SuSiE-inf, and SuSiE.ash differ across iterations. 
+The `susieash` package combines the Sum of Single Effects regression model with adaptive shrinkage priors to improve FDR and Power in both sparse and oligogenic simulation settings. Currently, you can find four key sections on the website i) a list of general improvements to build upon the `susieR` package, ii) a vignette detailing when the ash component fails to capture signals in an oligogenic setting, iii) an iteration analysis comparing how SuSiE, SuSiE-inf, and SuSiE.ash differ across iterations, and iv) an example of how SuSiE captures a false positive in LD with two causal variants and how Fineboost is able to capture one of the causal variants. 
 
 ## Table of Contents
 
 - [SuSiE Improvements](improvements.html)
 - [Ash Component Failure](vignette_ash_failure.html)
 - [Iteration Analysis](vignette_iteration_analysis_1.html)
+- [Synthetic Association Example](synthetic_association.rmd)
 
