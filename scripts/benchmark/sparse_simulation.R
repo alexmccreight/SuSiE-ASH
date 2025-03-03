@@ -85,7 +85,7 @@ simulation <- function(num_simulations = NULL,
 
     # Generate simulation data with seed equal to the replicate index
     data <- generate_sparse_eqtl_data(
-      X         = ld_block$X,
+      X         = scale(ld_block$X),
       K         = K,
       h2        = h2_total,
       ld_mode   = ld_mode,
