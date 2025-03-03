@@ -22,24 +22,15 @@ run_susie <- function(data, L, intercept = TRUE, standardize = TRUE) {
 }
 
 # Wrapper for SuSiE.ash (Marginal)
-run_susie_ash <- function(data, precomp, L, K.length, upper_bound, intercept = TRUE, standardize = TRUE) {
+run_susie_ash <- function(data, precomp, L, K.length, upper_bound) {
   cat("Starting SuSiE.ash (Marginal)\n")
 
-  # Manually scale X and y if intercept or standardize is TRUE.
-  X_in <- if (intercept || standardize) scale(data$X, center = intercept, scale = standardize) else data$X
-  y_in <- if (intercept || standardize) scale(data$y, center = intercept, scale = standardize) else data$y
-
   out <- susie_ash_RE_Marg(
-    X                = X_in,
-    y                = y_in,
+    X                = scale(data$X),
+    y                = scale(data$y),
     L                = L,
     verbose          = FALSE,
     coverage         = 0.95,
-    XtX              = precomp$XtX,
-    LD               = precomp$LD,
-    V                = precomp$V,
-    Dsq              = precomp$Dsq,
-    VtXt             = precomp$VtXt,
     update_ash_sigma = FALSE,
     K.length         = K.length,
     upper_bound      = upper_bound
@@ -48,30 +39,59 @@ run_susie_ash <- function(data, precomp, L, K.length, upper_bound, intercept = T
 }
 
 # Wrapper for SuSiE-inf
-run_susie_inf <- function(data, precomp, L, intercept = TRUE, standardize = TRUE) {
+run_susie_inf <- function(data, precomp, L) {
   cat("Starting SuSiE-inf\n")
 
-  # Manually scale X and y if needed.
-  X_in <- if (intercept || standardize) scale(data$X, center = intercept, scale = standardize) else data$X
-  y_in <- if (intercept || standardize) scale(data$y, center = intercept, scale = standardize) else data$y
-
   out <- susie_inf(
-    X       = X_in,
-    y       = y_in,
+    X       = scale(data$X),
+    y       = scale(data$y),
     L       = L,
     verbose = FALSE,
-    coverage = 0.95,
-    XtX     = precomp$XtX,
-    LD      = precomp$LD,
-    V       = precomp$V,
-    Dsq     = precomp$Dsq
+    coverage = 0.95
   )
   return(out)
 }
 
+
 # Wrapper for Fineboost
 run_fineboost <- function(data, null_max, intercept = TRUE, standardize = TRUE) {
   cat("Starting Fineboost\n")
+
+  # Check that X is a matrix
+  if (!is.matrix(data$X)) {
+    stop("data$X must be a matrix.")
+  }
+
+  # If column names are missing in X, assign default names
+  if (is.null(colnames(data$X))) {
+    cat("No column names found in data$X. Assigning default column names.\n")
+    colnames(data$X) <- paste0("var", seq_len(ncol(data$X)))
+  }
+
+  # Get the number of rows in X for consistency check
+  nX <- nrow(data$X)
+
+  # Check and process y: it must be a vector or a single-column matrix.
+  if (is.vector(data$y)) {
+    if (length(data$y) != nX) {
+      stop("Mismatch: length of data$y does not equal number of rows in data$X.")
+    }
+    # Convert vector to matrix then wrap in a list
+    data$y <- list(as.matrix(data$y))
+  } else if (is.matrix(data$y)) {
+    if (nrow(data$y) != nX) {
+      stop("Mismatch: number of rows in data$y does not equal number of rows in data$X.")
+    }
+    if (ncol(data$y) != 1) {
+      warning("data$y has more than one column. Only the first column will be used.")
+      data$y <- list(as.matrix(data$y[, 1, drop = FALSE]))
+    } else {
+      data$y <- list(data$y)
+    }
+  } else {
+    stop("data$y must be a vector or a matrix.")
+  }
+
   out <- colocboost(
     X              = data$X,
     Y              = data$y,

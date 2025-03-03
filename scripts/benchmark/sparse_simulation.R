@@ -6,18 +6,18 @@
 library(susieR)
 library(dplyr)
 library(magrittr)
+library(susieash)
+source("susie-ash-data/susie_inf.R")
 
 # Load Fineboost source files
 for (file in list.files("fineboost", pattern = "\\.R$", full.names = TRUE)) {
   source(file)
 }
 
-# Source helper functions from the helper_functions folder
-source("helper_functions/sparse_data_generation.R")
-source("helper_functions/run_methods.R")
-source("helper_functions/evaluate_method_performance.R")
-
-##### STILL NEED simxQTL and susieash #####
+# Source helper functions
+source("susie-ash-data/sparse_data_generation.R")
+source("susie-ash-data/run_methods.R")
+source("susie-ash-data/evaluate_method_performance.R")
 
 # Define the simulation function
 simulation <- function(num_simulations = NULL,
@@ -28,7 +28,7 @@ simulation <- function(num_simulations = NULL,
                        ld_mode         = NULL,
                        K.length        = NULL,
                        upper_bound     = NULL,
-                       LD_blocks_dir   = "LD_blocks_precomputed") {
+                       LD_blocks_dir   = NULL) {
 
   # Set Default Values if parameters are missing
   if (is.null(num_simulations)) num_simulations <- 2
@@ -39,10 +39,21 @@ simulation <- function(num_simulations = NULL,
   if (is.null(ld_mode))         ld_mode         <- "random"
   if (is.null(K.length))        K.length        <- 20
   if (is.null(upper_bound))     upper_bound     <- 2
+  if (is.null(LD_blocks_dir))   LD_blocks_dir   <- "LD_blocks_precomputed"
 
-  # Parse Command-Line Arguments (if any)
-  for (arg in commandArgs(trailingOnly = TRUE)) {
-    eval(parse(text = arg))
+  # Parse Command-Line Arguments (if any) robustly
+  args <- commandArgs(trailingOnly = TRUE)
+  if (length(args) > 0) {
+    for (arg in args) {
+      split_arg <- strsplit(arg, "=")[[1]]
+      key <- split_arg[1]
+      value <- split_arg[2]
+      if (key %in% c("ld_mode", "LD_blocks_dir")) {
+        assign(key, value)
+      } else {
+        assign(key, as.numeric(value))
+      }
+    }
   }
 
   # List available LD block files and check count
@@ -52,12 +63,13 @@ simulation <- function(num_simulations = NULL,
   }
   ld_block_files <- ld_block_files[1:num_simulations]
 
-  # Container for simulation metrics
-  all_metrics <- vector("list", num_simulations)
+  # Container for simulation results for each replicate (including data, metrics, and fine-mapping outputs)
+  all_results <- vector("list", num_simulations)
 
   # Loop over simulation replicates
   for (i in seq_len(num_simulations)) {
     cat("Running simulation", i, "of", num_simulations, "\n")
+    cat("Using LD block file:", basename(ld_block_files[i]), "\n")
 
     # Load precomputed LD block data
     ld_block <- readRDS(ld_block_files[i])
@@ -82,11 +94,10 @@ simulation <- function(num_simulations = NULL,
     )
 
     # Run methods via the wrapper functions
-    susie_out      <- run_susie(data, L, intercept = TRUE, standardize = FALSE)
-    susie_ash_out  <- run_susie_ash(data, precomp, L, K.length = K.length, upper_bound = upper_bound,
-                                    intercept = TRUE, standardize = FALSE)
-    susie_inf_out  <- run_susie_inf(data, precomp, L, intercept = TRUE, standardize = FALSE)
-    fineboost_out  <- run_fineboost(data, null_max, intercept = TRUE, standardize = FALSE)
+    susie_out      <- run_susie(data, L, intercept = TRUE, standardize = TRUE)
+    susie_ash_out  <- run_susie_ash(data, precomp, L, K.length = K.length, upper_bound = upper_bound)
+    susie_inf_out  <- run_susie_inf(data, precomp, L)
+    fineboost_out  <- run_fineboost(data, null_max, intercept = TRUE, standardize = TRUE)
 
     # Evaluate metrics from all methods using the evaluation function
     metrics <- evaluate_method_performance(
@@ -98,17 +109,49 @@ simulation <- function(num_simulations = NULL,
       data          = data
     )
 
-    # Save the metrics, data, and fine-mapping outputs
-    all_metrics[[i]] <- metrics
+    # Compile the replicate results: store simulation data, fine-mapping outputs, and evaluation metrics.
+    replicate_results <- list(
+      data            = data,
+      metrics         = metrics,
+      susie_out       = susie_out,
+      susie_ash_out   = susie_ash_out,
+      susie_inf_out   = susie_inf_out,
+      fineboost_out   = fineboost_out
+    )
+
+    # Save the replicate results in our results container
+    all_results[[i]] <- replicate_results
 
     # Remove large objects no longer needed to free memory
     rm(ld_block, precomp, susie_out, susie_ash_out, susie_inf_out, fineboost_out, data)
     gc()
   }
 
-  # Compile all results into a list including simulation parameters
+  # Compute averaged metrics across replicates
+  # Each replicate's metrics are stored as a data frame in replicate_results$metrics$metrics
+  all_metrics_list <- lapply(all_results, function(x) x$metrics$metrics)
+  # Assuming each data frame has rows for each method in the same order:
+  models <- all_metrics_list[[1]]$Model
+  avg_metrics <- data.frame(Model = models,
+                            CS_Size   = rep(0, length(models)),
+                            Coverage  = rep(0, length(models)),
+                            CS_FDR    = rep(0, length(models)),
+                            CS_Recall = rep(0, length(models)))
+  for (df in all_metrics_list) {
+    avg_metrics$CS_Size   <- avg_metrics$CS_Size   + df$CS_Size
+    avg_metrics$Coverage  <- avg_metrics$Coverage  + df$Coverage
+    avg_metrics$CS_FDR    <- avg_metrics$CS_FDR    + df$CS_FDR
+    avg_metrics$CS_Recall <- avg_metrics$CS_Recall + df$CS_Recall
+  }
+  avg_metrics$CS_Size   <- avg_metrics$CS_Size   / num_simulations
+  avg_metrics$Coverage  <- avg_metrics$Coverage  / num_simulations
+  avg_metrics$CS_FDR    <- avg_metrics$CS_FDR    / num_simulations
+  avg_metrics$CS_Recall <- avg_metrics$CS_Recall / num_simulations
+
+  # Compile all results into a list including simulation parameters and averaged metrics
   simulation_results <- list(
-    all_metrics = all_metrics,
+    all_results = all_results,
+    avg_metrics = avg_metrics,
     parameters  = list(
       num_simulations = num_simulations,
       h2_total        = h2_total,
@@ -122,8 +165,8 @@ simulation <- function(num_simulations = NULL,
     )
   )
 
-  # Save Simulation Results as RDS File
-  output_dir <- "/home/apm2217/output"
+  # Save Simulation Results as an RDS File
+  output_dir <- "/home/apm2217/output"  # Update as needed
   file_name <- paste0("numIter", num_simulations,
                       "_h2total", h2_total,
                       "_K", K,
@@ -147,5 +190,5 @@ results <- simulation(
   L               = NULL,
   null_max        = NULL,
   ld_mode         = NULL,
-  LD_blocks_dir   = "LD_blocks_precomputed"
+  LD_blocks_dir   = NULL
 )

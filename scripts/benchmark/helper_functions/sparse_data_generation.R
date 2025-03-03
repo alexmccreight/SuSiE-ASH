@@ -1,5 +1,5 @@
 # helper function to sample causal indices that satisfy an LD threshold
-get_valid_causal <- function(G, ncausal, ld_threshold, max_attempts = 100, ld_matrix = NULL) {
+get_valid_causal <- function(G, ncausal, ld_threshold, max_attempts = 10000, ld_matrix = NULL) {
   snp_indices <- seq_len(ncol(G))
   for (attempt in 1:max_attempts) {
     causal_indices <- sort(sample(snp_indices, ncausal))
@@ -19,8 +19,63 @@ get_valid_causal <- function(G, ncausal, ld_threshold, max_attempts = 100, ld_ma
   stop("Could not find a set of causal variants with LD (|r|) below ", ld_threshold, " after ", max_attempts, " attempts.")
 }
 
+# helper function to parse number of causals
+parse_num_causal_snps <- function(value) {
+  is_pct <- FALSE
+  if (grepl("[^0-9]+(pct|avg)?$", value, ignore.case = TRUE)) {
+    num_tmp <- as.numeric(gsub("[^0-9]+", "", value))
+    num_mod <- tolower(gsub("[^a-zA-Z]+", "", value))
+
+    if (num_mod %in% c("pct", "avg")) {
+      if (num_mod == "pct") {
+        if (num_tmp <= 0 || num_tmp > 100) {
+          stop("Percentage of causal SNPs must be in (0, 100].")
+        }
+        num_tmp <- num_tmp / 100
+        is_pct <- TRUE
+      } else if (num_mod == "avg") {
+        if (num_tmp == 0) {
+          stop("Average number of causal SNPs must be at least 1")
+        }
+        num_smpl <- 0
+        while (num_smpl == 0) {
+          num_smpl <- rpois(1, num_tmp)
+        }
+        num_tmp <- num_smpl
+      }
+    } else {
+      if (num_tmp < 1) {
+        stop("Number of causal SNPs must be at least 1")
+      }
+    }
+  } else {
+    num_tmp = as.numeric(gsub("[^0-9]+", "", value))
+  }
+
+  return(list(value = num_tmp, is_pct = is_pct))
+}
+
+# helper function to generate phenotype
+simulate_polygenic_trait <- function(g, h2g) {
+  n <- length(g)
+
+  if (h2g > 0) {
+    s2g <- var(g)  # Genetic variance
+    s2e <- s2g * ((1 / h2g) - 1)  # Environmental variance
+    e <- rnorm(n, mean = 0, sd = sqrt(s2e))
+    y <- g + e
+  } else {
+    y <- rnorm(n, mean = 0, sd = 1)
+  }
+
+  # Standardize the phenotype
+  y <- scale(y, center = TRUE, scale = FALSE)
+
+  return(y)
+}
+
 generate_sparse_eqtl_data <- function(X, K = 10, h2 = 0.3, seed = NULL,
-                                      ld_mode = "random", ld_matrix = NULL, max_attempts = 100) {
+                                      ld_mode = "random", ld_matrix = NULL, max_attempts = 10000) {
   if (!is.null(seed)) set.seed(seed)
 
   n_samples <- nrow(X)
