@@ -1,0 +1,531 @@
+---
+title: "Preliminary Benchmark Results"
+output: html_document
+---
+
+## Recall & FDR Plots
+
+The following plots show the Recall and FDR for our oligogenic simulation setting depending on the heritability level (averaged across 50 replicates). 
+
+- Fineboost was ran using a null_max_threshold of 0.015.
+- SuSiE.ash (Grid 1) refers to the SuSiE.ash (Marginal) model with a predefined variance grid.
+- SuSiE.ash (Grid 2) refers to the SuSiE.ash (Marginal) model with a variance grid estimated from the data.
+
+```{r, echo=FALSE,warning=F,message=F}
+# Load required libraries
+library(tidyverse)
+library(patchwork)
+library(ROCR)
+library(gridExtra)
+
+# ------------------------------
+# Helper Functions
+# ------------------------------
+
+# Function to compute credible set metrics (FDR and Recall)
+compute_cs_metrics <- function(credible_sets, truth) {
+  if (length(credible_sets) == 0) {
+    return(list(cs_fdr = 0, cs_recall = 0))
+  }
+  TP <- sum(sapply(credible_sets, function(cs) any(cs %in% truth)))
+  FP <- length(credible_sets) - TP
+  cs_fdr <- ifelse((TP + FP) > 0, FP / (TP + FP), 0)
+  
+  recovered <- unique(unlist(credible_sets))
+  TP_recall <- sum(truth %in% recovered)
+  FN_recall <- length(truth) - TP_recall
+  cs_recall <- ifelse((TP_recall + FN_recall) > 0, TP_recall / (TP_recall + FN_recall), 0)
+  
+  list(cs_fdr = cs_fdr, cs_recall = cs_recall)
+}
+
+# Function to define causal variants using a PVE threshold
+is_causal <- function(beta, residual_variance, pve_threshold) {
+  variance_explained <- beta^2
+  var_g <- sum(variance_explained)
+  total_variance <- var_g + residual_variance
+  proportion_var_explained <- variance_explained / total_variance
+  which(proportion_var_explained > pve_threshold)
+}
+
+# Function to compute AUROC (using ROCR)
+compute_auroc <- function(truth, pips) {
+  pred <- prediction(pips, truth)
+  perf <- performance(pred, "auc")
+  as.numeric(perf@y.values)
+}
+
+# Function to compute AUPRC (using ROCR)
+compute_auprc <- function(truth, pips) {
+  pred <- prediction(pips, truth)
+  perf <- performance(pred, "aucpr")
+  as.numeric(perf@y.values)
+}
+
+# Set parameters
+pve_threshold <- 0.005
+top_N <- c(1, 3, 5, 10, 15, 25)
+
+# ------------------------------
+# Pre-filter File Lists
+# ------------------------------
+
+# For original files, exclude those with h2total = 0.3
+orig_files <- list.files(
+  "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/oligo_result_files_original",
+  pattern = "\\.rds$", full.names = TRUE
+)
+orig_files <- orig_files[ !grepl("h2total0\\.3", orig_files) ]
+
+# For new files, only keep those with h2total = 0.15 or 0.50, Klength = 20, and warmStart = 1
+new_files <- list.files(
+  "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/oligo_result_files",
+  pattern = "warmStart", full.names = TRUE
+)
+new_files <- new_files[ grepl("h2total(0\\.15|0\\.5)", new_files) &
+                           grepl("Klength20", new_files) &
+                           grepl("warmStart1", new_files) ]
+
+# ------------------------------
+# Process Original Files (CS Metrics)
+# ------------------------------
+
+results_list_orig <- list()
+
+for (file in orig_files) {
+  filename <- basename(file)
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  message("Processing original file: ", filename)
+  file_data <- readRDS(file)
+  
+  for (i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    beta <- rep_data$data$beta
+    residual_variance <- rep_data$data$residual_variance
+    truth <- is_causal(beta, residual_variance, pve_threshold)
+    
+    ## Method 1: SuSiE
+    cs_susie <- if (!is.null(rep_data$susie_out$sets$cs)) rep_data$susie_out$sets$cs else list()
+    metrics <- compute_cs_metrics(cs_susie, truth)
+    results_list_orig[[length(results_list_orig) + 1]] <- data.frame(
+      file = filename,
+      replicate = i,
+      h2total = h2total,
+      pve_threshold = pve_threshold,
+      Method = "SuSiE",
+      cs_fdr = metrics$cs_fdr,
+      cs_recall = metrics$cs_recall,
+      stringsAsFactors = FALSE
+    )
+    
+    ## Method 2: SuSiE-inf
+    cs_susie_inf <- if (!is.null(rep_data$susie_inf_out$sets)) rep_data$susie_inf_out$sets else list()
+    metrics <- compute_cs_metrics(cs_susie_inf, truth)
+    results_list_orig[[length(results_list_orig) + 1]] <- data.frame(
+      file = filename,
+      replicate = i,
+      h2total = h2total,
+      pve_threshold = pve_threshold,
+      Method = "SuSiE-inf",
+      cs_fdr = metrics$cs_fdr,
+      cs_recall = metrics$cs_recall,
+      stringsAsFactors = FALSE
+    )
+    
+    ## Method 3: SuSiE-ash (Scenario 6)
+    cs_susie_ash <- if (!is.null(rep_data$susie_ash_6$sets)) rep_data$susie_ash_6$sets else list()
+    metrics <- compute_cs_metrics(cs_susie_ash, truth)
+    results_list_orig[[length(results_list_orig) + 1]] <- data.frame(
+      file = filename,
+      replicate = i,
+      h2total = h2total,
+      pve_threshold = pve_threshold,
+      Method = "SuSiE-ash (Scenario 6)",
+      cs_fdr = metrics$cs_fdr,
+      cs_recall = metrics$cs_recall,
+      stringsAsFactors = FALSE
+    )
+    
+    ## Method 4: Fineboost
+    cs_fineboost <- if (!is.null(rep_data$fineboost_out$ucos_details$ucos$ucos_index))
+      rep_data$fineboost_out$ucos_details$ucos$ucos_index else list()
+    metrics <- compute_cs_metrics(cs_fineboost, truth)
+    results_list_orig[[length(results_list_orig) + 1]] <- data.frame(
+      file = filename,
+      replicate = i,
+      h2total = h2total,
+      pve_threshold = pve_threshold,
+      Method = "Fineboost",
+      cs_fdr = metrics$cs_fdr,
+      cs_recall = metrics$cs_recall,
+      stringsAsFactors = FALSE
+    )
+  }
+  rm(file_data)
+  gc()
+  message("Processed original file: ", filename)
+}
+
+results_orig_df <- do.call(rbind, results_list_orig)
+
+# ------------------------------
+# Process New Files (CS Metrics)
+# ------------------------------
+
+results_list_new <- list()
+
+for (file in new_files) {
+  filename <- basename(file)
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  Klength <- as.numeric(str_extract(filename, "(?<=Klength)[0-9.]+"))
+  warmStart <- as.numeric(str_extract(filename, "(?<=warmStart)[0-9]+"))
+  message("Processing new file: ", filename)
+  file_data <- readRDS(file)
+  
+  for (i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    beta <- rep_data$data$beta
+    residual_variance <- rep_data$data$residual_variance
+    truth <- is_causal(beta, residual_variance, pve_threshold)
+    
+    for (grid in 1:6) {
+      grid_label <- switch(as.character(grid),
+                           "1" = "Grid 1: Base",
+                           "2" = "Grid 2: 10x",
+                           "3" = "Grid 3: 100x",
+                           "4" = "Grid 4: 500x",
+                           "5" = "Grid 5: 1000x",
+                           "6" = "Grid 6: 10000x")
+      grid_obj <- rep_data[[paste0("susie_ash_", grid)]]
+      cs_susie_ash <- if (!is.null(grid_obj$sets)) grid_obj$sets else list()
+      metrics <- compute_cs_metrics(cs_susie_ash, truth)
+      method_label <- paste0("SuSiE.ash (", grid_label, "), K.length = ", Klength, ", Warmstart = ", warmStart)
+      
+      results_list_new[[length(results_list_new) + 1]] <- data.frame(
+        file = filename,
+        replicate = i,
+        h2total = h2total,
+        pve_threshold = pve_threshold,
+        Method = method_label,
+        cs_fdr = metrics$cs_fdr,
+        cs_recall = metrics$cs_recall,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  rm(file_data)
+  gc()
+  message("Processed new file: ", filename)
+}
+
+results_new_df <- do.call(rbind, results_list_new)
+
+# ------------------------------
+# Combine Original and New CS Metrics
+# ------------------------------
+
+combined_df <- bind_rows(results_orig_df, results_new_df)
+
+# Summarize by Method and h2total for CS metrics
+summary_by_h2 <- combined_df %>%
+  group_by(Method, h2total) %>%
+  summarise(
+    mean_cs_fdr = mean(cs_fdr, na.rm = TRUE),
+    sd_cs_fdr = sd(cs_fdr, na.rm = TRUE),
+    se_cs_fdr = sd_cs_fdr / sqrt(n()),
+    mean_cs_recall = mean(cs_recall, na.rm = TRUE),
+    sd_cs_recall = sd(cs_recall, na.rm = TRUE),
+    se_cs_recall = sd_cs_recall / sqrt(n()),
+    n = n(),
+    .groups = "drop"
+  )
+
+# Filter out unwanted grids/methods and remove h2total == 0.3 (already filtered in file selection)
+summary_by_h2_filtered <- summary_by_h2 %>%
+  filter(!grepl("Grid 2: 10x|Grid 3: 100x|Grid 4: 500x|Grid 5: 1000x|Grid 6: 10000x|K.length = 10|K.length = 30|Warmstart = 0", Method)) %>%
+  mutate(Method = case_when(
+    Method == "SuSiE-ash (Scenario 6)" ~ "SuSiE.ash (Grid 2)",
+    grepl("SuSiE\\.ash \\(Grid 1: Base\\)", Method) ~ "SuSiE.ash (Grid 1)",
+    TRUE ~ Method
+  ))
+
+# Pivot the h2 summary for plotting CS metrics
+plot_data_h2 <- summary_by_h2_filtered %>%
+  pivot_longer(
+    cols = c(mean_cs_fdr, mean_cs_recall, se_cs_fdr, se_cs_recall),
+    names_to = c(".value", "Metric"),
+    names_pattern = "(mean|se)_cs_(.*)"
+  ) %>%
+  mutate(Metric = ifelse(Metric == "fdr", "CS_FDR", "CS_Recall"))
+
+# ------------------------------
+# Plotting: CS FDR & Recall by h2total
+# ------------------------------
+
+# Function to create a 1x2 plot (side-by-side CS_FDR and CS_Recall) for a given heritability level
+plot_by_h2 <- function(h2_val, data, pve_threshold) {
+  data_h2 <- data %>% filter(h2total == h2_val)
+  
+  # CS_FDR plot with y-axis 0 to 0.5
+  plot_fdr <- ggplot(data_h2 %>% filter(Metric == "CS_FDR"),
+                     aes(x = Method, y = mean, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
+                  position = position_dodge(width = 0.7), width = 0.2) +
+    labs(x = "Method",
+         y = "CS FDR",
+         title = paste("50 Replicates, h² =", h2_val),
+         subtitle = paste("Causal PVE threshold =", pve_threshold)) +
+    scale_y_continuous(limits = c(0, 0.5)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "none")
+  
+  # CS_Recall plot with y-axis 0 to 1
+  plot_recall <- ggplot(data_h2 %>% filter(Metric == "CS_Recall"),
+                        aes(x = Method, y = mean, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
+                  position = position_dodge(width = 0.7), width = 0.2) +
+    labs(x = "Method",
+         y = "CS Recall",
+         title = paste("50 Replicates, h² =", h2_val),
+         subtitle = paste("Causal PVE threshold =", pve_threshold)) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "none")
+  
+  combined_plot <- plot_fdr + plot_recall
+  return(combined_plot)
+}
+
+# Example calls for CS metrics plots (for h² = 0.15 and 0.50)
+cs_plot_015 <- plot_by_h2(0.15, plot_data_h2, pve_threshold)
+cs_plot_050 <- plot_by_h2(0.50, plot_data_h2, pve_threshold)
+print(cs_plot_015)
+print(cs_plot_050)
+```
+
+## AUROC & AUPRC Plots
+
+```{r, echo=FALSE, warning=F, message=F}
+# ---------------------------------------------------------------------------------
+# Now, Compute AUROC and AUPRC using Top N variants (by absolute effect size)
+# ---------------------------------------------------------------------------------
+
+results_list_auroc <- list()
+results_list_auprc <- list()
+
+# --- Process Original Files for ROC metrics ---
+for (file in orig_files) {
+  filename <- basename(file)
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  message("Processing original file for ROC metrics: ", filename)
+  file_data <- readRDS(file)
+  
+  for (i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    betas <- rep_data$data$beta
+    p <- length(betas)
+    ranked_indices <- order(abs(betas), decreasing = TRUE)
+    
+    for (n in top_N) {
+      truth <- rep(0, p)
+      truth[ranked_indices[1:n]] <- 1
+      
+      ## Method 1: SuSiE
+      pips <- rep_data$susie_out$pip
+      auroc_val <- compute_auroc(truth, pips)
+      auprc_val <- compute_auprc(truth, pips)
+      results_list_auroc[[length(results_list_auroc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "SuSiE", AUROC = auroc_val, stringsAsFactors = FALSE
+      )
+      results_list_auprc[[length(results_list_auprc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "SuSiE", AUPRC = auprc_val, stringsAsFactors = FALSE
+      )
+      
+      ## Method 2: SuSiE-inf
+      pips <- rep_data$susie_inf_out$marginal_PIP
+      auroc_val <- compute_auroc(truth, pips)
+      auprc_val <- compute_auprc(truth, pips)
+      results_list_auroc[[length(results_list_auroc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "SuSiE-inf", AUROC = auroc_val, stringsAsFactors = FALSE
+      )
+      results_list_auprc[[length(results_list_auprc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "SuSiE-inf", AUPRC = auprc_val, stringsAsFactors = FALSE
+      )
+      
+      ## Method 3: SuSiE-ash (Scenario 6)
+      pips <- rep_data$susie_ash_6$marginal_PIP
+      auroc_val <- compute_auroc(truth, pips)
+      auprc_val <- compute_auprc(truth, pips)
+      results_list_auroc[[length(results_list_auroc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "SuSiE-ash (Scenario 6)", AUROC = auroc_val, stringsAsFactors = FALSE
+      )
+      results_list_auprc[[length(results_list_auprc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "SuSiE-ash (Scenario 6)", AUPRC = auprc_val, stringsAsFactors = FALSE
+      )
+      
+      ## Method 4: Fineboost
+      pips <- rep_data$fineboost_out$pip
+      auroc_val <- compute_auroc(truth, pips)
+      auprc_val <- compute_auprc(truth, pips)
+      results_list_auroc[[length(results_list_auroc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "Fineboost", AUROC = auroc_val, stringsAsFactors = FALSE
+      )
+      results_list_auprc[[length(results_list_auprc) + 1]] <- data.frame(
+        file = filename, replicate = i, h2total = h2total, top_N = n,
+        Method = "Fineboost", AUPRC = auprc_val, stringsAsFactors = FALSE
+      )
+    }
+  }
+  rm(file_data)
+  gc()
+  message("Processed original file for ROC metrics: ", filename)
+}
+
+# --- Process New Files for ROC metrics ---
+for (file in new_files) {
+  filename <- basename(file)
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  Klength <- as.numeric(str_extract(filename, "(?<=Klength)[0-9.]+"))
+  warmStart <- as.numeric(str_extract(filename, "(?<=warmStart)[0-9]+"))
+  message("Processing new file for ROC metrics: ", filename)
+  file_data <- readRDS(file)
+  
+  for (i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    betas <- rep_data$data$beta
+    p <- length(betas)
+    ranked_indices <- order(abs(betas), decreasing = TRUE)
+    
+    for (n in top_N) {
+      truth <- rep(0, p)
+      truth[ranked_indices[1:n]] <- 1
+      
+      for (grid in 1:6) {
+        grid_label <- switch(as.character(grid),
+                             "1" = "Grid 1: Base",
+                             "2" = "Grid 2: 10x",
+                             "3" = "Grid 3: 100x",
+                             "4" = "Grid 4: 500x",
+                             "5" = "Grid 5: 1000x",
+                             "6" = "Grid 6: 10000x")
+        grid_obj <- rep_data[[paste0("susie_ash_", grid)]]
+        pips <- grid_obj$marginal_PIP
+        auroc_val <- compute_auroc(truth, pips)
+        auprc_val <- compute_auprc(truth, pips)
+        
+        method_label <- paste0("SuSiE.ash (", grid_label, "), K.length = ", Klength, ", Warmstart = ", warmStart)
+        
+        results_list_auroc[[length(results_list_auroc) + 1]] <- data.frame(
+          file = filename, replicate = i, h2total = h2total, top_N = n,
+          Method = method_label, AUROC = auroc_val, stringsAsFactors = FALSE
+        )
+        results_list_auprc[[length(results_list_auprc) + 1]] <- data.frame(
+          file = filename, replicate = i, h2total = h2total, top_N = n,
+          Method = method_label, AUPRC = auprc_val, stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  rm(file_data)
+  gc()
+  message("Processed new file for ROC metrics: ", filename)
+}
+
+results_auroc_df <- do.call(rbind, results_list_auroc)
+results_auprc_df <- do.call(rbind, results_list_auprc)
+
+# ------------------------------
+# Summarize and Filter AUROC/AUPRC Results (Stratify by h2total = 0.15 and 0.50)
+# ------------------------------
+
+summary_auroc_df <- results_auroc_df %>%
+  filter(h2total %in% c(0.15, 0.50)) %>%
+  filter(!grepl("Grid 2: 10x|Grid 3: 100x|Grid 4: 500x|Grid 5: 1000x|Grid 6: 10000x|K.length = 10|K.length = 30|Warmstart = 0", Method)) %>%
+  mutate(Method = case_when(
+    Method == "SuSiE-ash (Scenario 6)" ~ "SuSiE.ash (Grid 2)",
+    grepl("SuSiE\\.ash \\(Grid 1: Base\\)", Method) ~ "SuSiE.ash (Grid 1)",
+    TRUE ~ Method
+  )) %>%
+  group_by(top_N, Method, h2total) %>%
+  summarise(
+    mean_AUROC = mean(AUROC, na.rm = TRUE),
+    sd_AUROC = sd(AUROC, na.rm = TRUE),
+    se_AUROC = sd_AUROC / sqrt(n()),
+    n = n(),
+    .groups = "drop"
+  )
+
+summary_auprc_df <- results_auprc_df %>%
+  filter(h2total %in% c(0.15, 0.50)) %>%
+  filter(!grepl("Grid 2: 10x|Grid 3: 100x|Grid 4: 500x|Grid 5: 1000x|Grid 6: 10000x|K.length = 10|K.length = 30|Warmstart = 0", Method)) %>%
+  mutate(Method = case_when(
+    Method == "SuSiE-ash (Scenario 6)" ~ "SuSiE.ash (Grid 2)",
+    grepl("SuSiE\\.ash \\(Grid 1: Base\\)", Method) ~ "SuSiE.ash (Grid 1)",
+    TRUE ~ Method
+  )) %>%
+  group_by(top_N, Method, h2total) %>%
+  summarise(
+    mean_AUPRC = mean(AUPRC, na.rm = TRUE),
+    sd_AUPRC = sd(AUPRC, na.rm = TRUE),
+    se_AUPRC = sd_AUPRC / sqrt(n()),
+    n = n(),
+    .groups = "drop"
+  )
+
+# ------------------------------
+# Plotting: AUROC and AUPRC by h2total
+# ------------------------------
+
+# AUROC Plot Function (for a given h2total)
+plot_auroc_by_h2 <- function(h2_val, data) {
+  data %>% filter(h2total == h2_val) %>%
+    ggplot(aes(x = factor(top_N), y = mean_AUROC, color = Method, group = Method)) +
+    geom_point(position = position_dodge(width = 0.5), size = 3) +
+    geom_errorbar(aes(ymin = mean_AUROC - se_AUROC, ymax = mean_AUROC + se_AUROC),
+                  position = position_dodge(width = 0.5), width = 0.2) +
+    labs(x = "Number of Causal Variants (Top N)",
+         y = "Mean AUROC",
+         title = paste("AUROC, h² =", h2_val)) +
+    theme_minimal()
+}
+
+# AUPRC Plot Function (for a given h2total)
+plot_auprc_by_h2 <- function(h2_val, data) {
+  data %>% filter(h2total == h2_val) %>%
+    ggplot(aes(x = factor(top_N), y = mean_AUPRC, color = Method, group = Method)) +
+    geom_point(position = position_dodge(width = 0.5), size = 3) +
+    geom_errorbar(aes(ymin = mean_AUPRC - se_AUPRC, ymax = mean_AUPRC + se_AUPRC),
+                  position = position_dodge(width = 0.5), width = 0.2) +
+    labs(x = "Number of Causal Variants (Top N)",
+         y = "Mean AUPRC",
+         title = paste("AUPRC, h² =", h2_val)) +
+    theme_minimal()
+}
+
+# Create AUROC and AUPRC plots for h2total = 0.15 and 0.50
+auroc_plot_015 <- plot_auroc_by_h2(0.15, summary_auroc_df)
+auroc_plot_050 <- plot_auroc_by_h2(0.50, summary_auroc_df)
+auprc_plot_015 <- plot_auprc_by_h2(0.15, summary_auprc_df)
+auprc_plot_050 <- plot_auprc_by_h2(0.50, summary_auprc_df)
+
+# Optionally, arrange the plots:
+# grid.arrange(auroc_plot_015, auroc_plot_050, ncol = 1)
+# grid.arrange(auprc_plot_015, auprc_plot_050, ncol = 1)
+
+# Or print them individually:
+print(auroc_plot_015)
+print(auroc_plot_050)
+print(auprc_plot_015)
+print(auprc_plot_050)
+```

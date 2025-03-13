@@ -340,10 +340,10 @@ div.tocify {
   <a href="vignette_ash_failure.html">Vignette: mr.ash Failure</a>
 </li>
 <li>
-  <a href="vignette_iteration_analysis_1.html">Vignette: Iteration Analysis</a>
+  <a href="synthetic_association.html">Synthetic Association</a>
 </li>
 <li>
-  <a href="synthetic_association.html">Synthetic Association</a>
+  <a href="oligo_results.html">Benchmark Results</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -393,7 +393,7 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-03-03
+<strong>Last updated:</strong> 2025-03-12
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -582,15 +582,15 @@ X_subset
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6betargetblank1c6083ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreefc78af4f0463e58cafe811a8a9b323725616d5catargetblankfc78af4a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6be" target="_blank">1c6083e</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/fc78af4f0463e58cafe811a8a9b323725616d5ca" target="_blank">fc78af4</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6betargetblank1c6083ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreefc78af4f0463e58cafe811a8a9b323725616d5catargetblankfc78af4a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -600,7 +600,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/1c6083ec1fa5d14fe0513c3ac9ba9338a9aea6be" target="_blank">1c6083e</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/fc78af4f0463e58cafe811a8a9b323725616d5ca" target="_blank">fc78af4</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -643,17 +643,25 @@ Ignored files:
 
 Untracked files:
     Untracked:  X_subset
+    Untracked:  analysis/oligo_results.Rmd
     Untracked:  code/Tmp.Rmd
+    Untracked:  code/susie_versions/SuSiE_Ash_Marginal_options.R
     Untracked:  misc/
-    Untracked:  oligogenic_data_generation.R
     Untracked:  overleaf_graphics/
     Untracked:  preprint/KISS-paper.Rmd
     Untracked:  scripts/LD_blocks/
+    Untracked:  scripts/benchmark/ash_marginal_test.R
     Untracked:  scripts/benchmark/command_generation/
+    Untracked:  scripts/benchmark/helper_functions/evaluate_method_tmp.R
+    Untracked:  scripts/benchmark/helper_functions/oligogenic_data_generation.R
+    Untracked:  scripts/benchmark/oligo_metrics/
+    Untracked:  scripts/benchmark/oligo_result_files/
+    Untracked:  scripts/benchmark/oligo_result_files_original/
     Untracked:  scripts/benchmark/plots/
+    Untracked:  scripts/benchmark/small_replicate.R
     Untracked:  scripts/benchmark/sparse_metrics/
-    Untracked:  scripts/benchmark/sparse_result_files/
     Untracked:  scripts/benchmark/sparse_result_files_2/
+    Untracked:  scripts/benchmark/sparse_updated.R
     Untracked:  scripts/commands_to_submit_eqtl_simple.R
     Untracked:  scripts/eqtl_simulation_marginal.R
     Untracked:  scripts/eqtl_simulation_simple.R
@@ -666,8 +674,6 @@ Untracked files:
     Untracked:  seed9_data.rds
     Untracked:  seed9_ld.rds
     Untracked:  seed9_res.rds
-    Untracked:  simulation/15x3jxl3enlnnsejfeke1_tmate.log
-    Untracked:  simulation/15x3jxl3enlnnsejfeke1_tmate_session.log
     Untracked:  simulation/eqtl-results/
     Untracked:  simulation/misc/Rcpp-Comparison.R
     Untracked:  simulation/misc/RcppTesting.Rmd
@@ -676,17 +682,29 @@ Untracked files:
     Untracked:  simulation/misc/sim_analysis.Rmd
     Untracked:  simulation/misc/sim_debugging.Rmd
     Untracked:  simulation/misc/sim_download.Rmd
+    Untracked:  simulation/n25qma8mgqfgvh03uln75_tmate.log
+    Untracked:  simulation/n25qma8mgqfgvh03uln75_tmate_session.log
+    Untracked:  simulation/old mmcloud/
     Untracked:  simulation/sparse-results/
-    Untracked:  sparse_simulation.ipynb
+    Untracked:  simulation/src/float_wrapper.sh
+    Untracked:  simulation/src/generate_job_script.sh
     Untracked:  test_script.R
-    Untracked:  tmp_files/
+    Untracked:  testing.Rmd
     Untracked:  vignettes/
 
 Unstaged changes:
+    Modified:   analysis/_site.yml
+    Modified:   analysis/index.Rmd
+    Deleted:    analysis/vignette_iteration_analysis_1.Rmd
     Modified:   code/susie_versions/SuSiE_Ash_Marginal.R
     Modified:   code/susie_versions/susie_ash_mod.R
     Modified:   code/susie_versions/susie_inf.R
+    Modified:   new-rcpp/mr.ash.alpha/src/mr_ash.h
     Deleted:    scripts/LD_blocks_precomputations.R
+    Modified:   scripts/benchmark/helper_functions/evaluate_method_performance.R
+    Modified:   scripts/benchmark/helper_functions/run_methods.R
+    Modified:   scripts/benchmark/helper_functions/sparse_data_generation.R
+    Modified:   scripts/benchmark/sparse_simulation.R
     Deleted:    scripts/comannds_to_submit_LD.R
     Deleted:    scripts/commands_to_submit_LD_precomputations.R
     Deleted:    scripts/commands_to_submit_ash_mod.R
@@ -701,6 +719,10 @@ Unstaged changes:
     Modified:   simulation/eqtl_sim.sh
     Modified:   simulation/identification.Rmd
     Modified:   simulation/sparse_eqtl_sim.sh
+    Modified:   simulation/src/bind_mount.sh
+    Modified:   simulation/src/host_init.sh
+    Modified:   simulation/src/mm_interactive.sh
+    Modified:   simulation/src/mm_jobman.sh
     Modified:   submodules/VEB.Boost
     Modified:   submodules/pecotmr
 
@@ -747,6 +769,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/9b3d6a6841c5caf400cfea97909cf5ea72d431bc/docs/vignette_ash_failure.html" target="_blank">9b3d6a6</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-03
+</td>
+<td>
+site update
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -1216,6 +1255,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/9b3d6a6841c5caf400cfea97909cf5ea72d431bc/docs/figure/vignette_ash_failure.Rmd/plot-1.png" target="_blank">9b3d6a6</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-03
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/105e516209301954b1632ecdf6e414c98eb96839/docs/figure/vignette_ash_failure.Rmd/plot-1.png" target="_blank">105e516</a>

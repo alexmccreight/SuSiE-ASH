@@ -14,6 +14,6 @@ The `susieash` package combines the Sum of Single Effects regression model with 
 
 - [SuSiE Improvements](improvements.html)
 - [Ash Component Failure](vignette_ash_failure.html)
-- [Iteration Analysis](vignette_iteration_analysis_1.html)
 - [Synthetic Association Example](synthetic_association.html)
+- [Preliminary Benchmark Results](oligo_results.html)
 

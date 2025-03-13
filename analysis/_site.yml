@@ -9,10 +9,10 @@ navbar:
     href: improvements.html
   - text: "Vignette: mr.ash Failure"
     href: vignette_ash_failure.html
-  - text: "Vignette: Iteration Analysis"
-    href: vignette_iteration_analysis_1.html
   - text: "Synthetic Association"
     href: synthetic_association.html
+  - text: "Benchmark Results"
+    href: oligo_results.html
 
   right:
   - icon: fab fa-github
