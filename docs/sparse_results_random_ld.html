@@ -11,7 +11,7 @@
 
 
 
-<title>Oligogenic Results</title>
+<title>Sparse Results Random LD</title>
 
 <script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -360,7 +360,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Oligogenic Results</h1>
+<h1 class="title toc-ignore">Sparse Results Random LD</h1>
 
 </div>
 
@@ -427,10 +427,10 @@ changes </a>
 <div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
 <code>wflow_publish</code> to commit the R Markdown file and build the
 HTML.</p>
 </div>
@@ -535,26 +535,10 @@ relative
 <tbody>
 <tr>
 <td style="text-align:left;">
-/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/power_calculation
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_results
 </td>
 <td style="text-align:left;">
-scripts/benchmark/power_calculation
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/oligo_result_files_original
-</td>
-<td style="text-align:left;">
-scripts/benchmark/oligo_result_files_original
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/oligo_result_files
-</td>
-<td style="text-align:left;">
-scripts/benchmark/oligo_result_files
+scripts/benchmark/sparse_results
 </td>
 </tr>
 </tbody>
@@ -736,210 +720,33 @@ have uncommitted changes.
 </div>
 <div id="versions" class="tab-pane fade">
 <p>
-These are the previous versions of the repository in which changes were
-made to the R Markdown (<code>analysis/oligo_results.Rmd</code>) and
-HTML (<code>docs/oligo_results.html</code>) files. If you’ve configured
-a remote Git repository (see <code>?wflow_git_remote</code>), click on
-the hyperlinks in the table below to view the files as they were in that
-past version.
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
 </p>
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-File
-</th>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-<th>
-Message
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-Rmd
-</td>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6/analysis/oligo_results.Rmd" target="_blank">8daabef</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2025-03-12
-</td>
-<td>
-update site
-</td>
-</tr>
-<tr>
-<td>
-html
-</td>
-<td>
-<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6/docs/oligo_results.html" target="_blank">8daabef</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2025-03-12
-</td>
-<td>
-update site
-</td>
-</tr>
-</tbody>
-</table>
-</div>
 <hr>
 </div>
 </div>
 </div>
-<div id="power-calculation-for-causal-definition"
+<div id="aggregated-results-across-all-heritability-levels"
 class="section level2">
-<h2>Power Calculation for Causal Definition</h2>
-<p>In an oligogenic setting, with an infinitesimal background, we cannot
-simply set our causal variants as those with nonzero effect sizes. Thus,
-we ran SuSiE with L = 1 on multiple different total PVE settings, each
-on 150 different LD blocks with n = 1500 and ranging from p = 5000 to p
-= 8000, and with only a single causal variant. We found at PVE = 0.0225
-we can achieve 80% power.</p>
-<p><img src="figure/oligo_results.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
-Past versions of unnamed-chunk-1-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-1-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6/docs/figure/oligo_results.Rmd/unnamed-chunk-1-1.png" target="_blank">8daabef</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2025-03-12
-</td>
-</tr>
-</tbody>
-</table>
+<h2>Aggregated Results Across All Heritability Levels</h2>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
+<div id="h2-0.05" class="section level2">
+<h2>h2 = 0.05</h2>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
+<div id="h2-0.10" class="section level2">
+<h2>h2 = 0.10</h2>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
-<div id="recall-fdr-plots" class="section level2">
-<h2>Recall &amp; FDR Plots</h2>
-<p>The following plots show the Recall and FDR for our oligogenic
-simulation setting depending on the heritability level (averaged across
-50 replicates).</p>
-<ul>
-<li>Fineboost was ran using a null_max_threshold of 0.015.</li>
-<li>SuSiE.ash (Grid 2) refers to the SuSiE.ash (Marginal) model with a
-variance grid estimated from the data.</li>
-</ul>
-<p><img src="figure/oligo_results.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
-Past versions of unnamed-chunk-2-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-2-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6/docs/figure/oligo_results.Rmd/unnamed-chunk-2-1.png" target="_blank">8daabef</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2025-03-12
-</td>
-</tr>
-</tbody>
-</table>
+<div id="h2-0.20" class="section level2">
+<h2>h2 = 0.20</h2>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
-</div>
-<p><img src="figure/oligo_results.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
-Past versions of unnamed-chunk-2-2.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-2-2" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6/docs/figure/oligo_results.Rmd/unnamed-chunk-2-2.png" target="_blank">8daabef</a>
-</td>
-<td>
-alexmccreight
-</td>
-<td>
-2025-03-12
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<div id="h2-0.40" class="section level2">
+<h2>h2 = 0.40</h2>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -967,10 +774,10 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] gridExtra_2.3   ROCR_1.0-11     patchwork_1.3.0 lubridate_1.9.4
- [5] forcats_1.0.0   stringr_1.5.1   dplyr_1.1.4     purrr_1.0.4    
- [9] readr_2.1.5     tidyr_1.3.1     tibble_3.2.1    ggplot2_3.5.1  
-[13] tidyverse_2.0.0 workflowr_1.7.1
+ [1] ROCR_1.0-11     patchwork_1.3.0 lubridate_1.9.4 forcats_1.0.0  
+ [5] stringr_1.5.1   dplyr_1.1.4     purrr_1.0.4     readr_2.1.5    
+ [9] tidyr_1.3.1     tibble_3.2.1    ggplot2_3.5.1   tidyverse_2.0.0
+[13] workflowr_1.7.1
 
 loaded via a namespace (and not attached):
  [1] sass_0.4.9        generics_0.1.3    stringi_1.8.4     hms_1.1.3        
