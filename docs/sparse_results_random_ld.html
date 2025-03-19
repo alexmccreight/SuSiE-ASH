@@ -393,9 +393,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 2
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>SuSiE-ASH/</code> <span
@@ -418,21 +418,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R
-Markdown file created these results, you’ll want to first commit it to
-the Git repo. If you’re still working on the analysis, you can ignore
-this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -549,15 +546,15 @@ scripts/benchmark/sparse_results
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6targetblank8daabefa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreedc04a771ca0f576c26e6793f5ab2da3a5aaf1086targetblankdc04a77a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6" target="_blank">8daabef</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/dc04a771ca0f576c26e6793f5ab2da3a5aaf1086" target="_blank">dc04a77</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtree8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6targetblank8daabefa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreedc04a771ca0f576c26e6793f5ab2da3a5aaf1086targetblankdc04a77a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -567,7 +564,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/8daabefa8ad61b6f3e443e9ff44131e2fd7acbe6" target="_blank">8daabef</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/dc04a771ca0f576c26e6793f5ab2da3a5aaf1086" target="_blank">dc04a77</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -610,11 +607,6 @@ Ignored files:
 
 Untracked files:
     Untracked:  X_subset
-    Untracked:  analysis/results.Rmd
-    Untracked:  analysis/sparse_block_results.Rmd
-    Untracked:  analysis/sparse_results_low_ld.Rmd
-    Untracked:  analysis/sparse_results_random_ld.Rmd
-    Untracked:  analysis/vignettes.Rmd
     Untracked:  code/Tmp.Rmd
     Untracked:  code/susie_versions/SuSiE_Ash_Marginal_options.R
     Untracked:  ld_score.R
@@ -673,9 +665,6 @@ Untracked files:
     Untracked:  vignettes/
 
 Unstaged changes:
-    Modified:   analysis/_site.yml
-    Modified:   analysis/index.Rmd
-    Modified:   analysis/oligo_results.Rmd
     Modified:   code/susie_versions/SuSiE_Ash_Marginal.R
     Modified:   code/susie_versions/susie_ash_mod.R
     Modified:   code/susie_versions/susie_inf.R
@@ -687,7 +676,6 @@ Unstaged changes:
     Modified:   scripts/benchmark/sparse_simulation.R
     Deleted:    scripts/comannds_to_submit_LD.R
     Deleted:    scripts/commands_to_submit_LD_precomputations.R
-    Deleted:    scripts/commands_to_submit_ash_mod.R
     Modified:   scripts/commands_to_submit_eqtl.R
     Deleted:    scripts/eqtl_ash_mod.R
     Deleted:    scripts/eqtl_ash_mod_default_grid.R
@@ -720,9 +708,73 @@ have uncommitted changes.
 </div>
 <div id="versions" class="tab-pane fade">
 <p>
-There are no past versions. Publish this analysis with
-<code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/sparse_results_random_ld.Rmd</code>) and HTML
+(<code>docs/sparse_results_random_ld.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/dc04a771ca0f576c26e6793f5ab2da3a5aaf1086/analysis/sparse_results_random_ld.Rmd" target="_blank">dc04a77</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+<td>
+website update
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/87c8626569aa77beca2a473888a4c25dd85be94d/docs/sparse_results_random_ld.html" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+<td>
+update website
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -730,23 +782,398 @@ There are no past versions. Publish this analysis with
 <div id="aggregated-results-across-all-heritability-levels"
 class="section level2">
 <h2>Aggregated Results Across All Heritability Levels</h2>
-<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-1.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-2">
+Past versions of unnamed-chunk-3-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-2.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="h2-0.05" class="section level2">
 <h2>h2 = 0.05</h2>
-<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-2.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="h2-0.10" class="section level2">
 <h2>h2 = 0.10</h2>
-<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-2">
+Past versions of unnamed-chunk-6-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-2.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="h2-0.20" class="section level2">
 <h2>h2 = 0.20</h2>
-<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-2">
+Past versions of unnamed-chunk-7-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-2.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="h2-0.40" class="section level2">
 <h2>h2 = 0.40</h2>
-<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-2">
+Past versions of unnamed-chunk-8-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-2.png" target="_blank">87c8626</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
