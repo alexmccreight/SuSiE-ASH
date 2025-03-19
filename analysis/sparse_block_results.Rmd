@@ -1,0 +1,393 @@
+---
+title: "Independent Sparse Results"
+output: html_document
+---
+
+## Overview + Data Example
+
+The following results were generated to have independent LD between causal variants. We evaluated scenarios with total PVE = {0.05, 0.10, 0.20, 0.40} and we also varied the number of effect variables to be S = {1, 2, 3, 4, 5}. All effect variables have the same effect size and we set the residual variance to achieve our desired heritability level.
+
+Here is an example where we sample 5 causal variant (one for each LD block). For examples where we only sample 3 causal variants, there will only be 3 LD blocks, etc.
+
+```{r, echo = F}
+## Example Genotype Matrix with Causal Variants
+generate_blocky_data <- function(X,
+                                 K = 5,      # Number of bins = # of causal variants
+                                 h2 = 0.3,   # Desired heritability
+                                 seed = NULL) {
+  # X: Scaled genotype matrix of dimension n x p
+  # K: number of bins (and # of causal variants)
+  # h2: heritability
+  # seed: for reproducibility
+
+  if (!is.null(seed)) set.seed(seed)
+
+  n <- nrow(X)
+  p <- ncol(X)
+
+  # 1. Compute bin size
+  bin_size <- ceiling(p / K)
+
+  # 2. Permute the genotype matrix in each bin
+  #    (preserves within-bin LD, breaks across-bin LD)
+  X_blocky <- X
+  for (b in seq_len(K)) {
+    start_idx <- (b - 1) * bin_size + 1
+    end_idx   <- min(b * bin_size, p)
+    bin_indices <- start_idx:end_idx
+
+    # Permute rows (samples) within these columns
+    perm_order <- sample(n, n, replace = FALSE)
+    X_blocky[, bin_indices] <- X[perm_order, bin_indices]
+  }
+
+  # 3. Place the causal variant in the *middle* of each bin
+  causal_indices <- numeric(K)
+  for (b in seq_len(K)) {
+    start_idx <- (b - 1) * bin_size + 1
+    end_idx   <- min(b * bin_size, p)
+
+    # If bin_size is even, this picks the lower of the two middle positions
+    middle_idx <- floor((start_idx + end_idx) / 2)
+    causal_indices[b] <- middle_idx
+  }
+
+  # 4. Create effect-size vector: 1 for each causal variant, 0 otherwise
+  beta <- rep(0, p)
+  beta[causal_indices] <- 1
+
+  # 5. Compute the genetic component: g = X_blocky %*% beta
+  g <- X_blocky %*% beta
+  var_g <- var(g)
+
+  # 6. Scale the residual variance to achieve heritability h2
+  var_e <- var_g * (1 / h2 - 1)
+
+  # 7. Simulate the phenotype
+  e <- rnorm(n, mean = 0, sd = sqrt(var_e))
+  y <- g + e
+
+  # Optionally center or standardize y
+  y <- scale(y, center = TRUE, scale = TRUE)[,1]
+
+  # Return a list with the necessary components
+  return(list(
+    X               = X_blocky,      # n x p blocky genotype matrix
+    y               = y,             # n-vector phenotype
+    causal_indices  = causal_indices,
+    beta            = beta,          # p-vector effect sizes
+    h2              = h2,
+    var_g           = var_g,
+    var_e           = var_e
+  ))
+}
+
+X <- readRDS("/Users/alexmccreight/Columbia/data/X20")
+X <- X[1:1500, 1:1000]
+
+data <- generate_blocky_data(X = X, K = 5, h2 = 0.3, seed = 1)
+ld_matrix <- cor(data$X)
+ld_matrix_abs <- abs(ld_matrix)
+
+image(1:ncol(data$X), 1:ncol(data$X), ld_matrix_abs, 
+      main = "LD (|r|) Matrix with Causal Variants (blue dots)",
+      xlab = "Variant", ylab = "Variant",
+      col = colorRampPalette(c("white", "red"))(100))
+points(data$causal_indices, data$causal_indices, col = "blue", pch = 19, cex = 0.8)
+text(data$causal_indices, data$causal_indices, labels = paste("ID=", data$causal_indices, sep=""),
+     pos = 3, col = "blue")
+```
+
+
+
+
+```{r, echo = F, warning = F, message = F}
+# Load required libraries
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+library(ROCR)
+
+# ------------------------------
+# Helper Functions
+# ------------------------------
+
+# Compute credible set metrics (CS FDR and CS Recall)
+compute_cs_metrics <- function(credible_sets, truth) {
+  if (length(credible_sets) == 0) {
+    return(list(cs_fdr = 0, cs_recall = 0))
+  }
+  # Count credible sets that capture at least one true causal index
+  TP <- sum(sapply(credible_sets, function(cs) any(cs %in% truth)))
+  FP <- length(credible_sets) - TP
+  cs_fdr <- ifelse((TP + FP) > 0, FP / (TP + FP), 0)
+  
+  # For recall, we first compute the unique variants that are in any credible set
+  recovered <- unique(unlist(credible_sets))
+  TP_recall <- sum(truth %in% recovered)
+  FN_recall <- length(truth) - TP_recall
+  cs_recall <- ifelse((TP_recall + FN_recall) > 0, TP_recall / (TP_recall + FN_recall), 0)
+  
+  list(cs_fdr = cs_fdr, cs_recall = cs_recall)
+}
+
+# Compute AUROC (using ROCR)
+compute_auroc <- function(truth_vec, pips) {
+  pred <- prediction(pips, truth_vec)
+  perf <- performance(pred, "auc")
+  as.numeric(perf@y.values)
+}
+
+# Compute AUPRC (using ROCR)
+compute_auprc <- function(truth_vec, pips) {
+  pred <- prediction(pips, truth_vec)
+  perf <- performance(pred, "aucpr")
+  as.numeric(perf@y.values)
+}
+
+# ------------------------------
+# Read Files & Loop Over Replicates
+# ------------------------------
+
+# List all files in your sparse block directory
+sparse_path <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_block"
+files <- list.files(sparse_path, pattern = "\\.rds$", full.names = TRUE)
+```
+
+
+```{r, echo = F, warning = F, message = F}
+# Create lists to store replicate-level results
+cs_results <- list()
+#au_results <- list()
+
+# Loop over each file
+for(file in files) {
+  filename <- basename(file)
+  
+  # Extract h2total and K (number of true causal variants) from the filename.
+  # For example: "numIter150_h2total0.05_K1_L10_Klength20_upperBound2.rds"
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  K_val  <- as.numeric(str_extract(filename, "(?<=_K)[0-9]+"))
+  
+  message("Processing file: ", filename)
+  file_data <- readRDS(file)
+  
+  # Loop over replicates 
+  for(i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    
+    # Use the pre-saved causal indices as truth.
+    truth_indices <- rep_data$data$causal_indices
+    # For AUROC/AUPRC, we create a truth vector.
+    # Here we assume the full set of SNPs is given by the length of beta.
+    p <- length(rep_data$data$beta)
+    truth_vec <- rep(0, p)
+    truth_vec[truth_indices] <- 1
+    
+    # Define a list with the four methods and their outputs.
+    methods <- list(
+      "SuSiE" = rep_data$susie_out,
+      "SuSiE.ash (Grid 2)" = rep_data$susie_ash_out_grid_2,
+      "SuSiE-inf" = rep_data$susie_inf_out,
+      "Fineboost" = rep_data$fineboost_out
+    )
+    
+    for(m in names(methods)) {
+      meth_out <- methods[[m]]
+      
+      # ----- CS Metrics -----
+      # Extract credible sets based on the method.
+      # (Assuming similar structure as in your original code.)
+      if(m == "Fineboost") {
+        cs <- if(!is.null(meth_out$ucos_details$ucos$ucos_index)) {
+          meth_out$ucos_details$ucos$ucos_index
+        } else {
+          list()
+        }
+      } else if(m == "SuSiE") {
+        cs <- if(!is.null(meth_out$sets$cs)) meth_out$sets$cs else list()
+      } else {  # For SuSiE-inf and SuSiE.ash (Grid 2)
+        cs <- if(!is.null(meth_out$sets)) meth_out$sets else list()
+      }
+      
+      # Compute CS FDR and Recall (using the true causal indices)
+      metrics <- compute_cs_metrics(cs, truth_indices)
+      
+      # Additionally compute average CS size and coverage (proportion of sets capturing at least one true index)
+      cs_size <- if(length(cs) > 0) mean(sapply(cs, length)) else NA
+      coverage <- if(length(cs) > 0) mean(sapply(cs, function(x) any(x %in% truth_indices))) else NA
+      
+      cs_results[[length(cs_results) + 1]] <- data.frame(
+        file       = filename,
+        replicate  = i,
+        h2total    = h2total,
+        K          = K_val,
+        Method     = m,
+        CS_Size    = cs_size,
+        Coverage   = coverage,
+        CS_FDR     = metrics$cs_fdr,
+        CS_Recall  = metrics$cs_recall,
+        stringsAsFactors = FALSE
+      )
+      
+      #----- AUROC & AUPRC -----
+      # if(m == "SuSiE-inf" || m == "SuSiE.ash (Grid 2)") {
+      #   pips <- meth_out$marginal_PIP
+      # } else {
+      #   pips <- meth_out$pip
+      # }
+      
+      #cat("\nComputing AUROC")
+      #auroc_val <- compute_auroc(truth_vec, pips)
+      
+      # cat("\nComputing AUPRC: ", i)
+      # auprc_val <- compute_auprc(truth_vec, pips)
+
+      # au_results[[length(au_results) + 1]] <- data.frame(
+      #   file       = filename,
+      #   replicate  = i,
+      #   h2total    = h2total,
+      #   K          = K_val,
+      #   Method     = m,
+      #   #AUROC      = auroc_val,
+      #   #AUPRC      = auprc_val,
+      #   stringsAsFactors = FALSE
+      #)
+    }
+  }
+  rm(file_data)
+  gc()
+}
+```
+
+## Aggregated Results Across All Heritability Levels
+
+When looking at the aggregated results, Fineboost has the best performance. Fineboost has the lowest FDR when the number of causal variants is 3 or less, and then SuSiE-inf and SuSiE.ash begin to have lower FDR. Still, when we aggregate the results across all settings, all methods (including SuSiE) have controlled FDR. In terms of recall, Fineboost also performs best. SuSiE-inf and SuSiE.ash are very conservative, however we will find later that this is mostly in the low total PVE settings.
+
+```{r, warning = F, message = F, echo = F}
+cs_results_df <- bind_rows(cs_results)
+
+# Aggregate CS metrics by K and Method
+cs_summary <- cs_results_df %>%
+  group_by(K, Method) %>%
+  summarise(
+    mean_CS_FDR    = mean(CS_FDR, na.rm = TRUE),
+    se_CS_FDR      = sd(CS_FDR, na.rm = TRUE) / sqrt(n()),
+    mean_CS_Recall = mean(CS_Recall, na.rm = TRUE),
+    se_CS_Recall   = sd(CS_Recall, na.rm = TRUE) / sqrt(n()),
+    mean_CS_Size   = mean(CS_Size, na.rm = TRUE),
+    se_CS_Size     = sd(CS_Size, na.rm = TRUE) / sqrt(n()),
+    mean_Coverage  = mean(Coverage, na.rm = TRUE),
+    se_Coverage    = sd(Coverage, na.rm = TRUE) / sqrt(n()),
+    n              = n()
+  ) %>%
+  ungroup()
+
+# Create bar plot for CS FDR by K and Method
+plot_cs_fdr <- ggplot(cs_summary, aes(x = as.factor(K), y = mean_CS_FDR, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+  geom_errorbar(aes(ymin = mean_CS_FDR - se_CS_FDR, ymax = mean_CS_FDR + se_CS_FDR),
+                position = position_dodge(width = 0.7), width = 0.2) +
+  labs(title = "Average Credible Set FDR\nAcross h2 = {0.05, 0.1, 0.2, 0.4}", y = "Mean CS FDR", x = "Number of Causal Variants, K") +
+  theme_minimal() +
+  ylim(0, 0.1) +
+  geom_hline(yintercept = 0.05, color = "red", linetype = "dotted")
+
+# Create bar plot for CS Recall by K and Method
+plot_cs_recall <- ggplot(cs_summary, aes(x = as.factor(K), y = mean_CS_Recall, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+  geom_errorbar(aes(ymin = mean_CS_Recall - se_CS_Recall, ymax = mean_CS_Recall + se_CS_Recall),
+                position = position_dodge(width = 0.7), width = 0.2) +
+  labs(title = "Average Credible Set Recall\nAcross h2 = {0.05, 0.1, 0.2, 0.4}", y = "Mean CS Recall", x = "Number of Causal Variants, K") +
+  theme_minimal() +
+  ylim(0, 1)
+
+# Display the plots
+plot_cs_fdr
+plot_cs_recall
+
+```
+
+```{r, message = F, warning = F, include = F}
+# Get unique heritability levels
+unique_h2 <- unique(cs_results_df$h2total)
+
+# Create lists to store the plots (optional)
+plot_list_fdr <- list()
+plot_list_recall <- list()
+
+# Loop over each heritability level
+for (h2 in unique_h2) {
+  # Filter data for the current h2 level
+  data_h2 <- cs_results_df %>% filter(h2total == h2)
+  
+  # Aggregate CS metrics by K and Method for this heritability level
+  cs_summary_h2 <- data_h2 %>%
+    group_by(K, Method) %>%
+    summarise(
+      mean_CS_FDR    = mean(CS_FDR, na.rm = TRUE),
+      se_CS_FDR      = sd(CS_FDR, na.rm = TRUE) / sqrt(n()),
+      mean_CS_Recall = mean(CS_Recall, na.rm = TRUE),
+      se_CS_Recall   = sd(CS_Recall, na.rm = TRUE) / sqrt(n()),
+      n              = n()
+    ) %>%
+    ungroup()
+  
+  # Create bar plot for CS FDR for this h2 level
+  plot_fdr <- ggplot(cs_summary_h2, aes(x = as.factor(K), y = mean_CS_FDR, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+    geom_errorbar(aes(ymin = mean_CS_FDR - se_CS_FDR, ymax = mean_CS_FDR + se_CS_FDR),
+                  position = position_dodge(width = 0.7), width = 0.2) +
+    labs(title = paste("Average CS FDR (h2 =", h2, ")"),
+         x = "Number of Causal Variants, K",
+         y = "Mean CS FDR") +
+    ylim(0, 0.1) +
+    geom_hline(yintercept = 0.05, color = "red", linetype = "dotted") + theme_classic()
+  
+  # Create bar plot for CS Recall for this h2 level
+  plot_recall <- ggplot(cs_summary_h2, aes(x = as.factor(K), y = mean_CS_Recall, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+    geom_errorbar(aes(ymin = mean_CS_Recall - se_CS_Recall, ymax = mean_CS_Recall + se_CS_Recall),
+                  position = position_dodge(width = 0.7), width = 0.2) +
+    labs(title = paste("Average CS Recall (h2 =", h2, ")"),
+         x = "Number of Causal Variants, K",
+         y = "Mean CS Recall") +
+    ylim(0, 1) +
+    theme_classic()
+  
+  # Optionally, store the plots in lists
+  plot_list_fdr[[as.character(h2)]] <- plot_fdr
+  plot_list_recall[[as.character(h2)]] <- plot_recall
+}
+
+```
+
+## h2 = 0.05
+
+In the lowest heritability setting, all methods suffer as the number of causal variants increases, however, SuSiE-inf and SuSiE.ash especially struggle with being hyper-conservative. As the number of causal variants increases, the residual variance also increases. This increase in uncertainty in the model negatively impacts the conservative models, like SuSiE-inf and SuSiE.ash.
+
+```{r, echo = F}
+plot_list_fdr$`0.05`
+plot_list_recall$`0.05`
+```
+
+## h2 = 0.10
+
+```{r, echo = F}
+plot_list_fdr$`0.1`
+plot_list_recall$`0.1`
+```
+
+## h2 = 0.20
+
+```{r, echo = F}
+plot_list_fdr$`0.2`
+plot_list_recall$`0.2`
+```
+
+## h2 = 0.40
+
+```{r, echo = F}
+plot_list_fdr$`0.4`
+plot_list_recall$`0.4`
+```

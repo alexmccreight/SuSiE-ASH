@@ -1,0 +1,16 @@
+---
+title: "Results"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+editor_options:
+  chunk_output_type: console
+---
+
+## Table of Contents
+
+- [Oligogenic Results](oligo_results.html)
+- [Sparse Results (Independent)](sparse_block_results.html)
+- [Sparse Results (Low LD)](sparse_results_low_ld.html)
+- [Sparse Results (Random LD)](sparse_results_random_ld.html)

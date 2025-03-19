@@ -1,0 +1,14 @@
+---
+title: "Vignettes"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+editor_options:
+  chunk_output_type: console
+---
+
+## Table of Contents
+
+- [Ash Component Failure](vignette_ash_failure.html)
+- [Synthetic Association Example](synthetic_association.html)

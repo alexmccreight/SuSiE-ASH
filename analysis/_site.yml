@@ -7,12 +7,10 @@ navbar:
     href: index.html
   - text: "SuSiE Improvements"
     href: improvements.html
-  - text: "Vignette: mr.ash Failure"
-    href: vignette_ash_failure.html
-  - text: "Synthetic Association"
-    href: synthetic_association.html
-  - text: "Benchmark Results"
-    href: oligo_results.html
+  - text: "Vignettes"
+    href: vignettes.html
+  - text: "Results"
+    href: results.html
 
   right:
   - icon: fab fa-github
