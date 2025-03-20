@@ -290,3 +290,112 @@ plot_list_recall$`0.2`
 plot_list_fdr$`0.4`
 plot_list_recall$`0.4`
 ```
+
+## ROC Curves
+
+```{r, echo = F, message = F, warning = F}
+# Create a list to store pooled truth vectors and PIP scores for each method
+pooled_data <- list(
+  "SuSiE" = list(truth = numeric(0), pips = numeric(0)),
+  "SuSiE.ash (Grid 2)" = list(truth = numeric(0), pips = numeric(0)),
+  "SuSiE-inf" = list(truth = numeric(0), pips = numeric(0))
+)
+
+# Loop over each file
+for(file in files) {
+  filename <- basename(file)
+  message("Pooling data from file: ", filename)
+  file_data <- readRDS(file)
+  
+  # Loop over replicates in the file
+  for(i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    
+    # Create truth vector: mark causal indices as 1, others as 0.
+    truth_indices <- rep_data$data$causal_indices
+    p <- length(rep_data$data$beta)
+    truth_vec <- rep(0, p)
+    truth_vec[truth_indices] <- 1
+    
+    # Define the methods (excluding Fineboost)
+    methods_list <- list(
+      "SuSiE" = rep_data$susie_out,
+      "SuSiE.ash (Grid 2)" = rep_data$susie_ash_out,
+      "SuSiE-inf" = rep_data$susie_inf_out
+    )
+    
+    # Loop over each method and pool the predictions
+    for(m in names(methods_list)) {
+      meth_out <- methods_list[[m]]
+      # Use 'marginal_PIP' for SuSiE-inf and SuSiE.ash, else 'pip'
+      pips <- if(m %in% c("SuSiE-inf", "SuSiE.ash (Grid 2)")) {
+        meth_out$marginal_PIP
+      } else {
+        meth_out$pip
+      }
+      
+      pooled_data[[m]]$truth <- c(pooled_data[[m]]$truth, truth_vec)
+      pooled_data[[m]]$pips <- c(pooled_data[[m]]$pips, pips)
+    }
+  }
+  rm(file_data)
+  gc()
+}
+
+
+
+# 2) Compute ROC curve points and AUC for each method
+roc_curves <- list()
+auc_values <- list()
+
+for(m in names(pooled_data)) {
+  # Create a ROCR 'prediction' object
+  pred <- prediction(pooled_data[[m]]$pips, pooled_data[[m]]$truth)
+  
+  # Compute TPR and FPR
+  perf_roc <- performance(pred, measure = "tpr", x.measure = "fpr")
+  roc_curves[[m]] <- data.frame(
+    fpr = unlist(perf_roc@x.values),
+    tpr = unlist(perf_roc@y.values)
+  )
+  
+
+  # Compute AUC
+  perf_auc <- performance(pred, measure = "auc")
+  auc_values[[m]] <- as.numeric(perf_auc@y.values)  # AUC is stored in @y.values
+}
+
+# 3) Prepare legend labels with AUC appended
+#    Round the AUC to two decimal places (adjust as desired)
+method_labels <- c(
+  "SuSiE"               = paste0("SuSiE (AUC=", round(auc_values[["SuSiE"]], 3), ")"),
+  "SuSiE-inf"           = paste0("SuSiE-inf (AUC=", round(auc_values[["SuSiE-inf"]], 3), ")"),
+  "SuSiE.ash (Grid 2)"  = paste0("SuSiE.ash (Grid 2) (AUC=", 
+                                 round(auc_values[["SuSiE.ash (Grid 2)"]], 3), ")")
+)
+
+# 4) Plot each method's ROC curve, then manually set the legend name and labels
+roc_plot <- ggplot() +
+  geom_line(data = roc_curves[["SuSiE"]],
+            aes(x = fpr, y = tpr, color = "SuSiE"), size = 1) +
+  geom_line(data = roc_curves[["SuSiE-inf"]],
+            aes(x = fpr, y = tpr, color = "SuSiE-inf"), size = 1) +
+  geom_line(data = roc_curves[["SuSiE.ash (Grid 2)"]],
+            aes(x = fpr, y = tpr, color = "SuSiE.ash (Grid 2)"), size = 1) +
+  labs(title = "Pooled ROC Curves: Random LD",
+       x = "False Positive Rate (FPR)",
+       y = "True Positive Rate (TPR)") +
+  theme_minimal() +
+  # Manually define colors, legend title, and legend labels:
+  scale_color_manual(
+    name   = "Method",  # Legend title (instead of "colour")
+    values = c("SuSiE" = "blue",
+               "SuSiE-inf" = "red",
+               "SuSiE.ash (Grid 2)" = "green"),
+    labels = method_labels
+  )
+
+print(roc_plot)
+
+
+```
