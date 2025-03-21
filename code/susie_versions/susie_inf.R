@@ -8,7 +8,7 @@
 #' or maximum likelihood estimation (still needs to be implemented).
 #'
 #' This function supports two modes of data input:
-#' 1) **Individual-level data mode**: Provide `X` (n x p, scaled & centered) and `y` (n-vector, centered).
+#' 1) **Individual-level data mode**: Provide `X` (n x p, scaled & centered) and `y` (n-vector, scaled & centered).
 #'    The function will compute `z`, `meansq`, `XtX`, `LD`, `V`, and `Dsq` as needed.
 #' 2) **Summary-level data mode**: Provide `z` (p-vector), `meansq` (scalar), and `n` (scalar),
 #'    along with either `LD` or (`V`, `Dsq`). In this mode, `X` and `y` are not required.
@@ -133,7 +133,7 @@
 #'
 # Phenotype with both sparse and infinitesimal effects
 #' y <- X %*% (b_true + b_inf) + rnorm(n)
-#' y <- scale(y, scale = F, center = T)
+#' y <- scale(y, scale = TRUE, center = TRUE)
 #'
 # Example 1: Individual-level data mode (no precomputations)
 #' res_ind <- susie_inf(X=X, y=y, L=5, method="moments", est_tausq=TRUE)
@@ -232,9 +232,6 @@ susie_inf <- function(X = NULL, y = NULL, z = NULL, meansq = NULL, n = NULL,
       Dsq <- pmax(eig$values * n, 0)
     }
   }
-
-  # TODO: Investigate this for fitted values further.
-  mean_y <- if (have_individual_data) mean(y) else 0
 
   Xty <- sqrt(n)*z
   VtXty <- t(V) %*% Xty
@@ -352,8 +349,7 @@ susie_inf <- function(X = NULL, y = NULL, z = NULL, meansq = NULL, n = NULL,
   cred <- susie_inf_get_cs(PIP = PIP, coverage = coverage, LD = LD, V = V, Dsq = Dsq, n = n)
 
   # Compute fitted values
-  # TODO: Ensure this is correct, specifically mean_y.
-  fitted <- mean_y + if (!is.null(X)) X %*% (rowSums(marginal_PIP * mu) + alpha) else rep(mean_y, n)
+  fitted <- if (!is.null(X)) X %*% (rowSums(marginal_PIP * mu) + alpha) else rep(0, n)
 
   return(list(
     PIP = PIP,
@@ -367,7 +363,8 @@ susie_inf <- function(X = NULL, y = NULL, z = NULL, meansq = NULL, n = NULL,
     tausq = tausq,
     alpha = alpha,
     fitted = fitted,
-    sets = cred
+    sets = cred,
+    niter = it
   ))
 }
 
