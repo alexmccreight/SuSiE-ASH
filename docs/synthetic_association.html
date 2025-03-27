@@ -389,7 +389,7 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-03-19
+<strong>Last updated:</strong> 2025-03-26
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -562,15 +562,15 @@ seed9_res.rds
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreedc04a771ca0f576c26e6793f5ab2da3a5aaf1086targetblankdc04a77a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreef0c578ee60cd6e89589ff97c72a305b2a204ef26targetblankf0c578ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/dc04a771ca0f576c26e6793f5ab2da3a5aaf1086" target="_blank">dc04a77</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/f0c578ee60cd6e89589ff97c72a305b2a204ef26" target="_blank">f0c578e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreedc04a771ca0f576c26e6793f5ab2da3a5aaf1086targetblankdc04a77a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreef0c578ee60cd6e89589ff97c72a305b2a204ef26targetblankf0c578ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -580,7 +580,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/dc04a771ca0f576c26e6793f5ab2da3a5aaf1086" target="_blank">dc04a77</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/f0c578ee60cd6e89589ff97c72a305b2a204ef26" target="_blank">f0c578e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -625,12 +625,15 @@ Untracked files:
     Untracked:  X_subset
     Untracked:  code/Tmp.Rmd
     Untracked:  code/susie_versions/SuSiE_Ash_Marginal_options.R
+    Untracked:  code/susie_versions/susie_inf_estimated_L.R
     Untracked:  ld_score.R
     Untracked:  misc/
     Untracked:  overleaf_graphics/
     Untracked:  preprint/KISS-paper.Rmd
     Untracked:  problem_data.rds
     Untracked:  scripts/LD_blocks/
+    Untracked:  scripts/benchmark/BLiP.R
+    Untracked:  scripts/benchmark/Prediction.R
     Untracked:  scripts/benchmark/ash_marginal_test.R
     Untracked:  scripts/benchmark/command_generation/
     Untracked:  scripts/benchmark/helper_functions/blocky_data_generation.R
@@ -646,6 +649,7 @@ Untracked files:
     Untracked:  scripts/benchmark/small_replicate.R
     Untracked:  scripts/benchmark/sparse_block/
     Untracked:  scripts/benchmark/sparse_metrics/
+    Untracked:  scripts/benchmark/sparse_prediction_results/
     Untracked:  scripts/benchmark/sparse_result_files_2/
     Untracked:  scripts/benchmark/sparse_results/
     Untracked:  scripts/benchmark/sparse_updated.R
@@ -662,7 +666,11 @@ Untracked files:
     Untracked:  seed9_data.rds
     Untracked:  seed9_ld.rds
     Untracked:  seed9_res.rds
+    Untracked:  simulation/7328i5e5wmrhdsfkcczz9_tmate.log
+    Untracked:  simulation/7328i5e5wmrhdsfkcczz9_tmate_session.log
     Untracked:  simulation/eqtl-results/
+    Untracked:  simulation/g6t7roby96tc5u8aa2r26_tmate.log
+    Untracked:  simulation/g6t7roby96tc5u8aa2r26_tmate_session.log
     Untracked:  simulation/misc/Rcpp-Comparison.R
     Untracked:  simulation/misc/RcppTesting.Rmd
     Untracked:  simulation/misc/inf_debugging.Rmd
@@ -673,6 +681,8 @@ Untracked files:
     Untracked:  simulation/n25qma8mgqfgvh03uln75_tmate.log
     Untracked:  simulation/n25qma8mgqfgvh03uln75_tmate_session.log
     Untracked:  simulation/old mmcloud/
+    Untracked:  simulation/s1gjc5nf9sqiy6mj243nv_tmate.log
+    Untracked:  simulation/s1gjc5nf9sqiy6mj243nv_tmate_session.log
     Untracked:  simulation/sparse-results/
     Untracked:  simulation/src/float_wrapper.sh
     Untracked:  simulation/src/generate_job_script.sh
@@ -683,7 +693,6 @@ Untracked files:
 Unstaged changes:
     Modified:   code/susie_versions/SuSiE_Ash_Marginal.R
     Modified:   code/susie_versions/susie_ash_mod.R
-    Modified:   code/susie_versions/susie_inf.R
     Modified:   new-rcpp/mr.ash.alpha/src/mr_ash.h
     Deleted:    scripts/LD_blocks_precomputations.R
     Modified:   scripts/benchmark/helper_functions/evaluate_method_performance.R
@@ -753,6 +762,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/e8f770cb0c37813de83fdca22dc65d22b9168901/docs/synthetic_association.html" target="_blank">e8f770c</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-19
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 html
