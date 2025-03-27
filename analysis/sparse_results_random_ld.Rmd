@@ -243,7 +243,7 @@ for (h2 in unique_h2) {
          x = "Number of Causal Variants",
          y = "Mean CS FDR") +
     ylim(0, 0.3) +
-    geom_hline(yintercept = 0.05, color = "red", linetype = "dotted") + theme_classic()
+    geom_hline(yintercept = 0.05, color = "red", linetype = "dotted") + theme_minimal()
   
   # Create bar plot for CS Recall for this h2 level
   plot_recall <- ggplot(cs_summary_h2, aes(x = as.factor(K), y = mean_CS_Recall, fill = Method)) +
@@ -254,7 +254,7 @@ for (h2 in unique_h2) {
          x = "Number of Causal Variants",
          y = "Mean CS Recall") +
     ylim(0, 1) +
-    theme_classic()
+    theme_minimal()
   
   # Optionally, store the plots in lists
   plot_list_fdr[[as.character(h2)]] <- plot_fdr
@@ -398,4 +398,138 @@ roc_plot <- ggplot() +
 print(roc_plot)
 
 
+```
+
+## Prediction Metrics
+
+```{r echo = F, warning = F, message = F}
+# ------------------------------
+# TWAS Prediction Metrics Aggregation and Plots
+# ------------------------------
+
+# Define the path to the prediction result files
+pred_path <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_prediction_results"
+
+# List files and filter (e.g., files containing "ldModelow_ld")
+pred_files <- list.files(pred_path, pattern = "\\.rds$", full.names = TRUE)
+pred_files <- pred_files[grepl("ldModerandom", pred_files)]
+
+# Initialize a list to store the TWAS metrics for each replicate
+pred_metrics_list <- list()
+
+# Loop over each file and each replicate within the file
+for(file in pred_files) {
+  message("Processing file: ", basename(file))
+  file_data <- readRDS(file)
+  
+  for(i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    
+    # Check if the replicate has TWAS metrics and exclude if missing any data
+    if(is.null(rep_data$twas_metrics)) next
+    if(any(is.na(rep_data$twas_metrics))) next
+    
+    # Extract the metrics; expected columns: Method, corr, rsq, adj_rsq, pval, RMSE, MAE
+    rep_metrics <- rep_data$twas_metrics
+    rep_metrics$replicate <- i
+    rep_metrics$file <- basename(file)
+    
+    pred_metrics_list[[length(pred_metrics_list) + 1]] <- rep_metrics
+  }
+  
+  # Remove the file data from memory and run garbage collection
+  rm(file_data)
+  gc()
+}
+
+# Combine all replicates into a single data frame
+library(dplyr)
+pred_df <- bind_rows(pred_metrics_list)
+
+# Aggregate metrics across replicates (and files) by Method
+pred_summary <- pred_df %>%
+  group_by(Method) %>%
+  summarise(
+    mean_corr    = mean(corr, na.rm = TRUE),
+    se_corr      = sd(corr, na.rm = TRUE) / sqrt(n()),
+    mean_rsq     = mean(rsq, na.rm = TRUE),
+    se_rsq       = sd(rsq, na.rm = TRUE) / sqrt(n()),
+    mean_adj_rsq = mean(adj_rsq, na.rm = TRUE),
+    se_adj_rsq   = sd(adj_rsq, na.rm = TRUE) / sqrt(n()),
+    mean_pval    = mean(pval, na.rm = TRUE),
+    se_pval      = sd(pval, na.rm = TRUE) / sqrt(n()),
+    mean_RMSE    = mean(RMSE, na.rm = TRUE),
+    se_RMSE      = sd(RMSE, na.rm = TRUE) / sqrt(n()),
+    mean_MAE     = mean(MAE, na.rm = TRUE),
+    se_MAE       = sd(MAE, na.rm = TRUE) / sqrt(n())
+  ) %>% 
+  ungroup()
+
+# ------------------------------
+# Plotting: Create individual bar plots for each metric
+# ------------------------------
+library(ggplot2)
+
+pred_summary <- pred_summary %>%
+  mutate(Method = recode(Method,
+                         susie = "SuSiE",
+                         susie_ash = "SuSiE.ash",
+                         susie_inf = "SuSiE-inf"))
+
+# Plot 1: Correlation
+plot_corr <- ggplot(pred_summary, aes(x = Method, y = mean_corr, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_corr - se_corr, ymax = mean_corr + se_corr),
+                width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Average Correlation", y = "Mean Correlation") +
+  theme_minimal()
+
+# Plot 2: R-squared
+plot_rsq <- ggplot(pred_summary, aes(x = Method, y = mean_rsq, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_rsq - se_rsq, ymax = mean_rsq + se_rsq),
+                width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Average R-squared", y = "Mean R-squared") +
+  theme_minimal()
+
+# Plot 3: Adjusted R-squared
+plot_adj_rsq <- ggplot(pred_summary, aes(x = Method, y = mean_adj_rsq, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_adj_rsq - se_adj_rsq, ymax = mean_adj_rsq + se_adj_rsq),
+                width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Average Adjusted R-squared", y = "Mean Adjusted R-squared") +
+  theme_minimal()
+
+# Plot 4: p-value
+# Note: p-values are extremely small; you might consider a log transformation if desired.
+plot_pval <- ggplot(pred_summary, aes(x = Method, y = mean_pval, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_pval - se_pval, ymax = mean_pval + se_pval),
+                width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Average p-value", y = "Mean p-value") +
+  theme_minimal()
+
+# Plot 5: RMSE
+plot_RMSE <- ggplot(pred_summary, aes(x = Method, y = mean_RMSE, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_RMSE - se_RMSE, ymax = mean_RMSE + se_RMSE),
+                width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Average RMSE", y = "Mean RMSE") +
+  theme_minimal()
+
+# Plot 6: MAE
+plot_MAE <- ggplot(pred_summary, aes(x = Method, y = mean_MAE, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean_MAE - se_MAE, ymax = mean_MAE + se_MAE),
+                width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Average MAE", y = "Mean MAE") +
+  theme_minimal()
+
+# Print individual plots (each plot appears separately)
+print(plot_corr)
+print(plot_rsq)
+print(plot_adj_rsq)
+#print(plot_pval)
+#print(plot_RMSE)
+#print(plot_MAE)
 ```
