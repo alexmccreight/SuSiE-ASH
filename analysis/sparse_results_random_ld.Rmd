@@ -55,6 +55,10 @@ compute_auprc <- function(truth_vec, pips) {
 sparse_path <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_results"
 files <- list.files(sparse_path, pattern = "\\.rds$", full.names = TRUE)
 files <- files[grepl("ldModerandom", files)]
+
+sparse_path_mom <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_results_mom"
+files_mom <- list.files(sparse_path_mom, pattern = "\\.rds$", full.names = TRUE)
+files_mom <- files_mom[grepl("ldModerandom", files_mom)]
 ```
 
 
@@ -161,9 +165,67 @@ for(file in files) {
   rm(file_data)
   gc()
 }
+
+for(file in files_mom) {
+  filename <- basename(file)
+  
+  # Extract h2total and K as before:
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  K_val  <- as.numeric(str_extract(filename, "(?<=_K)[0-9]+"))
+  
+  message("Processing MoM file: ", filename)
+  file_data <- readRDS(file)
+  
+  for(i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    
+    # Use the pre-saved causal indices as truth.
+    truth_indices <- rep_data$data$causal_indices
+    
+    # (Optional) Create a truth vector if needed:
+    p <- length(rep_data$data$beta)
+    truth_vec <- rep(0, p)
+    truth_vec[truth_indices] <- 1
+    
+    # For the new files, the method is "SuSiE (MoM)" and results are in susie_inf_out
+    methods <- list("SuSiE (MoM)" = rep_data$susie_inf_out)
+    
+    for(m in names(methods)) {
+      meth_out <- methods[[m]]
+      
+      # Extract credible sets (assuming the structure is similar to susie_inf)
+      cs <- if(!is.null(meth_out$sets)) meth_out$sets else list()
+      
+      # Compute CS metrics
+      metrics <- compute_cs_metrics(cs, truth_indices)
+      
+      cs_size <- if(length(cs) > 0) mean(sapply(cs, length)) else NA
+      coverage <- if(length(cs) > 0) mean(sapply(cs, function(x) any(x %in% truth_indices))) else NA
+      
+      cs_results[[length(cs_results) + 1]] <- data.frame(
+        file       = filename,
+        replicate  = i,
+        h2total    = h2total,
+        K          = K_val,
+        Method     = m,    # This will be "SuSiE (MoM)"
+        CS_Size    = cs_size,
+        Coverage   = coverage,
+        CS_FDR     = metrics$cs_fdr,
+        CS_Recall  = metrics$cs_recall,
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  
+  rm(file_data)
+  gc()
+}
+
 ```
 
-## Aggregated Results Across All Heritability Levels
+## FDR / Recall Plots
+
+### Aggregated Results Across All Heritability Levels
 
 ```{r, warning = F, message = F, echo = F}
 cs_results_df <- bind_rows(cs_results)
@@ -263,28 +325,28 @@ for (h2 in unique_h2) {
 
 ```
 
-## h2 = 0.05
+### h2 = 0.05
 
 ```{r, echo = F}
 plot_list_fdr$`0.05`
 plot_list_recall$`0.05`
 ```
 
-## h2 = 0.10
+### h2 = 0.10
 
 ```{r, echo = F}
 plot_list_fdr$`0.1`
 plot_list_recall$`0.1`
 ```
 
-## h2 = 0.20
+### h2 = 0.20
 
 ```{r, echo = F}
 plot_list_fdr$`0.2`
 plot_list_recall$`0.2`
 ```
 
-## h2 = 0.40
+### h2 = 0.40
 
 ```{r, echo = F}
 plot_list_fdr$`0.4`
@@ -342,6 +404,32 @@ for(file in files) {
   gc()
 }
 
+# Initialize a new entry for the MoM method:
+pooled_data[["SuSiE (MoM)"]] <- list(truth = numeric(0), pips = numeric(0))
+
+for(file in files_mom) {
+  filename <- basename(file)
+  message("Pooling MoM data from file: ", filename)
+  file_data <- readRDS(file)
+  
+  for(i in seq_along(file_data$all_results)) {
+    rep_data <- file_data$all_results[[i]]
+    
+    truth_indices <- rep_data$data$causal_indices
+    p <- length(rep_data$data$beta)
+    truth_vec <- rep(0, p)
+    truth_vec[truth_indices] <- 1
+    
+    # For MoM, we use susie_inf_out
+    pooled_data[["SuSiE (MoM)"]][["truth"]] <- c(pooled_data[["SuSiE (MoM)"]][["truth"]], truth_vec)
+    pooled_data[["SuSiE (MoM)"]][["pips"]] <- c(pooled_data[["SuSiE (MoM)"]][["pips"]], rep_data$susie_inf_out$marginal_PIP)
+  }
+  
+  rm(file_data)
+  gc()
+}
+
+
 
 
 # 2) Compute ROC curve points and AUC for each method
@@ -368,10 +456,10 @@ for(m in names(pooled_data)) {
 # 3) Prepare legend labels with AUC appended
 #    Round the AUC to two decimal places (adjust as desired)
 method_labels <- c(
-  "SuSiE"               = paste0("SuSiE (AUC=", round(auc_values[["SuSiE"]], 3), ")"),
-  "SuSiE-inf"           = paste0("SuSiE-inf (AUC=", round(auc_values[["SuSiE-inf"]], 3), ")"),
-  "SuSiE.ash (Grid 2)"  = paste0("SuSiE.ash (Grid 2) (AUC=", 
-                                 round(auc_values[["SuSiE.ash (Grid 2)"]], 3), ")")
+  "SuSiE"              = paste0("SuSiE (AUC=", round(auc_values[["SuSiE"]], 3), ")"),
+  "SuSiE-inf"          = paste0("SuSiE-inf (AUC=", round(auc_values[["SuSiE-inf"]], 3), ")"),
+  "SuSiE.ash (Grid 2)" = paste0("SuSiE.ash (AUC=", round(auc_values[["SuSiE.ash (Grid 2)"]], 3), ")"),
+  "SuSiE (MoM)"        = paste0("SuSiE (MoM) (AUC=", round(auc_values[["SuSiE (MoM)"]], 3), ")")
 )
 
 # 4) Plot each method's ROC curve, then manually set the legend name and labels
@@ -382,6 +470,8 @@ roc_plot <- ggplot() +
             aes(x = fpr, y = tpr, color = "SuSiE-inf"), size = 1) +
   geom_line(data = roc_curves[["SuSiE.ash (Grid 2)"]],
             aes(x = fpr, y = tpr, color = "SuSiE.ash (Grid 2)"), size = 1) +
+  geom_line(data = roc_curves[["SuSiE (MoM)"]],
+            aes(x = fpr, y = tpr, color = "SuSiE (MoM)"), size = 1) +
   labs(title = "Pooled ROC Curves: Random LD",
        x = "False Positive Rate (FPR)",
        y = "True Positive Rate (TPR)") +
@@ -391,63 +481,138 @@ roc_plot <- ggplot() +
     name   = "Method",  # Legend title (instead of "colour")
     values = c("SuSiE" = "blue",
                "SuSiE-inf" = "red",
-               "SuSiE.ash (Grid 2)" = "green"),
+               "SuSiE.ash (Grid 2)" = "green",
+               "SuSiE (MoM)" = "purple"),
     labels = method_labels
-  )
+  ) + xlim(0, .1)
 
 print(roc_plot)
 
 
 ```
 
+## Calibration Plots
+
+```{r, echo = F, message = F, warning = F}
+# ------------------------------
+# Calibration Plots
+# ------------------------------
+
+# We assume you have "pooled_data" for each method as in your ROC code:
+# pooled_data[[method]]$pips  (numeric vector of PIPs across all replicates)
+# pooled_data[[method]]$truth (numeric vector of 0/1 indicating causal or not)
+
+# 1) Create a data frame with binned statistics for each method.
+library(dplyr)
+
+# Choose bin boundaries, for example in increments of 0.1:
+bin_breaks <- seq(0, 1, by = 0.1)
+
+calib_data <- do.call(rbind, lapply(names(pooled_data), function(m) {
+  pip_values <- pooled_data[[m]]$pips
+  truth_vals <- pooled_data[[m]]$truth
+  
+  # Assign each SNP to a bin according to its PIP.
+  bin_id <- cut(pip_values, breaks = bin_breaks, include.lowest = TRUE, labels = FALSE)
+  
+  # Create a small data frame for each SNP
+  df_temp <- data.frame(
+    Method = m,
+    bin    = bin_id,
+    pips   = pip_values,
+    truth  = truth_vals
+  )
+  
+  # For each bin, compute:
+  # - mean_pip    = average PIP in that bin
+  # - fraction    = fraction of causal SNPs in that bin
+  # - n           = number of SNPs in that bin (for SE calculation)
+  df_sum <- df_temp %>%
+    group_by(Method, bin) %>%
+    summarise(
+      mean_pip  = mean(pips),
+      fraction  = mean(truth),       # proportion of causal
+      n         = n(),              # how many SNPs in the bin
+      .groups   = "drop"
+    )
+  
+  # Standard error for a proportion p = sqrt(p*(1-p)/n)
+  df_sum$se <- with(df_sum, sqrt(fraction * (1 - fraction) / n))
+  
+  df_sum
+}))
+
+# 2) Plot the calibration curves
+library(ggplot2)
+
+calib_data <- calib_data %>% 
+  mutate(Method = recode(Method, "SuSiE.ash (Grid 2)" = "SuSiE.ash"))
+
+calib_plot <- ggplot(calib_data, aes(x = mean_pip, y = fraction, color = Method)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = fraction - se, ymax = fraction + se), width = 0.02) +
+  # Add the diagonal line for perfect calibration
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  # Force both axes to range [0,1] and keep them on the same scale
+  coord_equal(xlim = c(0,1), ylim = c(0,1)) +
+  labs(
+    title = "Calibration Plot",
+    x     = "Mean PIP",
+    y     = "Observed Frequency"
+  ) +
+  theme_minimal()
+
+print(calib_plot)
+```
+
+
 ## Prediction Metrics
 
+### Aggregated Across All Heritability Levels
+
 ```{r echo = F, warning = F, message = F}
-# ------------------------------
-# TWAS Prediction Metrics Aggregation and Plots
-# ------------------------------
+library(dplyr)
+library(ggplot2)
+library(stringr)
 
-# Define the path to the prediction result files
+# Define your prediction results folder and list files.
 pred_path <- "/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_prediction_results"
-
-# List files and filter (e.g., files containing "ldModelow_ld")
 pred_files <- list.files(pred_path, pattern = "\\.rds$", full.names = TRUE)
 pred_files <- pred_files[grepl("ldModerandom", pred_files)]
 
-# Initialize a list to store the TWAS metrics for each replicate
+# Loop through the files only once to extract prediction metrics and h2.
 pred_metrics_list <- list()
-
-# Loop over each file and each replicate within the file
 for(file in pred_files) {
-  message("Processing file: ", basename(file))
-  file_data <- readRDS(file)
+  filename <- basename(file)
+  # Extract heritability level (h2total) from the filename.
+  h2total <- as.numeric(str_extract(filename, "(?<=h2total)[0-9.]+"))
+  message("Processing file: ", filename)
   
+  file_data <- readRDS(file)
   for(i in seq_along(file_data$all_results)) {
     rep_data <- file_data$all_results[[i]]
     
-    # Check if the replicate has TWAS metrics and exclude if missing any data
-    if(is.null(rep_data$twas_metrics)) next
-    if(any(is.na(rep_data$twas_metrics))) next
+    # Skip if twas_metrics is missing or contains NA.
+    if (is.null(rep_data$twas_metrics)) next
+    if (any(is.na(rep_data$twas_metrics))) next
     
-    # Extract the metrics; expected columns: Method, corr, rsq, adj_rsq, pval, RMSE, MAE
     rep_metrics <- rep_data$twas_metrics
     rep_metrics$replicate <- i
-    rep_metrics$file <- basename(file)
+    rep_metrics$file <- filename
+    rep_metrics$h2total <- h2total  # add heritability as a column
     
     pred_metrics_list[[length(pred_metrics_list) + 1]] <- rep_metrics
   }
-  
-  # Remove the file data from memory and run garbage collection
   rm(file_data)
   gc()
 }
 
-# Combine all replicates into a single data frame
-library(dplyr)
+# Combine all replicates into a single data frame.
 pred_df <- bind_rows(pred_metrics_list)
 
-# Aggregate metrics across replicates (and files) by Method
-pred_summary <- pred_df %>%
+### 1. Aggregated Prediction Plots (across all h2 levels)
+pred_summary_all <- pred_df %>%
   group_by(Method) %>%
   summarise(
     mean_corr    = mean(corr, na.rm = TRUE),
@@ -462,74 +627,179 @@ pred_summary <- pred_df %>%
     se_RMSE      = sd(RMSE, na.rm = TRUE) / sqrt(n()),
     mean_MAE     = mean(MAE, na.rm = TRUE),
     se_MAE       = sd(MAE, na.rm = TRUE) / sqrt(n())
-  ) %>% 
-  ungroup()
+  ) %>% ungroup()
 
-# ------------------------------
-# Plotting: Create individual bar plots for each metric
-# ------------------------------
-library(ggplot2)
-
-pred_summary <- pred_summary %>%
-  mutate(Method = recode(Method,
-                         susie = "SuSiE",
-                         susie_ash = "SuSiE.ash",
-                         susie_inf = "SuSiE-inf"))
-
-# Plot 1: Correlation
-plot_corr <- ggplot(pred_summary, aes(x = Method, y = mean_corr, fill = Method)) +
+# Example: Aggregated Correlation Plot
+plot_corr_all <- ggplot(pred_summary_all, aes(x = Method, y = mean_corr, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean_corr - se_corr, ymax = mean_corr + se_corr),
                 width = 0.2, position = position_dodge(0.9)) +
-  labs(title = "Average Correlation", y = "Mean Correlation") +
+  labs(title = "Average Correlation (Aggregated)", y = "Mean Correlation") +
   theme_minimal()
 
-# Plot 2: R-squared
-plot_rsq <- ggplot(pred_summary, aes(x = Method, y = mean_rsq, fill = Method)) +
+# Similarly create aggregated plots for other metrics.
+plot_rsq_all <- ggplot(pred_summary_all, aes(x = Method, y = mean_rsq, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean_rsq - se_rsq, ymax = mean_rsq + se_rsq),
                 width = 0.2, position = position_dodge(0.9)) +
-  labs(title = "Average R-squared", y = "Mean R-squared") +
+  labs(title = "Average R-squared (Aggregated)", y = "Mean R-squared") +
   theme_minimal()
 
-# Plot 3: Adjusted R-squared
-plot_adj_rsq <- ggplot(pred_summary, aes(x = Method, y = mean_adj_rsq, fill = Method)) +
+plot_adj_rsq_all <- ggplot(pred_summary_all, aes(x = Method, y = mean_adj_rsq, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean_adj_rsq - se_adj_rsq, ymax = mean_adj_rsq + se_adj_rsq),
                 width = 0.2, position = position_dodge(0.9)) +
-  labs(title = "Average Adjusted R-squared", y = "Mean Adjusted R-squared") +
+  labs(title = "Average Adjusted R-squared (Aggregated)", y = "Mean Adjusted R-squared") +
   theme_minimal()
 
-# Plot 4: p-value
-# Note: p-values are extremely small; you might consider a log transformation if desired.
-plot_pval <- ggplot(pred_summary, aes(x = Method, y = mean_pval, fill = Method)) +
+plot_pval_all <- ggplot(pred_summary_all, aes(x = Method, y = mean_pval, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean_pval - se_pval, ymax = mean_pval + se_pval),
                 width = 0.2, position = position_dodge(0.9)) +
-  labs(title = "Average p-value", y = "Mean p-value") +
+  labs(title = "Average p-value (Aggregated)", y = "Mean p-value") +
   theme_minimal()
 
-# Plot 5: RMSE
-plot_RMSE <- ggplot(pred_summary, aes(x = Method, y = mean_RMSE, fill = Method)) +
+plot_RMSE_all <- ggplot(pred_summary_all, aes(x = Method, y = mean_RMSE, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean_RMSE - se_RMSE, ymax = mean_RMSE + se_RMSE),
                 width = 0.2, position = position_dodge(0.9)) +
-  labs(title = "Average RMSE", y = "Mean RMSE") +
+  labs(title = "Average RMSE (Aggregated)", y = "Mean RMSE") +
   theme_minimal()
 
-# Plot 6: MAE
-plot_MAE <- ggplot(pred_summary, aes(x = Method, y = mean_MAE, fill = Method)) +
+plot_MAE_all <- ggplot(pred_summary_all, aes(x = Method, y = mean_MAE, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean_MAE - se_MAE, ymax = mean_MAE + se_MAE),
                 width = 0.2, position = position_dodge(0.9)) +
-  labs(title = "Average MAE", y = "Mean MAE") +
+  labs(title = "Average MAE (Aggregated)", y = "Mean MAE") +
   theme_minimal()
 
-# Print individual plots (each plot appears separately)
-print(plot_corr)
-print(plot_rsq)
-print(plot_adj_rsq)
-#print(plot_pval)
-#print(plot_RMSE)
-#print(plot_MAE)
+# Display the aggregated plots.
+print(plot_corr_all)
+print(plot_rsq_all)
+# print(plot_adj_rsq_all)
+# print(plot_pval_all)
+# print(plot_RMSE_all)
+# print(plot_MAE_all)
+
+### 2. Heritability-Stratified Prediction Plots (one set per h2 level)
+unique_h2 <- sort(unique(pred_df$h2total))
+
+# Initialize lists to store plots for each metric per heritability level.
+plot_list_corr <- list()
+plot_list_rsq <- list()
+plot_list_adj_rsq <- list()
+plot_list_pval <- list()
+plot_list_RMSE <- list()
+plot_list_MAE <- list()
+
+for (h2 in unique_h2) {
+  # Filter data for the current h2 level.
+  data_h2 <- pred_df %>% filter(h2total == h2)
+  
+  # Aggregate metrics by Method for this heritability level.
+  pred_summary_h2 <- data_h2 %>%
+    group_by(Method) %>%
+    summarise(
+      mean_corr    = mean(corr, na.rm = TRUE),
+      se_corr      = sd(corr, na.rm = TRUE) / sqrt(n()),
+      mean_rsq     = mean(rsq, na.rm = TRUE),
+      se_rsq       = sd(rsq, na.rm = TRUE) / sqrt(n()),
+      mean_adj_rsq = mean(adj_rsq, na.rm = TRUE),
+      se_adj_rsq   = sd(adj_rsq, na.rm = TRUE) / sqrt(n()),
+      mean_pval    = mean(pval, na.rm = TRUE),
+      se_pval      = sd(pval, na.rm = TRUE) / sqrt(n()),
+      mean_RMSE    = mean(RMSE, na.rm = TRUE),
+      se_RMSE      = sd(RMSE, na.rm = TRUE) / sqrt(n()),
+      mean_MAE     = mean(MAE, na.rm = TRUE),
+      se_MAE       = sd(MAE, na.rm = TRUE) / sqrt(n())
+    ) %>% ungroup()
+  
+  # Create separate bar plots for each metric (without faceting).
+  plot_corr <- ggplot(pred_summary_h2, aes(x = Method, y = mean_corr, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = mean_corr - se_corr, ymax = mean_corr + se_corr),
+                  width = 0.2, position = position_dodge(0.9)) +
+    labs(title = paste("Average Correlation (h2 =", h2, ")"), y = "Mean Correlation") +
+    theme_minimal()
+  
+  plot_rsq <- ggplot(pred_summary_h2, aes(x = Method, y = mean_rsq, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = mean_rsq - se_rsq, ymax = mean_rsq + se_rsq),
+                  width = 0.2, position = position_dodge(0.9)) +
+    labs(title = paste("Average R-squared (h2 =", h2, ")"), y = "Mean R-squared") +
+    theme_minimal()
+  
+  plot_adj_rsq <- ggplot(pred_summary_h2, aes(x = Method, y = mean_adj_rsq, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = mean_adj_rsq - se_adj_rsq, ymax = mean_adj_rsq + se_adj_rsq),
+                  width = 0.2, position = position_dodge(0.9)) +
+    labs(title = paste("Average Adjusted R-squared (h2 =", h2, ")"), y = "Mean Adjusted R-squared") +
+    theme_minimal()
+  
+  plot_pval <- ggplot(pred_summary_h2, aes(x = Method, y = mean_pval, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = mean_pval - se_pval, ymax = mean_pval + se_pval),
+                  width = 0.2, position = position_dodge(0.9)) +
+    labs(title = paste("Average p-value (h2 =", h2, ")"), y = "Mean p-value") +
+    theme_minimal()
+  
+  plot_RMSE <- ggplot(pred_summary_h2, aes(x = Method, y = mean_RMSE, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = mean_RMSE - se_RMSE, ymax = mean_RMSE + se_RMSE),
+                  width = 0.2, position = position_dodge(0.9)) +
+    labs(title = paste("Average RMSE (h2 =", h2, ")"), y = "Mean RMSE") +
+    theme_minimal()
+  
+  plot_MAE <- ggplot(pred_summary_h2, aes(x = Method, y = mean_MAE, fill = Method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = mean_MAE - se_MAE, ymax = mean_MAE + se_MAE),
+                  width = 0.2, position = position_dodge(0.9)) +
+    labs(title = paste("Average MAE (h2 =", h2, ")"), y = "Mean MAE") +
+    theme_minimal()
+  
+  # Store the plots in lists indexed by the heritability level.
+  plot_list_corr[[as.character(h2)]] <- plot_corr
+  plot_list_rsq[[as.character(h2)]] <- plot_rsq
+  plot_list_adj_rsq[[as.character(h2)]] <- plot_adj_rsq
+  plot_list_pval[[as.character(h2)]] <- plot_pval
+  plot_list_RMSE[[as.character(h2)]] <- plot_RMSE
+  plot_list_MAE[[as.character(h2)]] <- plot_MAE
+}
+
+# To display the stratified plots for a given h2 level (for example, h2 = 0.05):
+# plot_list_corr[["0.05"]]
+# plot_list_rsq[["0.05"]]
+# plot_list_adj_rsq[["0.05"]]
+# plot_list_pval[["0.05"]]
+# plot_list_RMSE[["0.05"]]
+# plot_list_MAE[["0.05"]]
+
+```
+
+### h2 = 0.05
+
+```{r}
+plot_list_corr[["0.05"]]
+plot_list_rsq[["0.05"]]
+```
+
+### h2 = 0.1
+
+```{r}
+plot_list_corr[["0.1"]]
+plot_list_rsq[["0.1"]]
+```
+
+### h2 = 0.2
+
+```{r}
+plot_list_corr[["0.2"]]
+plot_list_rsq[["0.2"]]
+```
+
+### h2 = 0.4
+
+```{r}
+plot_list_corr[["0.4"]]
+plot_list_rsq[["0.4"]]
 ```
