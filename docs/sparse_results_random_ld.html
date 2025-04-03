@@ -389,7 +389,7 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-03-26
+<strong>Last updated:</strong> 2025-04-02
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -540,6 +540,14 @@ scripts/benchmark/sparse_results
 </tr>
 <tr>
 <td style="text-align:left;">
+/Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_results_mom
+</td>
+<td style="text-align:left;">
+scripts/benchmark/sparse_results_mom
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 /Users/alexmccreight/Columbia/Research/SuSiE-ASH/SuSiE-ASH/scripts/benchmark/sparse_prediction_results
 </td>
 <td style="text-align:left;">
@@ -554,15 +562,15 @@ scripts/benchmark/sparse_prediction_results
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreef0c578ee60cd6e89589ff97c72a305b2a204ef26targetblankf0c578ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreedbef970ae6c9b71740b6515a528c42fa0715c31dtargetblankdbef970a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/f0c578ee60cd6e89589ff97c72a305b2a204ef26" target="_blank">f0c578e</a>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/dbef970ae6c9b71740b6515a528c42fa0715c31d" target="_blank">dbef970</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreef0c578ee60cd6e89589ff97c72a305b2a204ef26targetblankf0c578ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomalexmccreightSuSiEASHtreedbef970ae6c9b71740b6515a528c42fa0715c31dtargetblankdbef970a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -572,7 +580,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/f0c578ee60cd6e89589ff97c72a305b2a204ef26" target="_blank">f0c578e</a>.
+<a href="https://github.com/alexmccreight/SuSiE-ASH/tree/dbef970ae6c9b71740b6515a528c42fa0715c31d" target="_blank">dbef970</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -644,7 +652,9 @@ Untracked files:
     Untracked:  scripts/benchmark/sparse_prediction_results/
     Untracked:  scripts/benchmark/sparse_result_files_2/
     Untracked:  scripts/benchmark/sparse_results/
+    Untracked:  scripts/benchmark/sparse_results_mom/
     Untracked:  scripts/benchmark/sparse_updated.R
+    Untracked:  scripts/benchmark/sparse_updated_MoM.R
     Untracked:  scripts/benchmark/sparse_updated_sigma.R
     Untracked:  scripts/commands_to_submit_eqtl_simple.R
     Untracked:  scripts/eqtl_simulation_marginal.R
@@ -680,6 +690,7 @@ Untracked files:
     Untracked:  simulation/src/generate_job_script.sh
     Untracked:  test_script.R
     Untracked:  testing.Rmd
+    Untracked:  tmp.Rmd
     Untracked:  vignettes/
 
 Unstaged changes:
@@ -755,6 +766,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/dbef970ae6c9b71740b6515a528c42fa0715c31d/analysis/sparse_results_random_ld.Rmd" target="_blank">dbef970</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-04-02
+</td>
+<td>
+wflow_publish(files = c("analysis/sparse_results_low_ld.Rmd",
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/alexmccreight/SuSiE-ASH/949c0ca14d48c663c5826e215678d9960a169689/docs/sparse_results_random_ld.html" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -864,9 +909,11 @@ update website
 </div>
 </div>
 </div>
+<div id="fdr-recall-plots" class="section level2">
+<h2>FDR / Recall Plots</h2>
 <div id="aggregated-results-across-all-heritability-levels"
-class="section level2">
-<h2>Aggregated Results Across All Heritability Levels</h2>
+class="section level3">
+<h3>Aggregated Results Across All Heritability Levels</h3>
 <p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
@@ -944,8 +991,8 @@ alexmccreight
 </div>
 </div>
 </div>
-<div id="h2-0.05" class="section level2">
-<h2>h2 = 0.05</h2>
+<div id="h2-0.05" class="section level3">
+<h3>h2 = 0.05</h3>
 <p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
@@ -969,6 +1016,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-1.png" target="_blank">87c8626</a>
@@ -1009,6 +1067,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-2.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-5-2.png" target="_blank">87c8626</a>
 </td>
 <td>
@@ -1023,8 +1092,8 @@ alexmccreight
 </div>
 </div>
 </div>
-<div id="h2-0.10" class="section level2">
-<h2>h2 = 0.10</h2>
+<div id="h2-0.10" class="section level3">
+<h3>h2 = 0.10</h3>
 <p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
@@ -1048,6 +1117,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-1.png" target="_blank">87c8626</a>
@@ -1088,6 +1168,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-2.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-6-2.png" target="_blank">87c8626</a>
 </td>
 <td>
@@ -1102,8 +1193,8 @@ alexmccreight
 </div>
 </div>
 </div>
-<div id="h2-0.20" class="section level2">
-<h2>h2 = 0.20</h2>
+<div id="h2-0.20" class="section level3">
+<h3>h2 = 0.20</h3>
 <p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
@@ -1127,6 +1218,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-1.png" target="_blank">87c8626</a>
@@ -1167,6 +1269,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-2.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-7-2.png" target="_blank">87c8626</a>
 </td>
 <td>
@@ -1181,8 +1294,8 @@ alexmccreight
 </div>
 </div>
 </div>
-<div id="h2-0.40" class="section level2">
-<h2>h2 = 0.40</h2>
+<div id="h2-0.40" class="section level3">
+<h3>h2 = 0.40</h3>
 <p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
@@ -1206,6 +1319,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-1.png" target="_blank">87c8626</a>
@@ -1246,6 +1370,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-2.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/alexmccreight/SuSiE-ASH/blob/87c8626569aa77beca2a473888a4c25dd85be94d/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-8-2.png" target="_blank">87c8626</a>
 </td>
 <td>
@@ -1257,6 +1392,7 @@ alexmccreight
 </tr>
 </tbody>
 </table>
+</div>
 </div>
 </div>
 </div>
@@ -1301,9 +1437,81 @@ alexmccreight
 </div>
 </div>
 </div>
+<div id="calibration-plots" class="section level2">
+<h2>Calibration Plots</h2>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/alexmccreight/SuSiE-ASH/blob/949c0ca14d48c663c5826e215678d9960a169689/docs/figure/sparse_results_random_ld.Rmd/unnamed-chunk-10-1.png" target="_blank">949c0ca</a>
+</td>
+<td>
+alexmccreight
+</td>
+<td>
+2025-03-26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
 <div id="prediction-metrics" class="section level2">
 <h2>Prediction Metrics</h2>
-<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="aggregated-across-all-heritability-levels"
+class="section level3">
+<h3>Aggregated Across All Heritability Levels</h3>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="h2-0.05-1" class="section level3">
+<h3>h2 = 0.05</h3>
+<pre class="r"><code>plot_list_corr[[&quot;0.05&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_list_rsq[[&quot;0.05&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="h2-0.1" class="section level3">
+<h3>h2 = 0.1</h3>
+<pre class="r"><code>plot_list_corr[[&quot;0.1&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_list_rsq[[&quot;0.1&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="h2-0.2" class="section level3">
+<h3>h2 = 0.2</h3>
+<pre class="r"><code>plot_list_corr[[&quot;0.2&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_list_rsq[[&quot;0.2&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="h2-0.4" class="section level3">
+<h3>h2 = 0.4</h3>
+<pre class="r"><code>plot_list_corr[[&quot;0.4&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_list_rsq[[&quot;0.4&quot;]]</code></pre>
+<p><img src="figure/sparse_results_random_ld.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1350,6 +1558,7 @@ loaded via a namespace (and not attached):
 [41] glue_1.8.0        Rcpp_1.0.14       xfun_0.50         tidyselect_1.2.1 
 [45] rstudioapi_0.17.1 knitr_1.49        farver_2.1.2      htmltools_0.5.8.1
 [49] labeling_0.4.3    rmarkdown_2.29    compiler_4.4.2    getPass_0.2-4    </code></pre>
+</div>
 </div>
 </div>
 </div>
