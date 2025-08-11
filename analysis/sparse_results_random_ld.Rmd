@@ -246,6 +246,9 @@ cs_summary <- cs_results_df %>%
   ) %>%
   ungroup()
 
+cs_summary$Method[cs_summary$Method == "SuSiE.ash (Grid 2)"] <- "SuSiE.ash"
+
+
 # Create bar plot for CS FDR by K and Method
 plot_cs_fdr <- ggplot(cs_summary, aes(x = as.factor(K), y = mean_CS_FDR, fill = Method)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
